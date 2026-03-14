@@ -1,19 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  mockContacts,
-  mockDealContacts,
-  mockDeals,
-  mockTickets,
-  mockTasks,
-  mockActivities,
-  mockNotes,
-  mockUsers,
-  getUserSelect,
-  getCompanyById,
-  getCompanySelect,
-  getStageById,
-  getPipelineById,
-} from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _request: Request,
@@ -22,128 +8,129 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const contact = mockContacts.find((c) => c.id === id);
+    const contact = await prisma.contact.findUnique({
+      where: { id },
+      include: {
+        company: true,
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        deals: {
+          include: {
+            deal: {
+              include: {
+                stage: { select: { id: true, name: true, color: true } },
+                pipeline: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+        tickets: {
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: {
+            owner: { select: { id: true, name: true, email: true, image: true } },
+          },
+        },
+        tasks: {
+          take: 10,
+          orderBy: { dueDate: "asc" },
+          include: {
+            owner: { select: { id: true, name: true, email: true, image: true } },
+          },
+        },
+        activities: {
+          take: 20,
+          orderBy: { createdAt: "desc" },
+          include: {
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+        },
+        notes: {
+          take: 10,
+          orderBy: { createdAt: "desc" },
+          include: {
+            user: { select: { id: true, name: true, email: true, image: true } },
+          },
+        },
+        properties: true,
+        _count: {
+          select: {
+            deals: true,
+            tickets: true,
+            tasks: true,
+            activities: true,
+            notes: true,
+          },
+        },
+      },
+    });
 
     if (!contact) {
       return NextResponse.json(
-        { error: "コンタクトが見つかりません" },
+        { status: "error", message: "Contact not found" },
         { status: 404 }
       );
     }
 
-    const company = contact.companyId
-      ? getCompanyById(contact.companyId)
-      : null;
-
-    const ownerUser = contact.ownerId
-      ? mockUsers.find((u) => u.id === contact.ownerId)
-      : null;
-    const owner = ownerUser
-      ? { id: ownerUser.id, name: ownerUser.name, email: ownerUser.email, image: ownerUser.image }
-      : null;
-
-    const dealContacts = mockDealContacts.filter(
-      (dc) => dc.contactId === id
-    );
-    const deals = dealContacts
-      .map((dc) => {
-        const deal = mockDeals.find((d) => d.id === dc.dealId);
-        if (!deal) return null;
-        const stage = getStageById(deal.stageId);
-        const pipeline = getPipelineById(deal.pipelineId);
-        return {
-          deal: {
-            ...deal,
-            stage: stage
-              ? { id: stage.id, name: stage.name, color: stage.color }
-              : null,
-            pipeline: pipeline
-              ? { id: pipeline.id, name: pipeline.name }
-              : null,
-          },
-        };
-      })
-      .filter(Boolean);
-
-    const tickets = mockTickets
-      .filter((t) => t.contactId === id)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, 10)
-      .map((t) => ({
-        ...t,
-        owner: getUserSelect(t.ownerId),
-      }));
-
-    const tasks = mockTasks
-      .filter((t) => t.contactId === id)
-      .sort((a, b) => {
-        if (!a.dueDate) return 1;
-        if (!b.dueDate) return -1;
-        return (
-          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
-        );
-      })
-      .slice(0, 10)
-      .map((t) => ({
-        ...t,
-        owner: getUserSelect(t.ownerId),
-      }));
-
-    const activities = mockActivities
-      .filter((a) => a.contactId === id)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, 20)
-      .map((a) => ({
-        ...a,
-        user: getUserSelect(a.userId),
-      }));
-
-    const notes = mockNotes
-      .filter((n) => n.contactId === id)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-      .slice(0, 10)
-      .map((n) => ({
-        ...n,
-        user: getUserSelect(n.userId),
-      }));
+    const formattedDeals = contact.deals.map((dc) => ({
+      deal: {
+        ...dc.deal,
+        stage: dc.deal.stage
+          ? { id: dc.deal.stage.id, name: dc.deal.stage.name, color: dc.deal.stage.color }
+          : null,
+        pipeline: dc.deal.pipeline
+          ? { id: dc.deal.pipeline.id, name: dc.deal.pipeline.name }
+          : null,
+      },
+    }));
 
     return NextResponse.json({
-      ...contact,
-      company,
-      owner,
-      deals,
-      tickets,
-      tasks,
-      activities,
-      notes,
-      properties: [],
-      _count: {
-        deals: dealContacts.length,
-        tickets: mockTickets.filter((t) => t.contactId === id).length,
-        tasks: mockTasks.filter((t) => t.contactId === id).length,
-        activities: mockActivities.filter((a) => a.contactId === id).length,
-        notes: mockNotes.filter((n) => n.contactId === id).length,
+      id: contact.id,
+      properties: {
+        email: contact.email,
+        firstname: contact.firstName,
+        lastname: contact.lastName,
+        phone: contact.phone,
+        jobtitle: contact.jobTitle,
+        avatar: contact.avatar,
+        lifecyclestage: contact.lifecycleStage,
+        leadstatus: contact.leadStatus,
+        source: contact.source,
+        hs_object_id: contact.id,
       },
+      createdAt: contact.createdAt.toISOString(),
+      updatedAt: contact.updatedAt.toISOString(),
+      archived: false,
+      // Expanded data for frontend
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phone: contact.phone,
+      jobTitle: contact.jobTitle,
+      avatar: contact.avatar,
+      lifecycleStage: contact.lifecycleStage,
+      leadStatus: contact.leadStatus,
+      source: contact.source,
+      ownerId: contact.ownerId,
+      companyId: contact.companyId,
+      company: contact.company,
+      owner: contact.owner,
+      deals: formattedDeals,
+      tickets: contact.tickets,
+      tasks: contact.tasks,
+      activities: contact.activities,
+      notes: contact.notes,
+      _count: contact._count,
     });
   } catch (error) {
     console.error("Error fetching contact:", error);
     return NextResponse.json(
-      { error: "コンタクトの取得に失敗しました" },
+      { status: "error", message: "Failed to fetch contact" },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(
+export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -153,69 +140,78 @@ export async function PUT(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      return NextResponse.json(
+        { status: "error", message: "Invalid JSON body" },
+        { status: 400 }
+      );
     }
 
-    const index = mockContacts.findIndex((c) => c.id === id);
-
-    if (index === -1) {
+    const existing = await prisma.contact.findUnique({ where: { id } });
+    if (!existing) {
       return NextResponse.json(
-        { error: "コンタクトが見つかりません" },
+        { status: "error", message: "Contact not found" },
         { status: 404 }
       );
     }
 
-    const allowedFields = [
-      "firstName",
-      "lastName",
-      "email",
-      "phone",
-      "jobTitle",
-      "avatar",
-      "lifecycleStage",
-      "leadStatus",
-      "source",
-      "ownerId",
-      "companyId",
-    ];
+    const props = body.properties || body;
 
-    const existing = mockContacts[index];
     const updateData: Record<string, unknown> = {};
 
-    for (const field of allowedFields) {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field] || null;
-      }
-    }
+    if (props.firstname !== undefined || props.firstName !== undefined)
+      updateData.firstName = props.firstname ?? props.firstName;
+    if (props.lastname !== undefined || props.lastName !== undefined)
+      updateData.lastName = props.lastname ?? props.lastName;
+    if (props.email !== undefined) updateData.email = props.email || null;
+    if (props.phone !== undefined) updateData.phone = props.phone || null;
+    if (props.jobtitle !== undefined || props.jobTitle !== undefined)
+      updateData.jobTitle = props.jobtitle ?? props.jobTitle ?? null;
+    if (props.avatar !== undefined) updateData.avatar = props.avatar || null;
+    if (props.lifecyclestage !== undefined || props.lifecycleStage !== undefined)
+      updateData.lifecycleStage = props.lifecyclestage ?? props.lifecycleStage;
+    if (props.leadstatus !== undefined || props.leadStatus !== undefined)
+      updateData.leadStatus = props.leadstatus ?? props.leadStatus ?? null;
+    if (props.source !== undefined) updateData.source = props.source || null;
+    if (props.ownerId !== undefined) updateData.ownerId = props.ownerId || null;
+    if (props.companyId !== undefined) updateData.companyId = props.companyId || null;
 
-    // firstName and lastName should not be null
-    if (body.firstName !== undefined) updateData.firstName = body.firstName;
-    if (body.lastName !== undefined) updateData.lastName = body.lastName;
-
-    const updated = {
-      ...existing,
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    };
-    mockContacts[index] = updated as typeof existing;
-
-    const contact = {
-      ...updated,
-      company: getCompanySelect(updated.companyId as string | null),
-      owner: getUserSelect(updated.ownerId as string | null),
-      _count: {
-        deals: mockDealContacts.filter((dc) => dc.contactId === id).length,
-        tickets: mockTickets.filter((t) => t.contactId === id).length,
-        tasks: mockTasks.filter((t) => t.contactId === id).length,
-        activities: mockActivities.filter((a) => a.contactId === id).length,
+    const contact = await prisma.contact.update({
+      where: { id },
+      data: updateData,
+      include: {
+        company: { select: { id: true, name: true, domain: true, industry: true } },
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        _count: {
+          select: { deals: true, tickets: true, tasks: true, activities: true },
+        },
       },
-    };
+    });
 
-    return NextResponse.json(contact);
+    return NextResponse.json({
+      id: contact.id,
+      properties: {
+        email: contact.email,
+        firstname: contact.firstName,
+        lastname: contact.lastName,
+        phone: contact.phone,
+        jobtitle: contact.jobTitle,
+        avatar: contact.avatar,
+        lifecyclestage: contact.lifecycleStage,
+        leadstatus: contact.leadStatus,
+        source: contact.source,
+        hs_object_id: contact.id,
+      },
+      createdAt: contact.createdAt.toISOString(),
+      updatedAt: contact.updatedAt.toISOString(),
+      archived: false,
+      company: contact.company || null,
+      owner: contact.owner || null,
+      _count: contact._count,
+    });
   } catch (error) {
     console.error("Error updating contact:", error);
     return NextResponse.json(
-      { error: "コンタクトの更新に失敗しました" },
+      { status: "error", message: "Failed to update contact" },
       { status: 500 }
     );
   }
@@ -228,22 +224,21 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const index = mockContacts.findIndex((c) => c.id === id);
-
-    if (index === -1) {
+    const existing = await prisma.contact.findUnique({ where: { id } });
+    if (!existing) {
       return NextResponse.json(
-        { error: "コンタクトが見つかりません" },
+        { status: "error", message: "Contact not found" },
         { status: 404 }
       );
     }
 
-    mockContacts.splice(index, 1);
+    await prisma.contact.delete({ where: { id } });
 
-    return NextResponse.json({ message: "コンタクトを削除しました" });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("Error deleting contact:", error);
     return NextResponse.json(
-      { error: "コンタクトの削除に失敗しました" },
+      { status: "error", message: "Failed to delete contact" },
       { status: 500 }
     );
   }

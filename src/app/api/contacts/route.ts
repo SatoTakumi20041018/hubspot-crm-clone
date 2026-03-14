@@ -1,86 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  mockContacts,
-  getUserSelect,
-  getCompanySelect,
-  includesCI,
-  mockDeals,
-  mockDealContacts,
-  mockTickets,
-  mockTasks,
-  mockActivities,
-} from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const after = searchParams.get("after");
     const search = searchParams.get("search") || "";
     const lifecycleStage = searchParams.get("lifecycleStage");
     const leadStatus = searchParams.get("leadStatus");
     const ownerId = searchParams.get("ownerId");
+    const associations = searchParams.get("associations")?.split(",") || [];
 
-    const skip = (page - 1) * limit;
-
-    let filtered = [...mockContacts];
+    const where: Prisma.ContactWhereInput = {};
 
     if (search) {
-      filtered = filtered.filter(
-        (c) =>
-          includesCI(c.firstName, search) ||
-          includesCI(c.lastName, search) ||
-          includesCI(c.email, search) ||
-          includesCI(c.phone, search)
-      );
+      where.OR = [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+      ];
     }
 
     if (lifecycleStage) {
-      filtered = filtered.filter((c) => c.lifecycleStage === lifecycleStage);
+      where.lifecycleStage = lifecycleStage as Prisma.EnumLifecycleStageFilter;
     }
 
     if (leadStatus) {
-      filtered = filtered.filter((c) => c.leadStatus === leadStatus);
+      where.leadStatus = leadStatus as Prisma.EnumLeadStatusNullableFilter;
     }
 
     if (ownerId) {
-      filtered = filtered.filter((c) => c.ownerId === ownerId);
+      where.ownerId = ownerId;
     }
 
-    // Sort by createdAt desc
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
-    const total = filtered.length;
-    const paginated = filtered.slice(skip, skip + limit);
-
-    const contacts = paginated.map((c) => ({
-      ...c,
-      company: getCompanySelect(c.companyId),
-      owner: getUserSelect(c.ownerId),
-      _count: {
-        deals: mockDealContacts.filter((dc) => dc.contactId === c.id).length,
-        tickets: mockTickets.filter((t) => t.contactId === c.id).length,
-        tasks: mockTasks.filter((t) => t.contactId === c.id).length,
-        activities: mockActivities.filter((a) => a.contactId === c.id).length,
+    const findArgs: Prisma.ContactFindManyArgs = {
+      where,
+      take: limit + 1,
+      orderBy: { createdAt: "desc" },
+      include: {
+        company: associations.includes("company") ? {
+          select: { id: true, name: true, domain: true, industry: true },
+        } : false,
+        owner: associations.includes("owner") ? {
+          select: { id: true, name: true, email: true, image: true },
+        } : false,
+        _count: {
+          select: {
+            deals: true,
+            tickets: true,
+            tasks: true,
+            activities: true,
+          },
+        },
       },
+    };
+
+    if (after) {
+      findArgs.cursor = { id: after };
+      findArgs.skip = 1;
+    }
+
+    const contacts = await prisma.contact.findMany(findArgs);
+
+    const hasMore = contacts.length > limit;
+    const results = contacts.slice(0, limit);
+
+    const formattedResults = results.map((c: Record<string, unknown>) => ({
+      id: c.id,
+      properties: {
+        email: c.email,
+        firstname: c.firstName,
+        lastname: c.lastName,
+        phone: c.phone,
+        jobtitle: c.jobTitle,
+        avatar: c.avatar,
+        lifecyclestage: c.lifecycleStage,
+        leadstatus: c.leadStatus,
+        source: c.source,
+        hs_object_id: c.id,
+      },
+      createdAt: (c.createdAt as Date).toISOString(),
+      updatedAt: (c.updatedAt as Date).toISOString(),
+      archived: false,
+      associations: {
+        ...(associations.includes("company") && c.company
+          ? { companies: { results: [{ id: (c.company as Record<string, unknown>).id, type: "contact_to_company" }] } }
+          : {}),
+        ...(associations.includes("owner") && c.owner
+          ? { owners: { results: [{ id: (c.owner as Record<string, unknown>).id, type: "contact_to_owner" }] } }
+          : {}),
+      },
+      company: c.company || null,
+      owner: c.owner || null,
+      _count: c._count,
     }));
 
     return NextResponse.json({
-      contacts,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      results: formattedResults,
+      paging: hasMore
+        ? { next: { after: (results[results.length - 1] as Record<string, unknown>).id } }
+        : undefined,
     });
   } catch (error) {
     console.error("Error fetching contacts:", error);
     return NextResponse.json(
-      { error: "コンタクトの取得に失敗しました" },
+      { status: "error", message: "Failed to fetch contacts" },
       { status: 500 }
     );
   }
@@ -92,74 +119,93 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      jobTitle,
-      lifecycleStage,
-      leadStatus,
-      source,
-      ownerId,
-      companyId,
-    } = body;
-
-    if (!firstName || !lastName) {
       return NextResponse.json(
-        { error: "姓と名は必須です" },
+        { status: "error", message: "Invalid JSON body" },
         { status: 400 }
       );
     }
 
+    const { properties, associations } = body;
+    const props = properties || body;
+
+    const firstName = props.firstname || props.firstName;
+    const lastName = props.lastname || props.lastName;
+
+    if (!firstName || !lastName) {
+      return NextResponse.json(
+        { status: "error", message: "firstname and lastname are required" },
+        { status: 400 }
+      );
+    }
+
+    const email = props.email || null;
+
     if (email) {
-      const existing = mockContacts.find((c) => c.email === email);
+      const existing = await prisma.contact.findFirst({
+        where: { email },
+      });
       if (existing) {
         return NextResponse.json(
-          { error: "このメールアドレスのコンタクトは既に存在します" },
+          { status: "error", message: "Contact with this email already exists" },
           { status: 409 }
         );
       }
     }
 
-    const newContact = {
-      id: `contact-${Date.now()}`,
-      firstName,
-      lastName,
-      email: email || null,
-      phone: phone || null,
-      jobTitle: jobTitle || null,
-      avatar: null,
-      lifecycleStage: lifecycleStage || ("SUBSCRIBER" as const),
-      leadStatus: leadStatus || null,
-      source: source || null,
-      ownerId: ownerId || null,
-      companyId: companyId || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const companyIdFromAssoc = associations?.find(
+      (a: { to?: { id?: string }; type?: string }) => a.type === "contact_to_company"
+    )?.to?.id;
 
-    mockContacts.push(newContact);
-
-    const contact = {
-      ...newContact,
-      company: getCompanySelect(newContact.companyId),
-      owner: getUserSelect(newContact.ownerId),
-      _count: {
-        deals: 0,
-        tickets: 0,
-        tasks: 0,
-        activities: 0,
+    const contact = await prisma.contact.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        phone: props.phone || null,
+        jobTitle: props.jobtitle || props.jobTitle || null,
+        lifecycleStage: props.lifecyclestage || props.lifecycleStage || "SUBSCRIBER",
+        leadStatus: props.leadstatus || props.leadStatus || null,
+        source: props.source || null,
+        ownerId: props.ownerId || null,
+        companyId: props.companyId || companyIdFromAssoc || null,
       },
-    };
+      include: {
+        company: { select: { id: true, name: true, domain: true, industry: true } },
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        _count: {
+          select: { deals: true, tickets: true, tasks: true, activities: true },
+        },
+      },
+    });
 
-    return NextResponse.json(contact, { status: 201 });
+    return NextResponse.json(
+      {
+        id: contact.id,
+        properties: {
+          email: contact.email,
+          firstname: contact.firstName,
+          lastname: contact.lastName,
+          phone: contact.phone,
+          jobtitle: contact.jobTitle,
+          avatar: contact.avatar,
+          lifecyclestage: contact.lifecycleStage,
+          leadstatus: contact.leadStatus,
+          source: contact.source,
+          hs_object_id: contact.id,
+        },
+        createdAt: contact.createdAt.toISOString(),
+        updatedAt: contact.updatedAt.toISOString(),
+        archived: false,
+        company: contact.company || null,
+        owner: contact.owner || null,
+        _count: contact._count,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating contact:", error);
     return NextResponse.json(
-      { error: "コンタクトの作成に失敗しました" },
+      { status: "error", message: "Failed to create contact" },
       { status: 500 }
     );
   }

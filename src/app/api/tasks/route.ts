@@ -1,82 +1,88 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  mockTasks,
-  getUserSelect,
-  getContactSelect,
-} from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const after = searchParams.get("after");
     const status = searchParams.get("status");
     const ownerId = searchParams.get("ownerId");
     const dueDateFrom = searchParams.get("dueDateFrom");
     const dueDateTo = searchParams.get("dueDateTo");
 
-    const skip = (page - 1) * limit;
-
-    let filtered = [...mockTasks];
+    const where: Prisma.TaskWhereInput = {};
 
     if (status) {
-      filtered = filtered.filter((t) => t.status === status);
+      where.status = status as Prisma.EnumTaskStatusFilter;
     }
 
     if (ownerId) {
-      filtered = filtered.filter((t) => t.ownerId === ownerId);
+      where.ownerId = ownerId;
     }
 
-    if (dueDateFrom) {
-      const from = new Date(dueDateFrom).getTime();
-      filtered = filtered.filter(
-        (t) => t.dueDate && new Date(t.dueDate).getTime() >= from
-      );
+    if (dueDateFrom || dueDateTo) {
+      const dueDateFilter: Record<string, Date> = {};
+      if (dueDateFrom) dueDateFilter.gte = new Date(dueDateFrom);
+      if (dueDateTo) dueDateFilter.lte = new Date(dueDateTo);
+      where.dueDate = dueDateFilter;
     }
 
-    if (dueDateTo) {
-      const to = new Date(dueDateTo).getTime();
-      filtered = filtered.filter(
-        (t) => t.dueDate && new Date(t.dueDate).getTime() <= to
-      );
+    const findArgs: Prisma.TaskFindManyArgs = {
+      where,
+      take: limit + 1,
+      orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    };
+
+    if (after) {
+      findArgs.cursor = { id: after };
+      findArgs.skip = 1;
     }
 
-    // Sort by dueDate asc, then createdAt desc
-    filtered.sort((a, b) => {
-      if (a.dueDate && b.dueDate) {
-        const diff =
-          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-        if (diff !== 0) return diff;
-      }
-      if (!a.dueDate) return 1;
-      if (!b.dueDate) return -1;
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    });
+    const tasks = await prisma.task.findMany(findArgs);
 
-    const total = filtered.length;
-    const paginated = filtered.slice(skip, skip + limit);
+    const hasMore = tasks.length > limit;
+    const results = tasks.slice(0, limit);
 
-    const tasks = paginated.map((t) => ({
-      ...t,
-      owner: getUserSelect(t.ownerId),
-      contact: getContactSelect(t.contactId),
+    const formattedResults = results.map((t: Record<string, unknown>) => ({
+      id: t.id,
+      properties: {
+        hs_task_subject: t.title,
+        hs_task_body: t.description,
+        hs_task_status: t.status,
+        hs_task_priority: t.priority,
+        hs_task_type: t.type,
+        hs_timestamp: t.dueDate ? (t.dueDate as Date).toISOString() : null,
+        hs_object_id: t.id,
+      },
+      createdAt: (t.createdAt as Date).toISOString(),
+      updatedAt: (t.updatedAt as Date).toISOString(),
+      archived: false,
+      title: t.title,
+      description: t.description,
+      dueDate: t.dueDate,
+      priority: t.priority,
+      status: t.status,
+      type: t.type,
+      owner: t.owner || null,
+      contact: t.contact || null,
     }));
 
     return NextResponse.json({
-      tasks,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      results: formattedResults,
+      paging: hasMore
+        ? { next: { after: (results[results.length - 1] as Record<string, unknown>).id } }
+        : undefined,
     });
   } catch (error) {
     console.error("Error fetching tasks:", error);
     return NextResponse.json(
-      { error: "タスクの取得に失敗しました" },
+      { status: "error", message: "Failed to fetch tasks" },
       { status: 500 }
     );
   }
@@ -88,127 +94,71 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const { title, description, dueDate, priority, status, type, ownerId, contactId } =
-      body;
-
-    if (!title) {
       return NextResponse.json(
-        { error: "タスク名は必須です" },
+        { status: "error", message: "Invalid JSON body" },
         { status: 400 }
       );
     }
 
-    const newTask = {
-      id: `task-${Date.now()}`,
-      title,
-      description: description || null,
-      dueDate: (() => {
-        if (!dueDate) return null;
-        try {
-          const d = new Date(dueDate);
-          if (isNaN(d.getTime())) return null;
-          return d.toISOString();
-        } catch {
-          return null;
-        }
-      })(),
-      priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
-      status: (status || "NOT_STARTED") as "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED",
-      type: (type || "TODO") as "TODO" | "CALL" | "EMAIL" | "MEETING" | "FOLLOW_UP",
-      ownerId: ownerId || null,
-      contactId: contactId || null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const props = body.properties || body;
 
-    mockTasks.push(newTask);
+    const title = props.hs_task_subject || props.title;
+    if (!title) {
+      return NextResponse.json(
+        { status: "error", message: "Task title is required" },
+        { status: 400 }
+      );
+    }
 
-    const task = {
-      ...newTask,
-      owner: getUserSelect(newTask.ownerId),
-      contact: getContactSelect(newTask.contactId),
-    };
+    const dueDate = props.hs_timestamp || props.dueDate;
 
-    return NextResponse.json(task, { status: 201 });
+    const task = await prisma.task.create({
+      data: {
+        title,
+        description: props.hs_task_body || props.description || null,
+        dueDate: dueDate ? new Date(dueDate) : null,
+        priority: props.hs_task_priority || props.priority || "MEDIUM",
+        status: props.hs_task_status || props.status || "NOT_STARTED",
+        type: props.hs_task_type || props.type || "TODO",
+        ownerId: props.ownerId || null,
+        contactId: props.contactId || null,
+      },
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    return NextResponse.json(
+      {
+        id: task.id,
+        properties: {
+          hs_task_subject: task.title,
+          hs_task_body: task.description,
+          hs_task_status: task.status,
+          hs_task_priority: task.priority,
+          hs_task_type: task.type,
+          hs_timestamp: task.dueDate?.toISOString() || null,
+          hs_object_id: task.id,
+        },
+        createdAt: task.createdAt.toISOString(),
+        updatedAt: task.updatedAt.toISOString(),
+        archived: false,
+        title: task.title,
+        description: task.description,
+        dueDate: task.dueDate,
+        priority: task.priority,
+        status: task.status,
+        type: task.type,
+        owner: task.owner || null,
+        contact: task.contact || null,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating task:", error);
     return NextResponse.json(
-      { error: "タスクの作成に失敗しました" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PATCH(request: Request) {
-  try {
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const { id, ...data } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "タスクIDは必須です" },
-        { status: 400 }
-      );
-    }
-
-    const index = mockTasks.findIndex((t) => t.id === id);
-
-    if (index === -1) {
-      return NextResponse.json(
-        { error: "タスクが見つかりません" },
-        { status: 404 }
-      );
-    }
-
-    const existing = mockTasks[index];
-    const updateData: Record<string, unknown> = {};
-
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.dueDate !== undefined) {
-      if (data.dueDate) {
-        try {
-          const d = new Date(data.dueDate);
-          updateData.dueDate = isNaN(d.getTime()) ? null : d.toISOString();
-        } catch {
-          updateData.dueDate = null;
-        }
-      } else {
-        updateData.dueDate = null;
-      }
-    }
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.type !== undefined) updateData.type = data.type;
-    if (data.ownerId !== undefined) updateData.ownerId = data.ownerId || null;
-    if (data.contactId !== undefined)
-      updateData.contactId = data.contactId || null;
-
-    const updated = {
-      ...existing,
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    };
-    mockTasks[index] = updated as typeof existing;
-
-    const task = {
-      ...updated,
-      owner: getUserSelect(updated.ownerId as string | null),
-      contact: getContactSelect(updated.contactId as string | null),
-    };
-
-    return NextResponse.json(task);
-  } catch (error) {
-    console.error("Error updating task:", error);
-    return NextResponse.json(
-      { error: "タスクの更新に失敗しました" },
+      { status: "error", message: "Failed to create task" },
       { status: 500 }
     );
   }

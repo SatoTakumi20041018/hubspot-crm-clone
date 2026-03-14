@@ -1,77 +1,99 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  mockTickets,
-  getUserSelect,
-  getContactSelect,
-  getCompanySelect,
-  includesCI,
-} from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
+    const limit = Math.min(parseInt(searchParams.get("limit") || "20"), 100);
+    const after = searchParams.get("after");
     const search = searchParams.get("search") || "";
     const status = searchParams.get("status");
     const priority = searchParams.get("priority");
     const ownerId = searchParams.get("ownerId");
 
-    const skip = (page - 1) * limit;
-
-    let filtered = [...mockTickets];
+    const where: Prisma.TicketWhereInput = {};
 
     if (search) {
-      filtered = filtered.filter(
-        (t) =>
-          includesCI(t.subject, search) ||
-          includesCI(t.description, search)
-      );
+      where.OR = [
+        { subject: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
     }
 
     if (status) {
-      filtered = filtered.filter((t) => t.status === status);
+      where.status = status as Prisma.EnumTicketStatusFilter;
     }
 
     if (priority) {
-      filtered = filtered.filter((t) => t.priority === priority);
+      where.priority = priority as Prisma.EnumPriorityFilter;
     }
 
     if (ownerId) {
-      filtered = filtered.filter((t) => t.ownerId === ownerId);
+      where.ownerId = ownerId;
     }
 
-    // Sort by createdAt desc
-    filtered.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    const findArgs: Prisma.TicketFindManyArgs = {
+      where,
+      take: limit + 1,
+      orderBy: { createdAt: "desc" },
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+        company: { select: { id: true, name: true, domain: true } },
+        pipeline: { select: { id: true, name: true } },
+        stage: { select: { id: true, name: true, color: true } },
+      },
+    };
 
-    const total = filtered.length;
-    const paginated = filtered.slice(skip, skip + limit);
+    if (after) {
+      findArgs.cursor = { id: after };
+      findArgs.skip = 1;
+    }
 
-    const tickets = paginated.map((t) => ({
-      ...t,
-      owner: getUserSelect(t.ownerId),
-      contact: getContactSelect(t.contactId),
-      company: getCompanySelect(t.companyId),
-      pipeline: null,
-      stage: null,
+    const tickets = await prisma.ticket.findMany(findArgs);
+
+    const hasMore = tickets.length > limit;
+    const results = tickets.slice(0, limit);
+
+    const formattedResults = results.map((t: Record<string, unknown>) => ({
+      id: t.id,
+      properties: {
+        subject: t.subject,
+        content: t.description,
+        hs_ticket_priority: t.priority,
+        hs_pipeline: t.pipelineId,
+        hs_pipeline_stage: t.stageId,
+        hs_ticket_category: t.category,
+        hs_object_id: t.id,
+      },
+      createdAt: (t.createdAt as Date).toISOString(),
+      updatedAt: (t.updatedAt as Date).toISOString(),
+      archived: false,
+      subject: t.subject,
+      description: t.description,
+      status: t.status,
+      priority: t.priority,
+      category: t.category,
+      slaDeadline: t.slaDeadline,
+      closedAt: t.closedAt,
+      owner: t.owner || null,
+      contact: t.contact || null,
+      company: t.company || null,
+      pipeline: t.pipeline || null,
+      stage: t.stage || null,
     }));
 
     return NextResponse.json({
-      tickets,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
+      results: formattedResults,
+      paging: hasMore
+        ? { next: { after: (results[results.length - 1] as Record<string, unknown>).id } }
+        : undefined,
     });
   } catch (error) {
     console.error("Error fetching tickets:", error);
     return NextResponse.json(
-      { error: "チケットの取得に失敗しました" },
+      { status: "error", message: "Failed to fetch tickets" },
       { status: 500 }
     );
   }
@@ -83,62 +105,78 @@ export async function POST(request: Request) {
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
-    }
-    const {
-      subject,
-      description,
-      status,
-      priority,
-      category,
-      ownerId,
-      contactId,
-      companyId,
-      pipelineId,
-      stageId,
-    } = body;
-
-    if (!subject) {
       return NextResponse.json(
-        { error: "件名は必須です" },
+        { status: "error", message: "Invalid JSON body" },
         { status: 400 }
       );
     }
 
-    const newTicket = {
-      id: `ticket-${Date.now()}`,
-      subject,
-      description: description || null,
-      status: (status || "OPEN") as "OPEN" | "IN_PROGRESS" | "WAITING" | "CLOSED",
-      priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
-      category: category || null,
-      ownerId: ownerId || null,
-      contactId: contactId || null,
-      companyId: companyId || null,
-      pipelineId: pipelineId || null,
-      stageId: stageId || null,
-      slaDeadline: null,
-      closedAt: null,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    const props = body.properties || body;
 
-    mockTickets.push(newTicket);
+    const subject = props.subject;
+    if (!subject) {
+      return NextResponse.json(
+        { status: "error", message: "subject is required" },
+        { status: 400 }
+      );
+    }
 
-    const ticket = {
-      ...newTicket,
-      owner: getUserSelect(newTicket.ownerId),
-      contact: getContactSelect(newTicket.contactId),
-      company: getCompanySelect(newTicket.companyId),
-      pipeline: null,
-      stage: null,
-    };
+    const ticket = await prisma.ticket.create({
+      data: {
+        subject,
+        description: props.content || props.description || null,
+        status: props.status || "OPEN",
+        priority: props.hs_ticket_priority || props.priority || "MEDIUM",
+        category: props.hs_ticket_category || props.category || null,
+        ownerId: props.ownerId || null,
+        contactId: props.contactId || null,
+        companyId: props.companyId || null,
+        pipelineId: props.hs_pipeline || props.pipelineId || null,
+        stageId: props.hs_pipeline_stage || props.stageId || null,
+      },
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+        company: { select: { id: true, name: true, domain: true } },
+        pipeline: { select: { id: true, name: true } },
+        stage: { select: { id: true, name: true, color: true } },
+      },
+    });
 
-    return NextResponse.json(ticket, { status: 201 });
+    return NextResponse.json(
+      {
+        id: ticket.id,
+        properties: {
+          subject: ticket.subject,
+          content: ticket.description,
+          hs_ticket_priority: ticket.priority,
+          hs_pipeline: ticket.pipelineId,
+          hs_pipeline_stage: ticket.stageId,
+          hs_ticket_category: ticket.category,
+          hs_object_id: ticket.id,
+        },
+        createdAt: ticket.createdAt.toISOString(),
+        updatedAt: ticket.updatedAt.toISOString(),
+        archived: false,
+        subject: ticket.subject,
+        description: ticket.description,
+        status: ticket.status,
+        priority: ticket.priority,
+        category: ticket.category,
+        slaDeadline: ticket.slaDeadline,
+        closedAt: ticket.closedAt,
+        owner: ticket.owner || null,
+        contact: ticket.contact || null,
+        company: ticket.company || null,
+        pipeline: ticket.pipeline || null,
+        stage: ticket.stage || null,
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating ticket:", error);
     return NextResponse.json(
-      { error: "チケットの作成に失敗しました" },
+      { status: "error", message: "Failed to create ticket" },
       { status: 500 }
     );
   }

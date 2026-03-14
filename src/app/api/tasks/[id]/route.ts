@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import {
-  mockTasks,
-  getUserSelect,
-  getContactSelect,
-} from "@/lib/mock-data";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _request: Request,
@@ -12,24 +8,48 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const task = mockTasks.find((t) => t.id === id);
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
 
     if (!task) {
       return NextResponse.json(
-        { error: "タスクが見つかりません" },
+        { status: "error", message: "Task not found" },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
-      ...task,
-      owner: getUserSelect(task.ownerId),
-      contact: getContactSelect(task.contactId),
+      id: task.id,
+      properties: {
+        hs_task_subject: task.title,
+        hs_task_body: task.description,
+        hs_task_status: task.status,
+        hs_task_priority: task.priority,
+        hs_task_type: task.type,
+        hs_timestamp: task.dueDate?.toISOString() || null,
+        hs_object_id: task.id,
+      },
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+      archived: false,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      priority: task.priority,
+      status: task.status,
+      type: task.type,
+      owner: task.owner || null,
+      contact: task.contact || null,
     });
   } catch (error) {
     console.error("Error fetching task:", error);
     return NextResponse.json(
-      { error: "タスクの取得に失敗しました" },
+      { status: "error", message: "Failed to fetch task" },
       { status: 500 }
     );
   }
@@ -46,28 +66,34 @@ export async function PATCH(
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+      return NextResponse.json(
+        { status: "error", message: "Invalid JSON body" },
+        { status: 400 }
+      );
     }
 
-    const index = mockTasks.findIndex((t) => t.id === id);
-
-    if (index === -1) {
+    const existing = await prisma.task.findUnique({ where: { id } });
+    if (!existing) {
       return NextResponse.json(
-        { error: "タスクが見つかりません" },
+        { status: "error", message: "Task not found" },
         { status: 404 }
       );
     }
 
-    const existing = mockTasks[index];
+    const props = body.properties || body;
     const updateData: Record<string, unknown> = {};
 
-    if (body.title !== undefined) updateData.title = body.title;
-    if (body.description !== undefined) updateData.description = body.description;
-    if (body.dueDate !== undefined) {
-      if (body.dueDate) {
+    if (props.hs_task_subject !== undefined || props.title !== undefined)
+      updateData.title = props.hs_task_subject ?? props.title;
+    if (props.hs_task_body !== undefined || props.description !== undefined)
+      updateData.description = props.hs_task_body ?? props.description ?? null;
+
+    const dueDate = props.hs_timestamp ?? props.dueDate;
+    if (dueDate !== undefined) {
+      if (dueDate) {
         try {
-          const d = new Date(body.dueDate);
-          updateData.dueDate = isNaN(d.getTime()) ? null : d.toISOString();
+          const d = new Date(dueDate);
+          updateData.dueDate = isNaN(d.getTime()) ? null : d;
         } catch {
           updateData.dueDate = null;
         }
@@ -75,30 +101,54 @@ export async function PATCH(
         updateData.dueDate = null;
       }
     }
-    if (body.priority !== undefined) updateData.priority = body.priority;
-    if (body.status !== undefined) updateData.status = body.status;
-    if (body.type !== undefined) updateData.type = body.type;
-    if (body.ownerId !== undefined) updateData.ownerId = body.ownerId || null;
-    if (body.contactId !== undefined) updateData.contactId = body.contactId || null;
 
-    const updated = {
-      ...existing,
-      ...updateData,
-      updatedAt: new Date().toISOString(),
-    };
-    mockTasks[index] = updated as typeof existing;
+    if (props.hs_task_priority !== undefined || props.priority !== undefined)
+      updateData.priority = props.hs_task_priority ?? props.priority;
+    if (props.hs_task_status !== undefined || props.status !== undefined)
+      updateData.status = props.hs_task_status ?? props.status;
+    if (props.hs_task_type !== undefined || props.type !== undefined)
+      updateData.type = props.hs_task_type ?? props.type;
+    if (props.ownerId !== undefined)
+      updateData.ownerId = props.ownerId || null;
+    if (props.contactId !== undefined)
+      updateData.contactId = props.contactId || null;
 
-    const task = {
-      ...updated,
-      owner: getUserSelect(updated.ownerId as string | null),
-      contact: getContactSelect(updated.contactId as string | null),
-    };
+    const task = await prisma.task.update({
+      where: { id },
+      data: updateData,
+      include: {
+        owner: { select: { id: true, name: true, email: true, image: true } },
+        contact: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
 
-    return NextResponse.json(task);
+    return NextResponse.json({
+      id: task.id,
+      properties: {
+        hs_task_subject: task.title,
+        hs_task_body: task.description,
+        hs_task_status: task.status,
+        hs_task_priority: task.priority,
+        hs_task_type: task.type,
+        hs_timestamp: task.dueDate?.toISOString() || null,
+        hs_object_id: task.id,
+      },
+      createdAt: task.createdAt.toISOString(),
+      updatedAt: task.updatedAt.toISOString(),
+      archived: false,
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      priority: task.priority,
+      status: task.status,
+      type: task.type,
+      owner: task.owner || null,
+      contact: task.contact || null,
+    });
   } catch (error) {
     console.error("Error updating task:", error);
     return NextResponse.json(
-      { error: "タスクの更新に失敗しました" },
+      { status: "error", message: "Failed to update task" },
       { status: 500 }
     );
   }
