@@ -84,7 +84,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { title, description, dueDate, priority, status, type, ownerId, contactId } =
       body;
 
@@ -99,7 +104,16 @@ export async function POST(request: Request) {
       id: `task-${Date.now()}`,
       title,
       description: description || null,
-      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      dueDate: (() => {
+        if (!dueDate) return null;
+        try {
+          const d = new Date(dueDate);
+          if (isNaN(d.getTime())) return null;
+          return d.toISOString();
+        } catch {
+          return null;
+        }
+      })(),
       priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
       status: (status || "NOT_STARTED") as "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED",
       type: (type || "TODO") as "TODO" | "CALL" | "EMAIL" | "MEETING" | "FOLLOW_UP",
@@ -129,7 +143,12 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const { id, ...data } = body;
 
     if (!id) {
@@ -153,10 +172,18 @@ export async function PATCH(request: Request) {
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.dueDate !== undefined)
-      updateData.dueDate = data.dueDate
-        ? new Date(data.dueDate).toISOString()
-        : null;
+    if (data.dueDate !== undefined) {
+      if (data.dueDate) {
+        try {
+          const d = new Date(data.dueDate);
+          updateData.dueDate = isNaN(d.getTime()) ? null : d.toISOString();
+        } catch {
+          updateData.dueDate = null;
+        }
+      } else {
+        updateData.dueDate = null;
+      }
+    }
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.type !== undefined) updateData.type = data.type;

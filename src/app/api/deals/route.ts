@@ -99,7 +99,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const {
       name,
       amount,
@@ -131,9 +136,18 @@ export async function POST(request: Request) {
     const newDeal = {
       id: `deal-${Date.now()}`,
       name,
-      amount: amount ? parseFloat(amount) : null,
+      amount: amount !== undefined && amount !== null && amount !== '' ? parseFloat(String(amount)) : null,
       currency: currency || "JPY",
-      closeDate: closeDate ? new Date(closeDate).toISOString() : null,
+      closeDate: (() => {
+        if (!closeDate) return null;
+        try {
+          const d = new Date(closeDate);
+          if (isNaN(d.getTime())) return null;
+          return d.toISOString();
+        } catch {
+          return null;
+        }
+      })(),
       probability: probability ? parseFloat(probability) : null,
       stageId,
       pipelineId,
