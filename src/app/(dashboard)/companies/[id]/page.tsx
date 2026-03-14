@@ -260,7 +260,7 @@ export default function CompanyDetailPage() {
               </label>
               <div className="flex items-center gap-1 mt-0.5">
                 <Globe className="h-3.5 w-3.5 text-gray-400" />
-                <p className="text-sm text-[#FF7A59]">{company.domain}</p>
+                <p className="text-sm text-[#ff4800]">{company.domain}</p>
               </div>
             </div>
             <div>
@@ -338,7 +338,7 @@ export default function CompanyDetailPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
                   activeTab === tab
-                    ? "border-[#FF7A59] text-[#FF7A59]"
+                    ? "border-[#ff4800] text-[#ff4800]"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -393,7 +393,7 @@ export default function CompanyDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 コンタクト
               </h2>
-              <button className="text-xs text-[#FF7A59] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
                 <Plus className="h-3 w-3" />
                 追加
               </button>
@@ -409,7 +409,7 @@ export default function CompanyDetailPage() {
                       href={`/contacts/${contact.id}`}
                       className="flex items-center gap-2"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                         {contact.name.charAt(0)}
                       </div>
                       <div className="min-w-0">
@@ -433,7 +433,7 @@ export default function CompanyDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 取引
               </h2>
-              <button className="text-xs text-[#FF7A59] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
                 <Plus className="h-3 w-3" />
                 追加
               </button>
@@ -469,7 +469,7 @@ export default function CompanyDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 チケット
               </h2>
-              <button className="text-xs text-[#FF7A59] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
                 <Plus className="h-3 w-3" />
                 追加
               </button>

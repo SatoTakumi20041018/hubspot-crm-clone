@@ -1,0 +1,327 @@
+"use client";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/layout/page-header";
+import {
+  Plus,
+  MessageSquare,
+  ThumbsUp,
+  TrendingUp,
+  BarChart3,
+  Users,
+  ArrowUpRight,
+  Clock,
+  MoreHorizontal,
+} from "lucide-react";
+
+interface Survey {
+  id: string;
+  name: string;
+  type: "NPS" | "CSAT" | "CES";
+  responses: number;
+  score: number;
+  status: "有効" | "停止中" | "下書き";
+  createdAt: string;
+  lastResponse: string;
+}
+
+const surveys: Survey[] = [
+  {
+    id: "s1",
+    name: "全体顧客満足度調査（Q1 2026）",
+    type: "CSAT",
+    responses: 342,
+    score: 92.3,
+    status: "有効",
+    createdAt: "2026-01-01",
+    lastResponse: "2026-03-14",
+  },
+  {
+    id: "s2",
+    name: "NPS 定期調査",
+    type: "NPS",
+    responses: 256,
+    score: 48,
+    status: "有効",
+    createdAt: "2026-01-15",
+    lastResponse: "2026-03-13",
+  },
+  {
+    id: "s3",
+    name: "サポート後満足度",
+    type: "CSAT",
+    responses: 189,
+    score: 88.5,
+    status: "有効",
+    createdAt: "2025-12-01",
+    lastResponse: "2026-03-14",
+  },
+  {
+    id: "s4",
+    name: "オンボーディング体験調査",
+    type: "CES",
+    responses: 67,
+    score: 4.2,
+    status: "有効",
+    createdAt: "2026-02-01",
+    lastResponse: "2026-03-12",
+  },
+  {
+    id: "s5",
+    name: "製品フィードバック調査",
+    type: "CSAT",
+    responses: 123,
+    score: 85.2,
+    status: "停止中",
+    createdAt: "2025-10-01",
+    lastResponse: "2026-01-15",
+  },
+  {
+    id: "s6",
+    name: "Q2 NPS 準備中",
+    type: "NPS",
+    responses: 0,
+    score: 0,
+    status: "下書き",
+    createdAt: "2026-03-10",
+    lastResponse: "-",
+  },
+];
+
+const npsBreakdown = {
+  promoters: 58,
+  passives: 32,
+  detractors: 10,
+};
+
+const csatTrend = [
+  { month: "10月", score: 86 },
+  { month: "11月", score: 88 },
+  { month: "12月", score: 85 },
+  { month: "1月", score: 90 },
+  { month: "2月", score: 91 },
+  { month: "3月", score: 92 },
+];
+const maxCsat = 100;
+
+const statusBadgeVariant = (status: string) => {
+  switch (status) {
+    case "有効": return "success" as const;
+    case "停止中": return "default" as const;
+    case "下書き": return "warning" as const;
+    default: return "default" as const;
+  }
+};
+
+const typeBadgeVariant = (type: string) => {
+  switch (type) {
+    case "NPS": return "purple" as const;
+    case "CSAT": return "info" as const;
+    case "CES": return "warning" as const;
+    default: return "default" as const;
+  }
+};
+
+export default function FeedbackPage() {
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="フィードバック"
+        description="顧客満足度調査とフィードバックの管理"
+        actions={
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            アンケート作成
+          </Button>
+        }
+      />
+
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex items-center gap-0.5 text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-xs font-medium">+5.2</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">+48</p>
+            <p className="text-xs text-gray-500 mt-0.5">NPS スコア</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50">
+                <ThumbsUp className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex items-center gap-0.5 text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-xs font-medium">+3.5%</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">92.3%</p>
+            <p className="text-xs text-gray-500 mt-0.5">CSAT スコア</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
+                <MessageSquare className="h-5 w-5 text-blue-600" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">977</p>
+            <p className="text-xs text-gray-500 mt-0.5">総回答数</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
+                <Users className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">34.2%</p>
+            <p className="text-xs text-gray-500 mt-0.5">回答率</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* NPS Gauge */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">NPS 分布</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative flex h-32 w-32 items-center justify-center">
+                <svg className="h-32 w-32 -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                  <circle
+                    cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="8"
+                    strokeDasharray={`${npsBreakdown.promoters * 2.51} 251`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute text-center">
+                  <p className="text-3xl font-bold text-gray-900">+48</p>
+                  <p className="text-xs text-gray-500">NPS</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center gap-6">
+              <div className="text-center">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="h-3 w-3 rounded-full bg-green-400" />
+                  <span className="text-xs text-gray-600">推奨者</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{npsBreakdown.promoters}%</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="h-3 w-3 rounded-full bg-yellow-400" />
+                  <span className="text-xs text-gray-600">中立者</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{npsBreakdown.passives}%</p>
+              </div>
+              <div className="text-center">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="h-3 w-3 rounded-full bg-red-400" />
+                  <span className="text-xs text-gray-600">批判者</span>
+                </div>
+                <p className="text-lg font-bold text-gray-900">{npsBreakdown.detractors}%</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CSAT Trend */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="h-4 w-4 text-gray-400" />
+              CSAT トレンド
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-3 h-48">
+              {csatTrend.map((m) => (
+                <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
+                  <span className="text-xs font-medium text-gray-900">{m.score}%</span>
+                  <div className="w-full flex items-end" style={{ height: "160px" }}>
+                    <div
+                      className="w-full rounded-t bg-green-400 hover:bg-green-500 transition-colors"
+                      style={{ height: `${(m.score / maxCsat) * 100}%` }}
+                    />
+                  </div>
+                  <span className="text-xs text-gray-500">{m.month}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Survey List */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>アンケート一覧</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-6 py-3 text-left font-medium text-gray-500">アンケート名</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">タイプ</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">回答数</th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500">スコア</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500">作成日</th>
+                  <th className="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {surveys.map((survey) => (
+                  <tr key={survey.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-6 py-3 font-medium text-gray-900">{survey.name}</td>
+                    <td className="px-4 py-3">
+                      <Badge variant={typeBadgeVariant(survey.type)}>{survey.type}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-right text-gray-600">
+                      {survey.responses > 0 ? survey.responses.toLocaleString() : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900">
+                      {survey.score > 0 ? (
+                        survey.type === "NPS" ? `+${survey.score}` :
+                        survey.type === "CES" ? `${survey.score}/5.0` :
+                        `${survey.score}%`
+                      ) : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant={statusBadgeVariant(survey.status)}>{survey.status}</Badge>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{survey.createdAt}</td>
+                    <td className="px-4 py-3">
+                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

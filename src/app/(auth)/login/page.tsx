@@ -52,8 +52,8 @@ export default function LoginPage() {
       <div className="rounded-2xl bg-white p-8 shadow-2xl">
         {/* Logo */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-[#2D3E50]">
-            <span className="text-[#FF7A59]">Hub</span>Spot CRM
+          <h1 className="text-3xl font-bold text-[#1f1f1f]">
+            <span className="text-[#ff4800]">Hub</span>Spot CRM
           </h1>
           <p className="mt-2 text-sm text-gray-500">
             アカウントにログイン
@@ -82,14 +82,14 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-[#FF7A59] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+              className="w-full rounded-[8px] border border-[rgba(0,0,0,0.11)] px-4 py-2.5 text-sm transition focus:border-[#2f7579] focus:outline-none focus:ring-2 focus:ring-[#2f7579]/20"
             />
           </div>
 
           <div>
             <label
               htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-1 block text-sm font-medium text-[#1f1f1f]"
             >
               パスワード
             </label>
@@ -99,14 +99,14 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
-              className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm transition focus:border-[#FF7A59] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+              className="w-full rounded-[8px] border border-[rgba(0,0,0,0.11)] px-4 py-2.5 text-sm transition focus:border-[#2f7579] focus:outline-none focus:ring-2 focus:ring-[#2f7579]/20"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-lg bg-[#FF7A59] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e8694a] focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-[8px] bg-[#ff4800] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#c93700] active:bg-[#9f2800] focus:outline-none focus:ring-2 focus:ring-[#2f7579]/50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? "ログイン中..." : "ログイン"}
           </button>
@@ -117,7 +117,7 @@ export default function LoginPage() {
           アカウントをお持ちでないですか？{" "}
           <Link
             href="/register"
-            className="font-medium text-[#FF7A59] hover:underline"
+            className="font-medium text-[#ff4800] hover:underline"
           >
             アカウントを作成
           </Link>

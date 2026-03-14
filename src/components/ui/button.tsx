@@ -4,20 +4,20 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 rounded-[8px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         primary:
-          "bg-[#FF7A59] text-white hover:bg-[#FF957A] focus-visible:ring-[#FF7A59]",
+          "bg-[#ff4800] text-white hover:bg-[#c93700] active:bg-[#9f2800] focus-visible:ring-[#2f7579]",
         secondary:
-          "bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-400",
+          "bg-[#f8f5ee] text-[#1f1f1f] hover:bg-[#ece6d9] focus-visible:ring-[#2f7579]",
         outline:
-          "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-400",
+          "border border-[rgba(0,0,0,0.11)] bg-white text-[#1f1f1f] hover:bg-[#fcfcfa] focus-visible:ring-[#2f7579]",
         ghost:
-          "text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-400",
+          "text-[#1f1f1f] hover:bg-[#f8f5ee] focus-visible:ring-[#2f7579]",
         destructive:
-          "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
+          "bg-[#d9002b] text-white hover:bg-[#b30024] focus-visible:ring-[#d9002b]",
       },
       size: {
         sm: "h-8 px-3 text-sm",

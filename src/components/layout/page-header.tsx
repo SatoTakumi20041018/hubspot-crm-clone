@@ -89,7 +89,7 @@ export function PageHeader({
                 className={cn(
                   "inline-flex items-center gap-1.5 border-b-2 px-1 py-3 text-sm font-medium transition-colors",
                   tab.active
-                    ? "border-[#FF7A59] text-[#FF7A59]"
+                    ? "border-[#ff4800] text-[#ff4800]"
                     : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
                 )}
               >
@@ -99,7 +99,7 @@ export function PageHeader({
                     className={cn(
                       "rounded-full px-2 py-0.5 text-xs font-medium",
                       tab.active
-                        ? "bg-[#FF7A59]/10 text-[#FF7A59]"
+                        ? "bg-[#ff4800]/10 text-[#ff4800]"
                         : "bg-gray-100 text-gray-600"
                     )}
                   >

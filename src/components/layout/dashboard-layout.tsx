@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Menu Toggle */}
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2D3E50] text-white shadow-lg lg:hidden"
+        className="fixed left-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-[8px] bg-[#1f1f1f] text-white shadow-lg lg:hidden"
         aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
       >
         {mobileMenuOpen ? (
@@ -58,7 +58,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         className={cn(
           "min-h-screen pt-16 transition-all duration-300",
           "pl-0",
-          sidebarCollapsed ? "lg:pl-16" : "lg:pl-[250px]"
+          sidebarCollapsed ? "lg:pl-14" : "lg:pl-[240px]"
         )}
       >
         <div className="p-6">{children}</div>

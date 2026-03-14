@@ -193,7 +193,7 @@ export default function SettingsPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
                 activeTab === tab.key
-                  ? "border-[#FF7A59] text-[#FF7A59]"
+                  ? "border-[#ff4800] text-[#ff4800]"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -252,7 +252,7 @@ export default function SettingsPage() {
                   type="checkbox"
                   id="email-tracking"
                   defaultChecked
-                  className="rounded border-gray-300 text-[#FF7A59] focus:ring-[#FF7A59]"
+                  className="rounded border-gray-300 text-[#ff4800] focus:ring-[#ff4800]"
                 />
                 <label
                   htmlFor="email-tracking"
@@ -313,7 +313,7 @@ export default function SettingsPage() {
                     >
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                             {user.avatar}
                           </div>
                           <span className="font-medium text-gray-900">

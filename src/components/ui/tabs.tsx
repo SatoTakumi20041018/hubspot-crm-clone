@@ -78,9 +78,9 @@ const TabsTrigger = React.forwardRef<HTMLButtonElement, TabsTriggerProps>(
         type="button"
         aria-selected={isActive}
         className={cn(
-          "relative px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A59] focus-visible:ring-offset-2",
+          "relative px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f7579] focus-visible:ring-offset-2",
           isActive
-            ? "text-[#FF7A59] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#FF7A59]"
+            ? "text-[#ff4800] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#ff4800]"
             : "text-gray-500 hover:text-gray-700",
           className
         )}

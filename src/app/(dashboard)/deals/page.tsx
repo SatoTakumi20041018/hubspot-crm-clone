@@ -271,7 +271,7 @@ export default function DealsPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* Pipeline Selector */}
-          <select className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]">
+          <select className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]">
             <option>デフォルトパイプライン</option>
             <option>エンタープライズ</option>
           </select>
@@ -365,7 +365,7 @@ export default function DealsPage() {
                         </div>
                       </div>
                       <div className="mt-2 flex items-center justify-between">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF7A59] text-[10px] text-white">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
                           {deal.owner.charAt(0)}
                         </div>
                         <span className="text-xs text-gray-400">
@@ -445,7 +445,7 @@ export default function DealsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                      <span className="font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">
                         {deal.name}
                       </span>
                     </td>
@@ -460,7 +460,7 @@ export default function DealsPage() {
                     <td className="px-4 py-3 text-gray-600">{deal.company}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF7A59] text-[10px] text-white">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
                           {deal.owner.charAt(0)}
                         </div>
                         <span className="text-gray-600">{deal.owner}</span>

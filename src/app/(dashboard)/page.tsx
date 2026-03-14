@@ -242,7 +242,7 @@ export default function DashboardPage() {
               <CardTitle>最近のアクティビティ</CardTitle>
               <Link
                 href="/contacts"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
               </Link>
@@ -282,7 +282,7 @@ export default function DashboardPage() {
               <CardTitle>タスク</CardTitle>
               <Link
                 href="/tasks"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
               </Link>
@@ -332,7 +332,7 @@ export default function DashboardPage() {
               <CardTitle>取引パイプライン</CardTitle>
               <Link
                 href="/deals"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 詳細を見る
               </Link>
@@ -370,7 +370,7 @@ export default function DashboardPage() {
               <CardTitle>最近のコンタクト</CardTitle>
               <Link
                 href="/contacts"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
               </Link>
@@ -384,7 +384,7 @@ export default function DashboardPage() {
                   href={`/contacts/${contact.id}`}
                   className="flex items-center gap-3 rounded-md p-2 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#FF7A59] text-sm font-medium text-white">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff4800] text-sm font-medium text-white">
                     {contact.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -97,7 +97,7 @@ export default function ReportsPage() {
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-gray-400" />
           <select
-            className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+            className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
             value={dateRange}
             onChange={(e) => setDateRange(e.target.value)}
           >
@@ -253,7 +253,7 @@ export default function ReportsPage() {
                   </span>
                   <div className="w-full flex items-end" style={{ height: "160px" }}>
                     <div
-                      className="w-full rounded-t bg-[#FF7A59] hover:bg-[#FF957A] transition-colors"
+                      className="w-full rounded-t bg-[#ff4800] hover:bg-[#c93700] transition-colors"
                       style={{
                         height: `${(month.value / maxMonthlyRevenue) * 100}%`,
                       }}
@@ -357,7 +357,7 @@ export default function ReportsPage() {
                     cy="50"
                     r="40"
                     fill="none"
-                    stroke="#FF7A59"
+                    stroke="#ff4800"
                     strokeWidth="8"
                     strokeDasharray={`${taskStats.rate * 2.51} 251`}
                     strokeLinecap="round"
@@ -426,7 +426,7 @@ export default function ReportsPage() {
                 >
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                         {person.name.charAt(0)}
                       </div>
                       <div className="flex items-center gap-2">

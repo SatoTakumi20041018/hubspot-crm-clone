@@ -39,7 +39,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         <input
           ref={inputRef}
           type="search"
-          className="h-10 w-full rounded-md border border-gray-300 bg-white pl-10 pr-20 text-sm placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF7A59] focus-visible:ring-offset-1 focus-visible:border-[#FF7A59]"
+          className="h-10 w-full rounded-[4px] border border-[rgba(0,0,0,0.11)] bg-white pl-10 pr-20 text-sm placeholder:text-[rgba(0,0,0,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2f7579] focus-visible:ring-offset-1 focus-visible:border-[#2f7579]"
           placeholder={placeholder}
           onKeyDown={handleKeyDown}
           {...props}

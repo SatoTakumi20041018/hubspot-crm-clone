@@ -312,7 +312,7 @@ export default function ContactsPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <select
-                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={selectedStage}
                 onChange={(e) => {
                   setSelectedStage(e.target.value);
@@ -326,7 +326,7 @@ export default function ContactsPage() {
                 ))}
               </select>
               <select
-                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
@@ -400,10 +400,10 @@ export default function ContactsPage() {
                       href={`/contacts/${contact.id}`}
                       className="flex items-center gap-3 group"
                     >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                         {contact.avatar}
                       </div>
-                      <span className="font-medium text-gray-900 group-hover:text-[#FF7A59]">
+                      <span className="font-medium text-gray-900 group-hover:text-[#ff4800]">
                         {contact.name}
                       </span>
                     </Link>

@@ -314,7 +314,7 @@ export default function TicketsPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <select
-                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
@@ -328,7 +328,7 @@ export default function TicketsPage() {
                 ))}
               </select>
               <select
-                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={selectedPriority}
                 onChange={(e) => {
                   setSelectedPriority(e.target.value);
@@ -404,7 +404,7 @@ export default function TicketsPage() {
                     {ticket.id}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-gray-900 hover:text-[#FF7A59]">
+                    <span className="font-medium text-gray-900 hover:text-[#ff4800]">
                       {ticket.subject}
                     </span>
                   </td>
@@ -426,7 +426,7 @@ export default function TicketsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF7A59] text-[10px] text-white">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
                         {ticket.owner.charAt(0)}
                       </div>
                       <span className="text-gray-600">{ticket.owner}</span>

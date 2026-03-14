@@ -4,17 +4,17 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const inputVariants = cva(
-  "flex w-full rounded-md border bg-white px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full rounded-[4px] border bg-white px-3 py-2 text-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[rgba(0,0,0,0.38)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "border-gray-300 focus-visible:ring-[#FF7A59] focus-visible:border-[#FF7A59]",
+          "border-[rgba(0,0,0,0.11)] focus-visible:ring-[#2f7579] focus-visible:border-[#2f7579]",
         search:
-          "border-gray-300 pl-10 focus-visible:ring-[#FF7A59] focus-visible:border-[#FF7A59]",
+          "border-[rgba(0,0,0,0.11)] pl-10 focus-visible:ring-[#2f7579] focus-visible:border-[#2f7579]",
       },
       error: {
-        true: "border-red-500 focus-visible:ring-red-500 focus-visible:border-red-500",
+        true: "border-[#d9002b] focus-visible:ring-[#d9002b] focus-visible:border-[#d9002b]",
       },
     },
     defaultVariants: {
@@ -41,14 +41,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-gray-700"
+            className="mb-1.5 block text-sm font-medium text-[#1f1f1f]"
           >
             {label}
           </label>
         )}
         <div className="relative">
           {variant === "search" && (
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(0,0,0,0.38)]" />
           )}
           <input
             id={inputId}
@@ -66,12 +66,12 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           />
         </div>
         {error && errorMessage && (
-          <p id={`${inputId}-error`} className="mt-1 text-sm text-red-600" role="alert">
+          <p id={`${inputId}-error`} className="mt-1 text-sm text-[#d9002b]" role="alert">
             {errorMessage}
           </p>
         )}
         {!error && helperText && (
-          <p id={`${inputId}-helper`} className="mt-1 text-sm text-gray-500">
+          <p id={`${inputId}-helper`} className="mt-1 text-sm text-[rgba(0,0,0,0.62)]">
             {helperText}
           </p>
         )}

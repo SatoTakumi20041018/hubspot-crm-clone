@@ -65,19 +65,19 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
   return (
     <header
       className={cn(
-        "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6 transition-all duration-300",
-        sidebarCollapsed ? "left-16" : "left-[250px]"
+        "fixed right-0 top-0 z-30 flex h-16 items-center justify-between border-b border-[rgba(0,0,0,0.11)] bg-white px-6 transition-all duration-300",
+        sidebarCollapsed ? "left-14" : "left-[240px]"
       )}
     >
       {/* Global Search */}
       <div className="relative w-full max-w-lg">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[rgba(0,0,0,0.38)]" />
         <input
           type="text"
           placeholder="Search..."
-          className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50 pl-10 pr-20 text-sm text-gray-700 placeholder:text-gray-400 focus:border-[#FF7A59] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF7A59]/20"
+          className="h-10 w-full rounded-[4px] border border-[rgba(0,0,0,0.11)] bg-[#fcfcfa] pl-10 pr-20 text-sm text-[#1f1f1f] placeholder:text-[rgba(0,0,0,0.38)] focus:border-[#2f7579] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#2f7579]/20"
         />
-        <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-xs text-gray-400">
+        <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-[4px] border border-[rgba(0,0,0,0.11)] bg-[#f8f5ee] px-1.5 py-0.5 text-xs text-[rgba(0,0,0,0.62)]">
           Cmd+K
         </kbd>
       </div>
@@ -91,15 +91,15 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
               setQuickCreateOpen(!quickCreateOpen);
               setUserMenuOpen(false);
             }}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#FF7A59] text-white hover:bg-[#FF957A] transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-[#ff4800] text-white hover:bg-[#c93700] active:bg-[#9f2800] transition-colors"
             aria-label="Quick create"
           >
             <Plus className="h-5 w-5" />
           </button>
 
           {quickCreateOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
-              <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <div className="absolute right-0 top-full mt-2 w-48 rounded-[8px] border border-[rgba(0,0,0,0.11)] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
+              <p className="px-3 py-2 text-[0.75rem] font-medium uppercase tracking-[0.05em] text-[rgba(0,0,0,0.38)]">
                 Create new
               </p>
               {quickCreateItems.map((item) => {
@@ -109,9 +109,9 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setQuickCreateOpen(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#1f1f1f] hover:bg-[#f8f5ee]"
                   >
-                    <Icon className="h-4 w-4 text-gray-400" />
+                    <Icon className="h-4 w-4 text-[rgba(0,0,0,0.38)]" />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -122,12 +122,12 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
 
         {/* Notifications */}
         <button
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 transition-colors"
+          className="relative flex h-9 w-9 items-center justify-center rounded-[8px] text-[rgba(0,0,0,0.62)] hover:bg-[#f8f5ee] transition-colors"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
           {notificationCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#d9002b] text-[10px] font-bold text-white">
               {notificationCount > 9 ? "9+" : notificationCount}
             </span>
           )}
@@ -140,21 +140,21 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
               setUserMenuOpen(!userMenuOpen);
               setQuickCreateOpen(false);
             }}
-            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-gray-700 hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-2 rounded-[8px] px-2 py-1.5 text-[#1f1f1f] hover:bg-[#f8f5ee] transition-colors"
             aria-label="User menu"
           >
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2D3E50] text-sm font-medium text-white">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1f1f1f] text-sm font-medium text-[#f8f5ee]">
               U
             </div>
-            <ChevronDown className="h-4 w-4 text-gray-400" />
+            <ChevronDown className="h-4 w-4 text-[rgba(0,0,0,0.38)]" />
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+            <div className="absolute right-0 top-full mt-2 w-56 rounded-[8px] border border-[rgba(0,0,0,0.11)] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)]">
               {/* User Info */}
-              <div className="border-b border-gray-100 px-4 py-3">
-                <p className="text-sm font-medium text-gray-900">User Name</p>
-                <p className="text-xs text-gray-500">user@example.com</p>
+              <div className="border-b border-[rgba(0,0,0,0.11)] px-4 py-3">
+                <p className="text-sm font-medium text-[#1f1f1f]">User Name</p>
+                <p className="text-xs text-[rgba(0,0,0,0.62)]">user@example.com</p>
               </div>
 
               {/* Menu Items */}
@@ -165,22 +165,22 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
                     key={item.href}
                     href={item.href}
                     onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-[#1f1f1f] hover:bg-[#f8f5ee]"
                   >
-                    <Icon className="h-4 w-4 text-gray-400" />
+                    <Icon className="h-4 w-4 text-[rgba(0,0,0,0.38)]" />
                     <span>{item.label}</span>
                   </Link>
                 );
               })}
 
               {/* Logout */}
-              <div className="border-t border-gray-100">
+              <div className="border-t border-[rgba(0,0,0,0.11)]">
                 <button
                   onClick={() => {
                     setUserMenuOpen(false);
                     // TODO: implement logout
                   }}
-                  className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  className="flex w-full items-center gap-2.5 px-4 py-2 text-sm text-[#d9002b] hover:bg-[#fcc6b1]/20"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Log out</span>

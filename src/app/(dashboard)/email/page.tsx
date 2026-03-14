@@ -1,0 +1,372 @@
+"use client";
+
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { PageHeader } from "@/components/layout/page-header";
+import {
+  Plus,
+  Mail,
+  Send,
+  Eye,
+  MousePointerClick,
+  ArrowUpDown,
+  MoreHorizontal,
+  TrendingUp,
+  ArrowUpRight,
+  Filter,
+  FlaskConical,
+} from "lucide-react";
+
+interface Campaign {
+  id: string;
+  name: string;
+  status: "下書き" | "予約済み" | "送信済み" | "送信中";
+  openRate: number;
+  clickRate: number;
+  sentCount: number;
+  date: string;
+  subject: string;
+  abTest?: { variantA: number; variantB: number; winner: string };
+}
+
+const campaigns: Campaign[] = [
+  {
+    id: "em1",
+    name: "3月ニュースレター",
+    status: "送信済み",
+    openRate: 28.5,
+    clickRate: 5.2,
+    sentCount: 2450,
+    date: "2026-03-10",
+    subject: "3月の最新アップデート情報",
+  },
+  {
+    id: "em2",
+    name: "新製品リリース案内",
+    status: "送信済み",
+    openRate: 32.1,
+    clickRate: 8.4,
+    sentCount: 3200,
+    date: "2026-03-05",
+    subject: "新機能リリースのお知らせ",
+    abTest: { variantA: 30.2, variantB: 34.0, winner: "B" },
+  },
+  {
+    id: "em3",
+    name: "セミナー招待メール",
+    status: "送信済み",
+    openRate: 22.3,
+    clickRate: 4.6,
+    sentCount: 1800,
+    date: "2026-02-28",
+    subject: "無料ウェビナーへのご招待",
+  },
+  {
+    id: "em4",
+    name: "4月キャンペーン予告",
+    status: "下書き",
+    openRate: 0,
+    clickRate: 0,
+    sentCount: 0,
+    date: "-",
+    subject: "春の特別キャンペーン開催！",
+  },
+  {
+    id: "em5",
+    name: "リード育成メール #5",
+    status: "予約済み",
+    openRate: 0,
+    clickRate: 0,
+    sentCount: 1200,
+    date: "2026-03-20",
+    subject: "導入事例のご紹介",
+  },
+  {
+    id: "em6",
+    name: "2月ニュースレター",
+    status: "送信済み",
+    openRate: 25.8,
+    clickRate: 3.9,
+    sentCount: 2300,
+    date: "2026-02-10",
+    subject: "2月のハイライト",
+  },
+  {
+    id: "em7",
+    name: "ホワイトペーパー案内",
+    status: "送信済み",
+    openRate: 29.4,
+    clickRate: 12.3,
+    sentCount: 1500,
+    date: "2026-02-20",
+    subject: "最新ホワイトペーパーのご案内",
+    abTest: { variantA: 27.8, variantB: 31.0, winner: "B" },
+  },
+  {
+    id: "em8",
+    name: "リード育成メール #4",
+    status: "送信済み",
+    openRate: 26.7,
+    clickRate: 6.1,
+    sentCount: 1350,
+    date: "2026-02-15",
+    subject: "製品活用のベストプラクティス",
+  },
+  {
+    id: "em9",
+    name: "年末感謝メール",
+    status: "送信済み",
+    openRate: 35.2,
+    clickRate: 2.8,
+    sentCount: 4500,
+    date: "2025-12-25",
+    subject: "今年もありがとうございました",
+  },
+  {
+    id: "em10",
+    name: "リードナーチャリング開始メール",
+    status: "送信済み",
+    openRate: 42.1,
+    clickRate: 15.6,
+    sentCount: 890,
+    date: "2026-01-05",
+    subject: "あなたに最適なソリューションをご提案",
+    abTest: { variantA: 38.5, variantB: 45.7, winner: "B" },
+  },
+  {
+    id: "em11",
+    name: "イベントリマインダー",
+    status: "予約済み",
+    openRate: 0,
+    clickRate: 0,
+    sentCount: 650,
+    date: "2026-03-25",
+    subject: "明日開催！お忘れなく",
+  },
+];
+
+const statusBadgeVariant = (status: string) => {
+  switch (status) {
+    case "送信済み": return "success" as const;
+    case "予約済み": return "info" as const;
+    case "下書き": return "default" as const;
+    case "送信中": return "warning" as const;
+    default: return "default" as const;
+  }
+};
+
+export default function EmailPage() {
+  const [search, setSearch] = useState("");
+  const [filterStatus, setFilterStatus] = useState("すべて");
+
+  const filtered = campaigns.filter((c) => {
+    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
+    const matchStatus = filterStatus === "すべて" || c.status === filterStatus;
+    return matchSearch && matchStatus;
+  });
+
+  const sentCampaigns = campaigns.filter((c) => c.status === "送信済み");
+  const avgOpenRate = sentCampaigns.length > 0
+    ? (sentCampaigns.reduce((s, c) => s + c.openRate, 0) / sentCampaigns.length).toFixed(1)
+    : "0";
+  const avgClickRate = sentCampaigns.length > 0
+    ? (sentCampaigns.reduce((s, c) => s + c.clickRate, 0) / sentCampaigns.length).toFixed(1)
+    : "0";
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Eメールマーケティング"
+        description="メールキャンペーンの作成・管理・分析"
+        actions={
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            メール作成
+          </Button>
+        }
+      />
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
+                <Send className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex items-center gap-0.5 text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-xs font-medium">+18.2%</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">
+              {campaigns.filter((c) => c.status === "送信済み").reduce((s, c) => s + c.sentCount, 0).toLocaleString()}
+            </p>
+            <p className="text-xs text-gray-500 mt-0.5">送信数</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-50">
+                <Eye className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="flex items-center gap-0.5 text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-xs font-medium">+3.2%</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">{avgOpenRate}%</p>
+            <p className="text-xs text-gray-500 mt-0.5">平均開封率</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
+                <MousePointerClick className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="flex items-center gap-0.5 text-green-600">
+                <ArrowUpRight className="h-3 w-3" />
+                <span className="text-xs font-medium">+0.8%</span>
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">{avgClickRate}%</p>
+            <p className="text-xs text-gray-500 mt-0.5">平均クリック率</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-50">
+                <Mail className="h-5 w-5 text-orange-600" />
+              </div>
+            </div>
+            <p className="text-xl font-bold text-gray-900">{campaigns.length}</p>
+            <p className="text-xs text-gray-500 mt-0.5">キャンペーン数</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <div className="p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-72">
+              <Input
+                variant="search"
+                placeholder="キャンペーン名で検索..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-gray-400" />
+              <select
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+              >
+                <option>すべて</option>
+                <option>下書き</option>
+                <option>予約済み</option>
+                <option>送信済み</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Campaign Table */}
+      <Card>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <input type="checkbox" className="rounded border-gray-300" />
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                    キャンペーン名
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500">送信数</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500">開封率</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500">クリック率</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                    送信日
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">A/Bテスト</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((campaign) => (
+                <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <input type="checkbox" className="rounded border-gray-300" />
+                  </td>
+                  <td className="px-4 py-3">
+                    <div>
+                      <p className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                        {campaign.name}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5">{campaign.subject}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant={statusBadgeVariant(campaign.status)}>{campaign.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3 text-right text-gray-600">
+                    {campaign.sentCount > 0 ? campaign.sentCount.toLocaleString() : "-"}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {campaign.openRate > 0 ? (
+                      <span className="font-medium text-gray-900">{campaign.openRate}%</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {campaign.clickRate > 0 ? (
+                      <span className="font-medium text-gray-900">{campaign.clickRate}%</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600 text-xs">{campaign.date}</td>
+                  <td className="px-4 py-3">
+                    {campaign.abTest ? (
+                      <div className="flex items-center gap-1">
+                        <FlaskConical className="h-3 w-3 text-purple-500" />
+                        <span className="text-xs text-purple-600 font-medium">
+                          勝者: {campaign.abTest.winner}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+    </div>
+  );
+}

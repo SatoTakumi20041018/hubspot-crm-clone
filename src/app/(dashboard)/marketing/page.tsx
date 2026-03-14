@@ -253,7 +253,7 @@ export default function MarketingPage() {
             <CardTitle>メールキャンペーン</CardTitle>
             <Link
               href="/marketing/email"
-              className="text-sm text-[#FF7A59] hover:underline"
+              className="text-sm text-[#ff4800] hover:underline"
             >
               すべて表示
             </Link>
@@ -335,7 +335,7 @@ export default function MarketingPage() {
               <CardTitle>フォーム</CardTitle>
               <Link
                 href="/marketing/forms"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
               </Link>
@@ -380,7 +380,7 @@ export default function MarketingPage() {
               <CardTitle>ランディングページ</CardTitle>
               <Link
                 href="/marketing/landing-pages"
-                className="text-sm text-[#FF7A59] hover:underline"
+                className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
               </Link>

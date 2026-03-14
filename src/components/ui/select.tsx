@@ -30,7 +30,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               "flex h-10 w-full appearance-none rounded-md border bg-white px-3 py-2 pr-10 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50",
               error
                 ? "border-red-500 focus-visible:ring-red-500"
-                : "border-gray-300 focus-visible:ring-[#FF7A59] focus-visible:border-[#FF7A59]",
+                : "border-[rgba(0,0,0,0.11)] focus-visible:ring-[#2f7579] focus-visible:border-[#2f7579]",
               className
             )}
             aria-invalid={error || undefined}

@@ -21,6 +21,30 @@ import {
   Settings,
   ChevronDown,
   ChevronRight,
+  ListChecks,
+  Megaphone,
+  Globe,
+  MousePointerClick,
+  Search as SearchIcon,
+  Briefcase,
+  Send,
+  Video,
+  Quote,
+  TrendingUp,
+  FileStack,
+  BookMarked,
+  Phone,
+  Headphones,
+  MessageSquare,
+  HelpCircle,
+  DoorOpen,
+  ShoppingCart,
+  CreditCard,
+  Workflow,
+  PenTool,
+  FileEdit,
+  Target,
+  Database,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,6 +67,7 @@ const navSections: NavSection[] = [
       { label: "Companies", href: "/companies", icon: Building2 },
       { label: "Deals", href: "/deals", icon: Handshake },
       { label: "Tickets", href: "/tickets", icon: Ticket },
+      { label: "Lists", href: "/crm/lists", icon: ListChecks },
     ],
   },
   {
@@ -51,28 +76,70 @@ const navSections: NavSection[] = [
       { label: "Email", href: "/marketing/email", icon: Mail },
       { label: "Forms", href: "/marketing/forms", icon: FileText },
       { label: "Landing Pages", href: "/marketing/landing-pages", icon: FileCode2 },
+      { label: "Social", href: "/marketing/social", icon: Megaphone },
+      { label: "Ads", href: "/marketing/ads", icon: MousePointerClick },
+      { label: "SEO", href: "/marketing/seo", icon: SearchIcon },
     ],
   },
   {
     label: "Sales",
     items: [
-      { label: "Deals Pipeline", href: "/sales/pipeline", icon: Kanban },
-      { label: "Tasks", href: "/sales/tasks", icon: CheckSquare },
+      { label: "Workspace", href: "/sales/workspace", icon: Briefcase },
+      { label: "Deals", href: "/sales/pipeline", icon: Kanban },
+      { label: "Sequences", href: "/sales/sequences", icon: Send },
       { label: "Meetings", href: "/sales/meetings", icon: Calendar },
+      { label: "Quotes", href: "/sales/quotes", icon: Quote },
+      { label: "Forecasting", href: "/sales/forecasting", icon: TrendingUp },
+      { label: "Documents", href: "/sales/documents", icon: FileStack },
+      { label: "Playbooks", href: "/sales/playbooks", icon: BookMarked },
+      { label: "Calls", href: "/sales/calls", icon: Phone },
     ],
   },
   {
     label: "Service",
     items: [
-      { label: "Tickets", href: "/service/tickets", icon: Ticket },
+      { label: "Help Desk", href: "/service/help-desk", icon: Headphones },
       { label: "Knowledge Base", href: "/service/knowledge-base", icon: BookOpen },
+      { label: "Feedback", href: "/service/feedback", icon: HelpCircle },
+      { label: "Chatflows", href: "/service/chatflows", icon: MessageSquare },
+      { label: "Customer Portal", href: "/service/customer-portal", icon: DoorOpen },
     ],
   },
   {
-    label: "Reports",
+    label: "Commerce",
+    items: [
+      { label: "Quotes", href: "/commerce/quotes", icon: Quote },
+      { label: "Products", href: "/commerce/products", icon: ShoppingCart },
+      { label: "Payments", href: "/commerce/payments", icon: CreditCard },
+    ],
+  },
+  {
+    label: "Automations",
+    items: [
+      { label: "Workflows", href: "/automations/workflows", icon: Workflow },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { label: "Website Pages", href: "/content/website-pages", icon: Globe },
+      { label: "Blog", href: "/content/blog", icon: PenTool },
+      { label: "Landing Pages", href: "/content/landing-pages", icon: FileEdit },
+    ],
+  },
+  {
+    label: "Reporting",
     items: [
       { label: "Dashboards", href: "/reports/dashboards", icon: LayoutDashboard },
       { label: "Reports", href: "/reports", icon: BarChart3 },
+      { label: "Goals", href: "/reports/goals", icon: Target },
+    ],
+  },
+  {
+    label: "Data Management",
+    items: [
+      { label: "Data Quality", href: "/data/quality", icon: Database },
+      { label: "Lists", href: "/data/lists", icon: ListChecks },
     ],
   },
 ];
@@ -86,10 +153,14 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     CRM: true,
-    Marketing: true,
+    Marketing: false,
     Sales: true,
-    Service: true,
-    Reports: true,
+    Service: false,
+    Commerce: false,
+    Automations: false,
+    Content: false,
+    Reporting: true,
+    "Data Management": false,
   });
 
   const toggleSection = (label: string) => {
@@ -107,20 +178,20 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-[#2D3E50] text-white transition-all duration-300",
-        collapsed ? "w-16" : "w-[250px]"
+        "fixed left-0 top-0 z-40 flex h-screen flex-col bg-[#1f1f1f] text-[#f8f5ee] transition-all duration-300",
+        collapsed ? "w-14" : "w-[240px]"
       )}
     >
       {/* Logo */}
       <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
         {!collapsed && (
-          <Link href="/" className="text-xl font-bold tracking-tight">
+          <Link href="/" className="text-xl font-bold tracking-tight text-[#f8f5ee]">
             HubSpot
           </Link>
         )}
         <button
           onClick={onToggleCollapse}
-          className="rounded-md p-1.5 text-white/70 hover:bg-white/10 hover:text-white"
+          className="rounded-[8px] p-1.5 text-[#f8f5ee]/60 hover:bg-white/10 hover:text-[#f8f5ee]"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? (
@@ -137,24 +208,24 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
         <Link
           href="/"
           className={cn(
-            "mb-1 flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            "mb-1 flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors",
             isActive("/") && pathname === "/"
-              ? "border-l-3 border-[#FF7A59] bg-white/10 text-white"
-              : "text-white/70 hover:bg-white/10 hover:text-white",
+              ? "border-l-[3px] border-[#ff4800] bg-white/10 text-[#f8f5ee]"
+              : "text-[#f8f5ee]/60 hover:bg-white/10 hover:text-[#f8f5ee]",
             collapsed && "justify-center px-2"
           )}
         >
-          <Home className="h-5 w-5 shrink-0" />
+          <Home className={cn("h-5 w-5 shrink-0", isActive("/") && pathname === "/" ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
           {!collapsed && <span>Home</span>}
         </Link>
 
         {/* Nav Sections */}
         {navSections.map((section) => (
-          <div key={section.label} className="mt-4">
+          <div key={section.label} className="mt-3">
             {!collapsed && (
               <button
                 onClick={() => toggleSection(section.label)}
-                className="flex w-full items-center justify-between px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/50 hover:text-white/70"
+                className="flex w-full items-center justify-between px-3 py-1.5 text-[0.75rem] font-medium uppercase tracking-[0.05em] text-[#f8f5ee]/40 hover:text-[#f8f5ee]/60"
               >
                 <span>{section.label}</span>
                 {expandedSections[section.label] ? (
@@ -177,14 +248,14 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                         href={item.href}
                         title={collapsed ? item.label : undefined}
                         className={cn(
-                          "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                          "flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors",
                           active
-                            ? "border-l-3 border-[#FF7A59] bg-white/10 font-medium text-white"
-                            : "text-white/70 hover:bg-white/10 hover:text-white",
+                            ? "border-l-[3px] border-[#ff4800] bg-white/10 font-medium text-[#f8f5ee]"
+                            : "text-[#f8f5ee]/60 hover:bg-white/10 hover:text-[#f8f5ee]",
                           collapsed && "justify-center px-2"
                         )}
                       >
-                        <Icon className="h-4.5 w-4.5 shrink-0" />
+                        <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
                         {!collapsed && <span>{item.label}</span>}
                       </Link>
                     </li>
@@ -201,14 +272,14 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
         <Link
           href="/settings"
           className={cn(
-            "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+            "flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors",
             isActive("/settings")
-              ? "border-l-3 border-[#FF7A59] bg-white/10 font-medium text-white"
-              : "text-white/70 hover:bg-white/10 hover:text-white",
+              ? "border-l-[3px] border-[#ff4800] bg-white/10 font-medium text-[#f8f5ee]"
+              : "text-[#f8f5ee]/60 hover:bg-white/10 hover:text-[#f8f5ee]",
             collapsed && "justify-center px-2"
           )}
         >
-          <Settings className="h-5 w-5 shrink-0" />
+          <Settings className={cn("h-5 w-5 shrink-0", isActive("/settings") ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
           {!collapsed && <span>Settings</span>}
         </Link>
       </div>
