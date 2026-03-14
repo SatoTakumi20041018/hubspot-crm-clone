@@ -45,6 +45,14 @@ import {
   FileEdit,
   Target,
   Database,
+  Sparkles,
+  Bot,
+  Share2,
+  Heart,
+  Brain,
+  Receipt,
+  RefreshCw,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +69,24 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
+    label: "Breeze",
+    items: [
+      { label: "Overview", href: "/breeze", icon: Sparkles },
+      { label: "Prospecting Agent", href: "/prospecting", icon: SearchIcon },
+      { label: "Customer Agent", href: "/customer-success", icon: Bot },
+      { label: "Content Agent", href: "/content", icon: FileText },
+      { label: "Social Agent", href: "/marketing/social", icon: Share2 },
+    ],
+  },
+  {
+    label: "Workspaces",
+    items: [
+      { label: "Prospecting", href: "/prospecting", icon: SearchIcon },
+      { label: "Customer Success", href: "/customer-success", icon: Heart },
+      { label: "Help Desk", href: "/help-desk", icon: Headphones },
+    ],
+  },
+  {
     label: "CRM",
     items: [
       { label: "Contacts", href: "/contacts", icon: Users },
@@ -68,6 +94,7 @@ const navSections: NavSection[] = [
       { label: "Deals", href: "/deals", icon: Handshake },
       { label: "Tickets", href: "/tickets", icon: Ticket },
       { label: "Lists", href: "/crm/lists", icon: ListChecks },
+      { label: "Import", href: "/import", icon: Upload },
     ],
   },
   {
@@ -79,6 +106,7 @@ const navSections: NavSection[] = [
       { label: "Social", href: "/marketing/social", icon: Megaphone },
       { label: "Ads", href: "/marketing/ads", icon: MousePointerClick },
       { label: "SEO", href: "/marketing/seo", icon: SearchIcon },
+      { label: "AEO", href: "/aeo", icon: Brain },
     ],
   },
   {
@@ -108,23 +136,28 @@ const navSections: NavSection[] = [
   {
     label: "Commerce",
     items: [
+      { label: "Overview", href: "/commerce", icon: ShoppingCart },
+      { label: "Payments", href: "/payments", icon: CreditCard },
+      { label: "Invoices", href: "/invoices", icon: Receipt },
+      { label: "Subscriptions", href: "/subscriptions", icon: RefreshCw },
       { label: "Quotes", href: "/commerce/quotes", icon: Quote },
       { label: "Products", href: "/commerce/products", icon: ShoppingCart },
-      { label: "Payments", href: "/commerce/payments", icon: CreditCard },
+    ],
+  },
+  {
+    label: "Content",
+    items: [
+      { label: "Overview", href: "/content", icon: FileEdit },
+      { label: "Blog", href: "/blog", icon: PenTool },
+      { label: "Website Pages", href: "/website-pages", icon: Globe },
+      { label: "Video", href: "/video", icon: Video },
+      { label: "Landing Pages", href: "/content/landing-pages", icon: FileCode2 },
     ],
   },
   {
     label: "Automations",
     items: [
       { label: "Workflows", href: "/automations/workflows", icon: Workflow },
-    ],
-  },
-  {
-    label: "Content",
-    items: [
-      { label: "Website Pages", href: "/content/website-pages", icon: Globe },
-      { label: "Blog", href: "/content/blog", icon: PenTool },
-      { label: "Landing Pages", href: "/content/landing-pages", icon: FileEdit },
     ],
   },
   {
@@ -152,13 +185,15 @@ interface SidebarProps {
 export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    Breeze: false,
+    Workspaces: true,
     CRM: true,
     Marketing: false,
     Sales: true,
     Service: false,
     Commerce: false,
-    Automations: false,
     Content: false,
+    Automations: false,
     Reporting: true,
     "Data Management": false,
   });

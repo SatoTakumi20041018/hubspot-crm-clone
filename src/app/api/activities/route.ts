@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockActivities,
+  mockDeals,
+  mockTickets,
+  getUserSelect,
+  getContactSelect,
+  getCompanySelect,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,40 +20,50 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockActivities];
 
     if (contactId) {
-      where.contactId = contactId;
+      filtered = filtered.filter((a) => a.contactId === contactId);
     }
 
     if (dealId) {
-      where.dealId = dealId;
+      filtered = filtered.filter((a) => a.dealId === dealId);
     }
 
     if (ticketId) {
-      where.ticketId = ticketId;
+      filtered = filtered.filter((a) => a.ticketId === ticketId);
     }
 
     if (companyId) {
-      where.companyId = companyId;
+      filtered = filtered.filter((a) => a.companyId === companyId);
     }
 
-    const [activities, total] = await Promise.all([
-      prisma.activity.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: { select: { id: true, name: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
-          deal: { select: { id: true, name: true } },
-          ticket: { select: { id: true, subject: true } },
-          company: { select: { id: true, name: true } },
-        },
-      }),
-      prisma.activity.count({ where }),
-    ]);
+    // Sort by createdAt desc
+    filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const activities = paginated.map((a) => {
+      const deal = a.dealId
+        ? mockDeals.find((d) => d.id === a.dealId)
+        : null;
+      const ticket = a.ticketId
+        ? mockTickets.find((t) => t.id === a.ticketId)
+        : null;
+
+      return {
+        ...a,
+        user: getUserSelect(a.userId),
+        contact: getContactSelect(a.contactId),
+        deal: deal ? { id: deal.id, name: deal.name } : null,
+        ticket: ticket ? { id: ticket.id, subject: ticket.subject } : null,
+        company: getCompanySelect(a.companyId),
+      };
+    });
 
     return NextResponse.json({
       activities,
@@ -69,7 +86,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { type, subject, body: activityBody, metadata, userId, contactId, companyId, dealId, ticketId } = body;
+    const {
+      type,
+      subject,
+      body: activityBody,
+      metadata,
+      userId,
+      contactId,
+      companyId,
+      dealId,
+      ticketId,
+    } = body;
 
     if (!type) {
       return NextResponse.json(
@@ -78,26 +105,37 @@ export async function POST(request: Request) {
       );
     }
 
-    const activity = await prisma.activity.create({
-      data: {
-        type,
-        subject: subject || null,
-        body: activityBody || null,
-        metadata: metadata || null,
-        userId: userId || null,
-        contactId: contactId || null,
-        companyId: companyId || null,
-        dealId: dealId || null,
-        ticketId: ticketId || null,
-      },
-      include: {
-        user: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-        deal: { select: { id: true, name: true } },
-        ticket: { select: { id: true, subject: true } },
-        company: { select: { id: true, name: true } },
-      },
-    });
+    const newActivity = {
+      id: `activity-${Date.now()}`,
+      type,
+      subject: subject || null,
+      body: activityBody || null,
+      metadata: metadata || null,
+      userId: userId || null,
+      contactId: contactId || null,
+      companyId: companyId || null,
+      dealId: dealId || null,
+      ticketId: ticketId || null,
+      createdAt: new Date().toISOString(),
+    };
+
+    mockActivities.push(newActivity);
+
+    const deal = newActivity.dealId
+      ? mockDeals.find((d) => d.id === newActivity.dealId)
+      : null;
+    const ticket = newActivity.ticketId
+      ? mockTickets.find((t) => t.id === newActivity.ticketId)
+      : null;
+
+    const activity = {
+      ...newActivity,
+      user: getUserSelect(newActivity.userId),
+      contact: getContactSelect(newActivity.contactId),
+      deal: deal ? { id: deal.id, name: deal.name } : null,
+      ticket: ticket ? { id: ticket.id, subject: ticket.subject } : null,
+      company: getCompanySelect(newActivity.companyId),
+    };
 
     return NextResponse.json(activity, { status: 201 });
   } catch (error) {

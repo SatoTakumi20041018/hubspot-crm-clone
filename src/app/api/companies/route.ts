@@ -1,5 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockCompanies,
+  mockContacts,
+  mockDeals,
+  mockTickets,
+  getUserSelect,
+  includesCI,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,35 +17,35 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockCompanies];
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { domain: { contains: search, mode: "insensitive" } },
-        { industry: { contains: search, mode: "insensitive" } },
-      ];
+      filtered = filtered.filter(
+        (c) =>
+          includesCI(c.name, search) ||
+          includesCI(c.domain, search) ||
+          includesCI(c.industry, search)
+      );
     }
 
-    const [companies, total] = await Promise.all([
-      prisma.company.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          owner: { select: { id: true, name: true } },
-          _count: {
-            select: {
-              contacts: true,
-              deals: true,
-              tickets: true,
-            },
-          },
-        },
-      }),
-      prisma.company.count({ where }),
-    ]);
+    // Sort by createdAt desc
+    filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const companies = paginated.map((c) => ({
+      ...c,
+      owner: getUserSelect(c.ownerId),
+      _count: {
+        contacts: mockContacts.filter((ct) => ct.companyId === c.id).length,
+        deals: mockDeals.filter((d) => d.companyId === c.id).length,
+        tickets: mockTickets.filter((t) => t.companyId === c.id).length,
+      },
+    }));
 
     return NextResponse.json({
       companies,
@@ -61,7 +68,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, domain, industry, phone, city, state, country, description, annualRevenue, employeeCount, ownerId } = body;
+    const {
+      name,
+      domain,
+      industry,
+      phone,
+      city,
+      state,
+      country,
+      description,
+      annualRevenue,
+      employeeCount,
+      ownerId,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -70,31 +89,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const company = await prisma.company.create({
-      data: {
-        name,
-        domain: domain || null,
-        industry: industry || null,
-        phone: phone || null,
-        city: city || null,
-        state: state || null,
-        country: country || null,
-        description: description || null,
-        annualRevenue: annualRevenue ? parseFloat(annualRevenue) : null,
-        employeeCount: employeeCount ? parseInt(employeeCount) : null,
-        ownerId: ownerId || null,
+    const newCompany = {
+      id: `company-${Date.now()}`,
+      name,
+      domain: domain || null,
+      industry: industry || null,
+      phone: phone || null,
+      city: city || null,
+      state: state || null,
+      country: country || null,
+      description: description || null,
+      annualRevenue: annualRevenue ? parseFloat(annualRevenue) : null,
+      employeeCount: employeeCount ? parseInt(employeeCount) : null,
+      ownerId: ownerId || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockCompanies.push(newCompany);
+
+    const company = {
+      ...newCompany,
+      owner: getUserSelect(newCompany.ownerId),
+      _count: {
+        contacts: 0,
+        deals: 0,
+        tickets: 0,
       },
-      include: {
-        owner: { select: { id: true, name: true } },
-        _count: {
-          select: {
-            contacts: true,
-            deals: true,
-            tickets: true,
-          },
-        },
-      },
-    });
+    };
 
     return NextResponse.json(company, { status: 201 });
   } catch (error) {

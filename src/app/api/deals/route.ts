@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockDeals,
+  mockDealContacts,
+  mockContacts,
+  getUserSelect,
+  getCompanySelect,
+  getStageById,
+  getPipelineById,
+  getContactSelect,
+  includesCI,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,52 +23,61 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockDeals];
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-      ];
+      filtered = filtered.filter((d) => includesCI(d.name, search));
     }
 
     if (pipelineId) {
-      where.pipelineId = pipelineId;
+      filtered = filtered.filter((d) => d.pipelineId === pipelineId);
     }
 
     if (stageId) {
-      where.stageId = stageId;
+      filtered = filtered.filter((d) => d.stageId === stageId);
     }
 
     if (ownerId) {
-      where.ownerId = ownerId;
+      filtered = filtered.filter((d) => d.ownerId === ownerId);
     }
 
-    const [deals, total] = await Promise.all([
-      prisma.deal.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          stage: {
-            select: { id: true, name: true, color: true, probability: true },
-          },
-          pipeline: {
-            select: { id: true, name: true },
-          },
-          owner: { select: { id: true, name: true } },
-          company: { select: { id: true, name: true } },
-          contacts: {
-            include: {
-              contact: {
-                select: { id: true, firstName: true, lastName: true },
-              },
-            },
-          },
-        },
-      }),
-      prisma.deal.count({ where }),
-    ]);
+    // Sort by createdAt desc
+    filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const deals = paginated.map((d) => {
+      const stage = getStageById(d.stageId);
+      const pipeline = getPipelineById(d.pipelineId);
+      const dealContactLinks = mockDealContacts.filter(
+        (dc) => dc.dealId === d.id
+      );
+      const contacts = dealContactLinks.map((dc) => ({
+        contact: getContactSelect(dc.contactId),
+      }));
+
+      return {
+        ...d,
+        stage: stage
+          ? {
+              id: stage.id,
+              name: stage.name,
+              color: stage.color,
+              probability: stage.probability,
+            }
+          : null,
+        pipeline: pipeline
+          ? { id: pipeline.id, name: pipeline.name }
+          : null,
+        owner: getUserSelect(d.ownerId),
+        company: getCompanySelect(d.companyId),
+        contacts,
+      };
+    });
 
     return NextResponse.json({
       deals,
@@ -81,7 +100,19 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, amount, currency, closeDate, probability, stageId, pipelineId, ownerId, companyId, priority, contactIds } = body;
+    const {
+      name,
+      amount,
+      currency,
+      closeDate,
+      probability,
+      stageId,
+      pipelineId,
+      ownerId,
+      companyId,
+      priority,
+      contactIds,
+    } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -97,44 +128,54 @@ export async function POST(request: Request) {
       );
     }
 
-    const deal = await prisma.deal.create({
-      data: {
-        name,
-        amount: amount ? parseFloat(amount) : null,
-        currency: currency || "JPY",
-        closeDate: closeDate ? new Date(closeDate) : null,
-        probability: probability ? parseFloat(probability) : null,
-        stageId,
-        pipelineId,
-        ownerId: ownerId || null,
-        companyId: companyId || null,
-        priority: priority || "MEDIUM",
-        contacts: contactIds?.length
-          ? {
-              create: contactIds.map((contactId: string) => ({
-                contactId,
-              })),
-            }
-          : undefined,
-      },
-      include: {
-        stage: {
-          select: { id: true, name: true, color: true, probability: true },
-        },
-        pipeline: {
-          select: { id: true, name: true },
-        },
-        owner: { select: { id: true, name: true } },
-        company: { select: { id: true, name: true } },
-        contacts: {
-          include: {
-            contact: {
-              select: { id: true, firstName: true, lastName: true },
-            },
-          },
-        },
-      },
-    });
+    const newDeal = {
+      id: `deal-${Date.now()}`,
+      name,
+      amount: amount ? parseFloat(amount) : null,
+      currency: currency || "JPY",
+      closeDate: closeDate ? new Date(closeDate).toISOString() : null,
+      probability: probability ? parseFloat(probability) : null,
+      stageId,
+      pipelineId,
+      ownerId: ownerId || null,
+      companyId: companyId || null,
+      priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockDeals.push(newDeal);
+
+    // Add deal-contact links
+    if (contactIds?.length) {
+      for (const contactId of contactIds) {
+        mockDealContacts.push({ dealId: newDeal.id, contactId });
+      }
+    }
+
+    const stage = getStageById(newDeal.stageId);
+    const pipeline = getPipelineById(newDeal.pipelineId);
+    const contacts = (contactIds || []).map((cid: string) => ({
+      contact: getContactSelect(cid),
+    }));
+
+    const deal = {
+      ...newDeal,
+      stage: stage
+        ? {
+            id: stage.id,
+            name: stage.name,
+            color: stage.color,
+            probability: stage.probability,
+          }
+        : null,
+      pipeline: pipeline
+        ? { id: pipeline.id, name: pipeline.name }
+        : null,
+      owner: getUserSelect(newDeal.ownerId),
+      company: getCompanySelect(newDeal.companyId),
+      contacts,
+    };
 
     return NextResponse.json(deal, { status: 201 });
   } catch (error) {

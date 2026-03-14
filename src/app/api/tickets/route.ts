@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockTickets,
+  getUserSelect,
+  getContactSelect,
+  getCompanySelect,
+  includesCI,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,43 +19,45 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockTickets];
 
     if (search) {
-      where.OR = [
-        { subject: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-      ];
+      filtered = filtered.filter(
+        (t) =>
+          includesCI(t.subject, search) ||
+          includesCI(t.description, search)
+      );
     }
 
     if (status) {
-      where.status = status;
+      filtered = filtered.filter((t) => t.status === status);
     }
 
     if (priority) {
-      where.priority = priority;
+      filtered = filtered.filter((t) => t.priority === priority);
     }
 
     if (ownerId) {
-      where.ownerId = ownerId;
+      filtered = filtered.filter((t) => t.ownerId === ownerId);
     }
 
-    const [tickets, total] = await Promise.all([
-      prisma.ticket.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          owner: { select: { id: true, name: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
-          company: { select: { id: true, name: true } },
-          pipeline: { select: { id: true, name: true } },
-          stage: { select: { id: true, name: true, color: true } },
-        },
-      }),
-      prisma.ticket.count({ where }),
-    ]);
+    // Sort by createdAt desc
+    filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const tickets = paginated.map((t) => ({
+      ...t,
+      owner: getUserSelect(t.ownerId),
+      contact: getContactSelect(t.contactId),
+      company: getCompanySelect(t.companyId),
+      pipeline: null,
+      stage: null,
+    }));
 
     return NextResponse.json({
       tickets,
@@ -72,7 +80,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { subject, description, status, priority, category, ownerId, contactId, companyId, pipelineId, stageId } = body;
+    const {
+      subject,
+      description,
+      status,
+      priority,
+      category,
+      ownerId,
+      contactId,
+      companyId,
+      pipelineId,
+      stageId,
+    } = body;
 
     if (!subject) {
       return NextResponse.json(
@@ -81,27 +100,34 @@ export async function POST(request: Request) {
       );
     }
 
-    const ticket = await prisma.ticket.create({
-      data: {
-        subject,
-        description: description || null,
-        status: status || "OPEN",
-        priority: priority || "MEDIUM",
-        category: category || null,
-        ownerId: ownerId || null,
-        contactId: contactId || null,
-        companyId: companyId || null,
-        pipelineId: pipelineId || null,
-        stageId: stageId || null,
-      },
-      include: {
-        owner: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-        company: { select: { id: true, name: true } },
-        pipeline: { select: { id: true, name: true } },
-        stage: { select: { id: true, name: true, color: true } },
-      },
-    });
+    const newTicket = {
+      id: `ticket-${Date.now()}`,
+      subject,
+      description: description || null,
+      status: (status || "OPEN") as "OPEN" | "IN_PROGRESS" | "WAITING" | "CLOSED",
+      priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      category: category || null,
+      ownerId: ownerId || null,
+      contactId: contactId || null,
+      companyId: companyId || null,
+      pipelineId: pipelineId || null,
+      stageId: stageId || null,
+      slaDeadline: null,
+      closedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockTickets.push(newTicket);
+
+    const ticket = {
+      ...newTicket,
+      owner: getUserSelect(newTicket.ownerId),
+      contact: getContactSelect(newTicket.contactId),
+      company: getCompanySelect(newTicket.companyId),
+      pipeline: null,
+      stage: null,
+    };
 
     return NextResponse.json(ticket, { status: 201 });
   } catch (error) {

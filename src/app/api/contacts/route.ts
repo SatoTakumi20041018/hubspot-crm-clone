@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockContacts,
+  getUserSelect,
+  getCompanySelect,
+  includesCI,
+  mockDeals,
+  mockDealContacts,
+  mockTickets,
+  mockTasks,
+  mockActivities,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,50 +23,50 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockContacts];
 
     if (search) {
-      where.OR = [
-        { firstName: { contains: search, mode: "insensitive" } },
-        { lastName: { contains: search, mode: "insensitive" } },
-        { email: { contains: search, mode: "insensitive" } },
-        { phone: { contains: search, mode: "insensitive" } },
-      ];
+      filtered = filtered.filter(
+        (c) =>
+          includesCI(c.firstName, search) ||
+          includesCI(c.lastName, search) ||
+          includesCI(c.email, search) ||
+          includesCI(c.phone, search)
+      );
     }
 
     if (lifecycleStage) {
-      where.lifecycleStage = lifecycleStage;
+      filtered = filtered.filter((c) => c.lifecycleStage === lifecycleStage);
     }
 
     if (leadStatus) {
-      where.leadStatus = leadStatus;
+      filtered = filtered.filter((c) => c.leadStatus === leadStatus);
     }
 
     if (ownerId) {
-      where.ownerId = ownerId;
+      filtered = filtered.filter((c) => c.ownerId === ownerId);
     }
 
-    const [contacts, total] = await Promise.all([
-      prisma.contact.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-        include: {
-          company: { select: { id: true, name: true } },
-          owner: { select: { id: true, name: true } },
-          _count: {
-            select: {
-              deals: true,
-              tickets: true,
-              tasks: true,
-              activities: true,
-            },
-          },
-        },
-      }),
-      prisma.contact.count({ where }),
-    ]);
+    // Sort by createdAt desc
+    filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const contacts = paginated.map((c) => ({
+      ...c,
+      company: getCompanySelect(c.companyId),
+      owner: getUserSelect(c.ownerId),
+      _count: {
+        deals: mockDealContacts.filter((dc) => dc.contactId === c.id).length,
+        tickets: mockTickets.filter((t) => t.contactId === c.id).length,
+        tasks: mockTasks.filter((t) => t.contactId === c.id).length,
+        activities: mockActivities.filter((a) => a.contactId === c.id).length,
+      },
+    }));
 
     return NextResponse.json({
       contacts,
@@ -79,7 +89,18 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { firstName, lastName, email, phone, jobTitle, lifecycleStage, leadStatus, source, ownerId, companyId } = body;
+    const {
+      firstName,
+      lastName,
+      email,
+      phone,
+      jobTitle,
+      lifecycleStage,
+      leadStatus,
+      source,
+      ownerId,
+      companyId,
+    } = body;
 
     if (!firstName || !lastName) {
       return NextResponse.json(
@@ -89,9 +110,7 @@ export async function POST(request: Request) {
     }
 
     if (email) {
-      const existing = await prisma.contact.findFirst({
-        where: { email },
-      });
+      const existing = mockContacts.find((c) => c.email === email);
       if (existing) {
         return NextResponse.json(
           { error: "このメールアドレスのコンタクトは既に存在します" },
@@ -100,32 +119,36 @@ export async function POST(request: Request) {
       }
     }
 
-    const contact = await prisma.contact.create({
-      data: {
-        firstName,
-        lastName,
-        email: email || null,
-        phone: phone || null,
-        jobTitle: jobTitle || null,
-        lifecycleStage: lifecycleStage || "SUBSCRIBER",
-        leadStatus: leadStatus || null,
-        source: source || null,
-        ownerId: ownerId || null,
-        companyId: companyId || null,
+    const newContact = {
+      id: `contact-${Date.now()}`,
+      firstName,
+      lastName,
+      email: email || null,
+      phone: phone || null,
+      jobTitle: jobTitle || null,
+      avatar: null,
+      lifecycleStage: lifecycleStage || ("SUBSCRIBER" as const),
+      leadStatus: leadStatus || null,
+      source: source || null,
+      ownerId: ownerId || null,
+      companyId: companyId || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockContacts.push(newContact);
+
+    const contact = {
+      ...newContact,
+      company: getCompanySelect(newContact.companyId),
+      owner: getUserSelect(newContact.ownerId),
+      _count: {
+        deals: 0,
+        tickets: 0,
+        tasks: 0,
+        activities: 0,
       },
-      include: {
-        company: { select: { id: true, name: true } },
-        owner: { select: { id: true, name: true } },
-        _count: {
-          select: {
-            deals: true,
-            tickets: true,
-            tasks: true,
-            activities: true,
-          },
-        },
-      },
-    });
+    };
 
     return NextResponse.json(contact, { status: 201 });
   } catch (error) {

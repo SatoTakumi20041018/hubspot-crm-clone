@@ -1,24 +1,33 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockPipelines,
+  mockPipelineStages,
+  mockDeals,
+} from "@/lib/mock-data";
 
 export async function GET() {
   try {
-    const pipelines = await prisma.pipeline.findMany({
-      orderBy: { order: "asc" },
-      include: {
-        stages: {
-          orderBy: { order: "asc" },
-          include: {
+    const pipelines = mockPipelines
+      .sort((a, b) => a.order - b.order)
+      .map((p) => {
+        const stages = mockPipelineStages
+          .filter((s) => s.pipelineId === p.id)
+          .sort((a, b) => a.order - b.order)
+          .map((s) => ({
+            ...s,
             _count: {
-              select: { deals: true },
+              deals: mockDeals.filter((d) => d.stageId === s.id).length,
             },
+          }));
+
+        return {
+          ...p,
+          stages,
+          _count: {
+            deals: mockDeals.filter((d) => d.pipelineId === p.id).length,
           },
-        },
-        _count: {
-          select: { deals: true },
-        },
-      },
-    });
+        };
+      });
 
     return NextResponse.json({ pipelines });
   } catch (error) {
@@ -50,42 +59,48 @@ export async function POST(request: Request) {
     }
 
     // Get max order for new pipeline
-    const maxOrder = await prisma.pipeline.aggregate({
-      _max: { order: true },
-    });
+    const maxOrder = mockPipelines.reduce(
+      (max, p) => Math.max(max, p.order),
+      -1
+    );
 
-    const pipeline = await prisma.pipeline.create({
-      data: {
-        name,
-        order: (maxOrder._max.order ?? -1) + 1,
-        stages: {
-          create: stages.map(
-            (
-              stage: { name: string; probability?: number; color?: string },
-              index: number
-            ) => ({
-              name: stage.name,
-              probability: stage.probability ?? 0,
-              color: stage.color ?? "#3B82F6",
-              order: index,
-            })
-          ),
-        },
-      },
-      include: {
-        stages: {
-          orderBy: { order: "asc" },
-          include: {
-            _count: {
-              select: { deals: true },
-            },
-          },
-        },
-        _count: {
-          select: { deals: true },
-        },
-      },
-    });
+    const newPipeline = {
+      id: `pipeline-${Date.now()}`,
+      name,
+      isDefault: false,
+      order: maxOrder + 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockPipelines.push(newPipeline);
+
+    const newStages = stages.map(
+      (
+        stage: { name: string; probability?: number; color?: string },
+        index: number
+      ) => {
+        const s = {
+          id: `stage-${Date.now()}-${index}`,
+          name: stage.name,
+          probability: stage.probability ?? 0,
+          color: stage.color ?? "#3B82F6",
+          order: index,
+          pipelineId: newPipeline.id,
+        };
+        mockPipelineStages.push(s);
+        return {
+          ...s,
+          _count: { deals: 0 },
+        };
+      }
+    );
+
+    const pipeline = {
+      ...newPipeline,
+      stages: newStages,
+      _count: { deals: 0 },
+    };
 
     return NextResponse.json(pipeline, { status: 201 });
   } catch (error) {

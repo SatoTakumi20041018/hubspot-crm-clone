@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockTasks,
+  getUserSelect,
+  getContactSelect,
+} from "@/lib/mock-data";
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,39 +17,52 @@ export async function GET(request: NextRequest) {
 
     const skip = (page - 1) * limit;
 
-    const where: Record<string, unknown> = {};
+    let filtered = [...mockTasks];
 
     if (status) {
-      where.status = status;
+      filtered = filtered.filter((t) => t.status === status);
     }
 
     if (ownerId) {
-      where.ownerId = ownerId;
+      filtered = filtered.filter((t) => t.ownerId === ownerId);
     }
 
-    if (dueDateFrom || dueDateTo) {
-      where.dueDate = {};
-      if (dueDateFrom) {
-        (where.dueDate as Record<string, unknown>).gte = new Date(dueDateFrom);
-      }
-      if (dueDateTo) {
-        (where.dueDate as Record<string, unknown>).lte = new Date(dueDateTo);
-      }
+    if (dueDateFrom) {
+      const from = new Date(dueDateFrom).getTime();
+      filtered = filtered.filter(
+        (t) => t.dueDate && new Date(t.dueDate).getTime() >= from
+      );
     }
 
-    const [tasks, total] = await Promise.all([
-      prisma.task.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
-        include: {
-          owner: { select: { id: true, name: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
-        },
-      }),
-      prisma.task.count({ where }),
-    ]);
+    if (dueDateTo) {
+      const to = new Date(dueDateTo).getTime();
+      filtered = filtered.filter(
+        (t) => t.dueDate && new Date(t.dueDate).getTime() <= to
+      );
+    }
+
+    // Sort by dueDate asc, then createdAt desc
+    filtered.sort((a, b) => {
+      if (a.dueDate && b.dueDate) {
+        const diff =
+          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        if (diff !== 0) return diff;
+      }
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return (
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+    });
+
+    const total = filtered.length;
+    const paginated = filtered.slice(skip, skip + limit);
+
+    const tasks = paginated.map((t) => ({
+      ...t,
+      owner: getUserSelect(t.ownerId),
+      contact: getContactSelect(t.contactId),
+    }));
 
     return NextResponse.json({
       tasks,
@@ -68,7 +85,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, dueDate, priority, status, type, ownerId, contactId } = body;
+    const { title, description, dueDate, priority, status, type, ownerId, contactId } =
+      body;
 
     if (!title) {
       return NextResponse.json(
@@ -77,22 +95,27 @@ export async function POST(request: Request) {
       );
     }
 
-    const task = await prisma.task.create({
-      data: {
-        title,
-        description: description || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        priority: priority || "MEDIUM",
-        status: status || "NOT_STARTED",
-        type: type || "TODO",
-        ownerId: ownerId || null,
-        contactId: contactId || null,
-      },
-      include: {
-        owner: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-      },
-    });
+    const newTask = {
+      id: `task-${Date.now()}`,
+      title,
+      description: description || null,
+      dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+      priority: (priority || "MEDIUM") as "LOW" | "MEDIUM" | "HIGH" | "URGENT",
+      status: (status || "NOT_STARTED") as "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "DEFERRED",
+      type: (type || "TODO") as "TODO" | "CALL" | "EMAIL" | "MEETING" | "FOLLOW_UP",
+      ownerId: ownerId || null,
+      contactId: contactId || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    mockTasks.push(newTask);
+
+    const task = {
+      ...newTask,
+      owner: getUserSelect(newTask.ownerId),
+      contact: getContactSelect(newTask.contactId),
+    };
 
     return NextResponse.json(task, { status: 201 });
   } catch (error) {
@@ -116,25 +139,43 @@ export async function PATCH(request: Request) {
       );
     }
 
+    const index = mockTasks.findIndex((t) => t.id === id);
+
+    if (index === -1) {
+      return NextResponse.json(
+        { error: "タスクが見つかりません" },
+        { status: 404 }
+      );
+    }
+
+    const existing = mockTasks[index];
     const updateData: Record<string, unknown> = {};
 
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
-    if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
+    if (data.dueDate !== undefined)
+      updateData.dueDate = data.dueDate
+        ? new Date(data.dueDate).toISOString()
+        : null;
     if (data.priority !== undefined) updateData.priority = data.priority;
     if (data.status !== undefined) updateData.status = data.status;
     if (data.type !== undefined) updateData.type = data.type;
     if (data.ownerId !== undefined) updateData.ownerId = data.ownerId || null;
-    if (data.contactId !== undefined) updateData.contactId = data.contactId || null;
+    if (data.contactId !== undefined)
+      updateData.contactId = data.contactId || null;
 
-    const task = await prisma.task.update({
-      where: { id },
-      data: updateData,
-      include: {
-        owner: { select: { id: true, name: true } },
-        contact: { select: { id: true, firstName: true, lastName: true } },
-      },
-    });
+    const updated = {
+      ...existing,
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    };
+    mockTasks[index] = updated as typeof existing;
+
+    const task = {
+      ...updated,
+      owner: getUserSelect(updated.ownerId as string | null),
+      contact: getContactSelect(updated.contactId as string | null),
+    };
 
     return NextResponse.json(task);
   } catch (error) {

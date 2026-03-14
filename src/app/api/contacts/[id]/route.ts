@@ -1,5 +1,19 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockContacts,
+  mockDealContacts,
+  mockDeals,
+  mockTickets,
+  mockTasks,
+  mockActivities,
+  mockNotes,
+  mockUsers,
+  getUserSelect,
+  getCompanyById,
+  getCompanySelect,
+  getStageById,
+  getPipelineById,
+} from "@/lib/mock-data";
 
 export async function GET(
   _request: Request,
@@ -8,61 +22,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const contact = await prisma.contact.findUnique({
-      where: { id },
-      include: {
-        company: true,
-        owner: { select: { id: true, name: true, email: true, image: true } },
-        deals: {
-          include: {
-            deal: {
-              include: {
-                stage: { select: { id: true, name: true, color: true } },
-                pipeline: { select: { id: true, name: true } },
-              },
-            },
-          },
-        },
-        tickets: {
-          include: {
-            owner: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-        tasks: {
-          include: {
-            owner: { select: { id: true, name: true } },
-          },
-          orderBy: { dueDate: "asc" },
-          take: 10,
-        },
-        activities: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 20,
-        },
-        notes: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-          orderBy: { createdAt: "desc" },
-          take: 10,
-        },
-        properties: true,
-        _count: {
-          select: {
-            deals: true,
-            tickets: true,
-            tasks: true,
-            activities: true,
-            notes: true,
-          },
-        },
-      },
-    });
+    const contact = mockContacts.find((c) => c.id === id);
 
     if (!contact) {
       return NextResponse.json(
@@ -71,7 +31,109 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(contact);
+    const company = contact.companyId
+      ? getCompanyById(contact.companyId)
+      : null;
+
+    const ownerUser = contact.ownerId
+      ? mockUsers.find((u) => u.id === contact.ownerId)
+      : null;
+    const owner = ownerUser
+      ? { id: ownerUser.id, name: ownerUser.name, email: ownerUser.email, image: ownerUser.image }
+      : null;
+
+    const dealContacts = mockDealContacts.filter(
+      (dc) => dc.contactId === id
+    );
+    const deals = dealContacts
+      .map((dc) => {
+        const deal = mockDeals.find((d) => d.id === dc.dealId);
+        if (!deal) return null;
+        const stage = getStageById(deal.stageId);
+        const pipeline = getPipelineById(deal.pipelineId);
+        return {
+          deal: {
+            ...deal,
+            stage: stage
+              ? { id: stage.id, name: stage.name, color: stage.color }
+              : null,
+            pipeline: pipeline
+              ? { id: pipeline.id, name: pipeline.name }
+              : null,
+          },
+        };
+      })
+      .filter(Boolean);
+
+    const tickets = mockTickets
+      .filter((t) => t.contactId === id)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 10)
+      .map((t) => ({
+        ...t,
+        owner: getUserSelect(t.ownerId),
+      }));
+
+    const tasks = mockTasks
+      .filter((t) => t.contactId === id)
+      .sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return (
+          new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+        );
+      })
+      .slice(0, 10)
+      .map((t) => ({
+        ...t,
+        owner: getUserSelect(t.ownerId),
+      }));
+
+    const activities = mockActivities
+      .filter((a) => a.contactId === id)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 20)
+      .map((a) => ({
+        ...a,
+        user: getUserSelect(a.userId),
+      }));
+
+    const notes = mockNotes
+      .filter((n) => n.contactId === id)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 10)
+      .map((n) => ({
+        ...n,
+        user: getUserSelect(n.userId),
+      }));
+
+    return NextResponse.json({
+      ...contact,
+      company,
+      owner,
+      deals,
+      tickets,
+      tasks,
+      activities,
+      notes,
+      properties: [],
+      _count: {
+        deals: dealContacts.length,
+        tickets: mockTickets.filter((t) => t.contactId === id).length,
+        tasks: mockTasks.filter((t) => t.contactId === id).length,
+        activities: mockActivities.filter((a) => a.contactId === id).length,
+        notes: mockNotes.filter((n) => n.contactId === id).length,
+      },
+    });
   } catch (error) {
     console.error("Error fetching contact:", error);
     return NextResponse.json(
@@ -89,18 +151,15 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
 
-    const existing = await prisma.contact.findUnique({
-      where: { id },
-    });
+    const index = mockContacts.findIndex((c) => c.id === id);
 
-    if (!existing) {
+    if (index === -1) {
       return NextResponse.json(
         { error: "コンタクトが見つかりません" },
         { status: 404 }
       );
     }
 
-    const updateData: Record<string, unknown> = {};
     const allowedFields = [
       "firstName",
       "lastName",
@@ -115,6 +174,9 @@ export async function PUT(
       "companyId",
     ];
 
+    const existing = mockContacts[index];
+    const updateData: Record<string, unknown> = {};
+
     for (const field of allowedFields) {
       if (body[field] !== undefined) {
         updateData[field] = body[field] || null;
@@ -125,22 +187,24 @@ export async function PUT(
     if (body.firstName !== undefined) updateData.firstName = body.firstName;
     if (body.lastName !== undefined) updateData.lastName = body.lastName;
 
-    const contact = await prisma.contact.update({
-      where: { id },
-      data: updateData,
-      include: {
-        company: { select: { id: true, name: true } },
-        owner: { select: { id: true, name: true } },
-        _count: {
-          select: {
-            deals: true,
-            tickets: true,
-            tasks: true,
-            activities: true,
-          },
-        },
+    const updated = {
+      ...existing,
+      ...updateData,
+      updatedAt: new Date().toISOString(),
+    };
+    mockContacts[index] = updated as typeof existing;
+
+    const contact = {
+      ...updated,
+      company: getCompanySelect(updated.companyId as string | null),
+      owner: getUserSelect(updated.ownerId as string | null),
+      _count: {
+        deals: mockDealContacts.filter((dc) => dc.contactId === id).length,
+        tickets: mockTickets.filter((t) => t.contactId === id).length,
+        tasks: mockTasks.filter((t) => t.contactId === id).length,
+        activities: mockActivities.filter((a) => a.contactId === id).length,
       },
-    });
+    };
 
     return NextResponse.json(contact);
   } catch (error) {
@@ -159,20 +223,16 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const existing = await prisma.contact.findUnique({
-      where: { id },
-    });
+    const index = mockContacts.findIndex((c) => c.id === id);
 
-    if (!existing) {
+    if (index === -1) {
       return NextResponse.json(
         { error: "コンタクトが見つかりません" },
         { status: 404 }
       );
     }
 
-    await prisma.contact.delete({
-      where: { id },
-    });
+    mockContacts.splice(index, 1);
 
     return NextResponse.json({ message: "コンタクトを削除しました" });
   } catch (error) {

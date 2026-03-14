@@ -1,97 +1,108 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import {
+  mockContacts,
+  mockCompanies,
+  mockDeals,
+  mockTickets,
+  mockTasks,
+  mockActivities,
+  mockPipelineStages,
+  getUserSelect,
+  getContactSelect,
+} from "@/lib/mock-data";
 
 export async function GET() {
   try {
-    const [
-      totalContacts,
-      totalCompanies,
-      activeDeals,
-      totalDealAmount,
-      openTickets,
-      totalTasks,
-      completedTasks,
-      recentActivities,
-      dealsByStage,
-    ] = await Promise.all([
-      // Total contacts
-      prisma.contact.count(),
+    const totalContacts = mockContacts.length;
+    const totalCompanies = mockCompanies.length;
+    const activeDeals = mockDeals.length;
+    const totalRevenue = mockDeals.reduce((sum, d) => sum + (d.amount || 0), 0);
 
-      // Total companies
-      prisma.company.count(),
+    const openTickets = mockTickets.filter((t) =>
+      ["OPEN", "IN_PROGRESS", "WAITING"].includes(t.status)
+    ).length;
 
-      // Active deals (not in closed stages - approximate by counting all)
-      prisma.deal.count(),
+    const totalTasks = mockTasks.length;
+    const completedTasks = mockTasks.filter(
+      (t) => t.status === "COMPLETED"
+    ).length;
 
-      // Total deal revenue
-      prisma.deal.aggregate({
-        _sum: { amount: true },
-      }),
+    // Recent activities
+    const recentActivities = [...mockActivities]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 10)
+      .map((a) => ({
+        ...a,
+        user: getUserSelect(a.userId),
+        contact: getContactSelect(a.contactId),
+        deal: a.dealId
+          ? (() => {
+              const deal = mockDeals.find((d) => d.id === a.dealId);
+              return deal ? { id: deal.id, name: deal.name } : null;
+            })()
+          : null,
+        ticket: a.ticketId
+          ? (() => {
+              const ticket = mockTickets.find((t) => t.id === a.ticketId);
+              return ticket
+                ? { id: ticket.id, subject: ticket.subject }
+                : null;
+            })()
+          : null,
+      }));
 
-      // Open tickets
-      prisma.ticket.count({
-        where: {
-          status: { in: ["OPEN", "IN_PROGRESS", "WAITING"] },
-        },
-      }),
+    // Deals grouped by stage
+    const stageGroups = new Map<
+      string,
+      { count: number; totalAmount: number }
+    >();
+    for (const deal of mockDeals) {
+      const existing = stageGroups.get(deal.stageId) || {
+        count: 0,
+        totalAmount: 0,
+      };
+      existing.count += 1;
+      existing.totalAmount += deal.amount || 0;
+      stageGroups.set(deal.stageId, existing);
+    }
 
-      // Total tasks
-      prisma.task.count(),
-
-      // Completed tasks
-      prisma.task.count({
-        where: { status: "COMPLETED" },
-      }),
-
-      // Recent activities
-      prisma.activity.findMany({
-        take: 10,
-        orderBy: { createdAt: "desc" },
-        include: {
-          user: { select: { id: true, name: true } },
-          contact: { select: { id: true, firstName: true, lastName: true } },
-          deal: { select: { id: true, name: true } },
-          ticket: { select: { id: true, subject: true } },
-        },
-      }),
-
-      // Deals grouped by stage
-      prisma.deal.groupBy({
-        by: ["stageId"],
-        _count: { id: true },
-        _sum: { amount: true },
-      }),
-    ]);
-
-    // Get stage info for deals by stage
-    const stageIds = dealsByStage.map((d: { stageId: string }) => d.stageId);
-    const stages = await prisma.pipelineStage.findMany({
-      where: { id: { in: stageIds } },
-      select: { id: true, name: true, color: true, order: true },
-    });
-
-    const stageMap = new Map(stages.map((s: { id: string; name: string; color: string; order: number }) => [s.id, s]));
-    const dealsByStageWithInfo = dealsByStage
-      .map((d: { stageId: string; _count: { id: number }; _sum: { amount: number | null } }) => ({
-        stage: stageMap.get(d.stageId) || { id: d.stageId, name: "不明", color: "#999", order: 0 },
-        count: d._count.id,
-        totalAmount: d._sum.amount || 0,
-      }))
-      .sort((a: { stage: { order: number } }, b: { stage: { order: number } }) => a.stage.order - b.stage.order);
+    const dealsByStage = Array.from(stageGroups.entries())
+      .map(([stageId, data]) => {
+        const stage = mockPipelineStages.find((s) => s.id === stageId);
+        return {
+          stage: stage
+            ? {
+                id: stage.id,
+                name: stage.name,
+                color: stage.color,
+                order: stage.order,
+              }
+            : { id: stageId, name: "不明", color: "#999", order: 0 },
+          count: data.count,
+          totalAmount: data.totalAmount,
+        };
+      })
+      .sort((a, b) => a.stage.order - b.stage.order);
 
     return NextResponse.json({
       stats: {
         totalContacts,
         totalCompanies,
         activeDeals,
-        totalRevenue: totalDealAmount._sum.amount || 0,
+        totalRevenue,
         openTickets,
         totalTasks,
         completedTasks,
-        taskCompletionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+        taskCompletionRate:
+          totalTasks > 0
+            ? Math.round((completedTasks / totalTasks) * 100)
+            : 0,
       },
       recentActivities,
-      dealsByStage: dealsByStageWithInfo,
+      dealsByStage,
     });
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
