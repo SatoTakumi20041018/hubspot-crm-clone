@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,11 @@ import {
   AlertTriangle,
   Sparkles,
   Plus,
+  ArrowUpDown,
+  MoreHorizontal,
+  Pencil,
+  Copy,
+  Trash2,
 } from "lucide-react";
 
 const promptTrackings = [
@@ -58,12 +63,75 @@ const visibilityColor = (score: number) => {
   return "text-[#d9002b] bg-[#fcc6b1]";
 };
 
+function RowActions() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("編集"); setOpen(false); }}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("複製"); setOpen(false); }}>
+            <Copy className="h-3.5 w-3.5" /> 複製
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); alert("削除"); setOpen(false); }}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AEOPage() {
   const [promptSearch, setPromptSearch] = useState("");
 
-  const filteredPrompts = promptTrackings.filter((p) =>
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const filteredPrompts = [...promptTrackings.filter((p) =>
     p.prompt.includes(promptSearch)
-  );
+  )].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredPrompts.length / itemsPerPage);
+  const paginatedItems = filteredPrompts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const avgVisibility = Math.round(
     promptTrackings.reduce((sum, p) => sum + p.visibility, 0) / promptTrackings.length
@@ -86,6 +154,8 @@ export default function AEOPage() {
           </Button>
         }
       />
+
+      <p className="text-sm text-gray-500">{promptTrackings.length}件のプロンプト追跡</p>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -112,7 +182,7 @@ export default function AEOPage() {
                     variant="search"
                     placeholder="プロンプトを検索..."
                     value={promptSearch}
-                    onChange={(e) => setPromptSearch(e.target.value)}
+                    onChange={(e) => { setPromptSearch(e.target.value); setCurrentPage(1); }}
                   />
                 </div>
               </div>
@@ -121,17 +191,18 @@ export default function AEOPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">追跡プロンプト</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-500">可視性スコア</th>
-                    <th className="px-4 py-3 text-center font-medium text-gray-500">言及回数</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("prompt")}><div className="flex items-center gap-1">追跡プロンプト <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("visibility")}><div className="flex items-center justify-center gap-1">可視性スコア <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-center font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("mentions")}><div className="flex items-center justify-center gap-1">言及回数 <ArrowUpDown className="h-3 w-3" /></div></th>
                     <th className="px-4 py-3 text-center font-medium text-gray-500">センチメント</th>
                     <th className="px-4 py-3 text-center font-medium text-gray-500">トレンド</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">最終確認</th>
                     <th className="px-4 py-3"></th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredPrompts.map((tracking) => (
+                  {paginatedItems.map((tracking) => (
                     <tr key={tracking.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -164,6 +235,7 @@ export default function AEOPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-gray-600">{tracking.lastChecked}</td>
+                      <td className="px-4 py-3"><RowActions /></td>
                       <td className="px-4 py-3">
                         <Button variant="ghost" size="sm">
                           詳細 <ArrowRight className="ml-1 h-3 w-3" />
@@ -174,6 +246,15 @@ export default function AEOPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filteredPrompts.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filteredPrompts.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
           </Card>
         </TabsContent>
 

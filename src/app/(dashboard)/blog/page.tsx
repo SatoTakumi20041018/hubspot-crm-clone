@@ -85,6 +85,11 @@ export default function BlogPage() {
     return matchSearch && matchStatus;
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const toggleAll = () => {
     if (selectedIds.size === filtered.length) {
       setSelectedIds(new Set());
@@ -154,13 +159,13 @@ export default function BlogPage() {
                 variant="search"
                 placeholder="タイトル、著者で検索..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               />
             </div>
             <select
               className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             >
               <option value="all">すべてのステータス</option>
               <option value="published">公開中</option>
@@ -208,7 +213,7 @@ export default function BlogPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((post) => (
+              {paginatedItems.map((post) => (
                 <tr key={post.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(String(post.id))} onChange={() => toggle(String(post.id))} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3">
@@ -245,9 +250,16 @@ export default function BlogPage() {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-gray-200 px-4 py-3">
-          <p className="text-sm text-gray-500">{filtered.length}件の記事を表示</p>
-        </div>
+        {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
+
       </Card>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,12 @@ import {
   CheckCircle2,
   BookOpen,
   MessageSquare,
+  Search,
+  MoreHorizontal,
+  Pencil,
+  Copy,
+  Trash2,
+  ArrowUpDown,
 } from "lucide-react";
 
 const kpis = [
@@ -108,9 +114,72 @@ const priorityBadgeVariant = (priority: string) => {
   }
 };
 
+function RowActions() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("編集"); setOpen(false); }}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("複製"); setOpen(false); }}>
+            <Copy className="h-3.5 w-3.5" /> 複製
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); alert("削除"); setOpen(false); }}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ServicePage() {
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+  const sorted = [...recentTickets].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(sorted.length / itemsPerPage);
+  const paginatedItems = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   if (loading) {
@@ -134,6 +203,7 @@ export default function ServicePage() {
         title="サービスハブ"
         description="カスタマーサポートの概要とパフォーマンス"
       />
+      <p className="text-sm text-gray-500">{recentTickets.length}件のチケット</p>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -252,23 +322,34 @@ export default function ServicePage() {
       {/* Recent Tickets */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>最近のチケット</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>最近のチケット</CardTitle>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">ID</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">件名</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">優先度</th>
+                  <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("id")}><div className="flex items-center gap-1">ID <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("subject")}><div className="flex items-center gap-1">件名 <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("priority")}><div className="flex items-center gap-1">優先度 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">コンタクト</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">経過</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
-                {recentTickets.map((ticket) => (
+                {paginatedItems.filter(item => {
+                  if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                  return true;
+                }).map((ticket) => (
                   <tr key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-3 text-gray-500 font-mono text-xs">{ticket.id}</td>
                     <td className="px-4 py-3 font-medium text-gray-900">
@@ -282,11 +363,21 @@ export default function ServicePage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{ticket.contact}</td>
                     <td className="px-4 py-3 text-gray-500 text-xs">{ticket.time}</td>
+                    <td className="px-4 py-3"><RowActions /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{sorted.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sorted.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
         </CardContent>
       </Card>
     </div>

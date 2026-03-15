@@ -20,6 +20,8 @@ import {
   CheckCircle2,
   TrendingUp,
   Plus,
+  ArrowUpDown,
+  Search,
 } from "lucide-react";
 
 const overallScore = 82;
@@ -141,6 +143,19 @@ const priorityBadgeVariant = (priority: string) => {
 
 export default function DataQualityPage() {
   const [activeView, setActiveView] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+  const sortedIssues = [...issues].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
 
   const views = [
     { key: "all", label: "すべて" },
@@ -148,6 +163,14 @@ export default function DataQualityPage() {
   ];
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const filteredIssues = sortedIssues.filter(item => {
+    if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+  const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
+  const paginatedItems = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   if (loading) {
@@ -251,10 +274,17 @@ export default function DataQualityPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle>データ品質の問題</CardTitle>
-            <Button variant="outline" size="sm">
-              <Zap className="h-4 w-4 mr-1" />
-              自動修正を実行
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                  placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+              </div>
+              <Button variant="outline" size="sm">
+                <Zap className="h-4 w-4 mr-1" />
+                自動修正を実行
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -262,9 +292,9 @@ export default function DataQualityPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-6 py-3 text-left font-medium text-gray-500">問題の種類</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">オブジェクト</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">説明</th>
+                  <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("type")}><div className="flex items-center gap-1">問題の種類 <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("object")}><div className="flex items-center gap-1">オブジェクト <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("description")}><div className="flex items-center gap-1">説明 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500">件数</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">優先度</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">自動修正</th>
@@ -272,7 +302,7 @@ export default function DataQualityPage() {
                 </tr>
               </thead>
               <tbody>
-                {issues.map((issue) => {
+                {paginatedItems.map((issue) => {
                   const config = typeConfig[issue.type];
                   const TypeIcon = config.icon;
                   return (
@@ -314,6 +344,15 @@ export default function DataQualityPage() {
               </tbody>
             </table>
           </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{sortedIssues.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sortedIssues.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
         </CardContent>
       </Card>
 

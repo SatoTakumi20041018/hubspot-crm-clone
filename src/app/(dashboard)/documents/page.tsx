@@ -162,6 +162,7 @@ export default function DocumentsPage() {
   const [search, setSearch] = useState("");
   const [activeView, setActiveView] = useState("all");
 
+
   const views = [
     { key: "all", label: "すべて" },
     { key: "mine", label: "マイドキュメント" },
@@ -170,6 +171,11 @@ export default function DocumentsPage() {
   const filtered = documents.filter((doc) =>
     doc.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   if (loading) {
@@ -210,13 +216,15 @@ export default function DocumentsPage() {
         <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
       </div>
 
+      <p className="text-sm text-gray-500">{documents.length}件のドキュメント</p>
+
       {/* Search */}
       <div className="w-72">
         <Input
           variant="search"
           placeholder="ドキュメント名で検索..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
         />
       </div>
 
@@ -265,7 +273,7 @@ export default function DocumentsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((doc) => (
+              {paginatedItems.map((doc) => (
                 <tr key={doc.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" />
@@ -315,6 +323,15 @@ export default function DocumentsPage() {
             </tbody>
           </table>
         </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
       </Card>
     </div>
   );

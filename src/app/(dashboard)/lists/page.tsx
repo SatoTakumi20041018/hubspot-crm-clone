@@ -179,11 +179,17 @@ export default function ListsPage() {
   ];
   const [filterType, setFilterType] = useState("すべて");
 
+
   const filtered = lists.filter((l) => {
     const matchSearch = l.name.toLowerCase().includes(search.toLowerCase());
     const matchType = filterType === "すべて" || l.type === filterType;
     return matchSearch && matchType;
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   if (loading) {
@@ -231,14 +237,14 @@ export default function ListsPage() {
             variant="search"
             placeholder="リスト名で検索..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
           />
         </div>
         <div className="flex gap-1">
           {["すべて", "静的", "動的"].map((type) => (
             <button
               key={type}
-              onClick={() => setFilterType(type)}
+              onClick={() => { setFilterType(type); setCurrentPage(1); }}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filterType === type
                   ? "bg-[#ff4800] text-white"
@@ -282,7 +288,7 @@ export default function ListsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((list) => (
+              {paginatedItems.map((list) => (
                 <tr key={list.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" />
@@ -330,6 +336,15 @@ export default function ListsPage() {
             </tbody>
           </table>
         </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
       </Card>
     </div>
   );

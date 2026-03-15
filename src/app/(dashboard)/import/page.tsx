@@ -20,6 +20,8 @@ import {
   MoreHorizontal,
   Eye,
   RefreshCw,
+  ArrowUpDown,
+  Search,
 } from "lucide-react";
 
 const importHistory = [
@@ -60,6 +62,27 @@ const steps = [
 export default function ImportPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedObject, setSelectedObject] = useState("contacts");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+  const sortedHistory = [...importHistory].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+  const filteredHistory = sortedHistory.filter(item => {
+    if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage);
+  const paginatedItems = filteredHistory.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div className="space-y-6">
@@ -211,6 +234,15 @@ export default function ImportPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{sortedHistory.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sortedHistory.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
@@ -322,10 +354,17 @@ export default function ImportPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>インポート履歴</CardTitle>
-            <Button variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-1" />
-              更新
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                  placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+              </div>
+              <Button variant="outline" size="sm">
+                <RefreshCw className="h-4 w-4 mr-1" />
+                更新
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -333,9 +372,9 @@ export default function ImportPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">ファイル名</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">タイプ</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">レコード</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("fileName")}><div className="flex items-center gap-1">ファイル名 <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("type")}><div className="flex items-center gap-1">タイプ <ArrowUpDown className="h-3 w-3" /></div></th>
+                  <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("records")}><div className="flex items-center justify-end gap-1">レコード <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500">成功</th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500">エラー</th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500">日時</th>
@@ -344,7 +383,7 @@ export default function ImportPage() {
                 </tr>
               </thead>
               <tbody>
-                {importHistory.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">

@@ -310,6 +310,15 @@ export default function WorkflowsPage() {
           );
         })}
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white shadow-xl">
+          <span className="text-sm">{selectedIds.size}件選択中</span>
+          <button onClick={() => alert("有効化は準備中です")} className="px-3 py-1 text-sm rounded bg-white/10 hover:bg-white/20">有効化</button>
+          <button onClick={() => alert("削除は準備中です")} className="px-3 py-1 text-sm rounded bg-white/10 hover:bg-white/20">削除</button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-2 p-1 hover:bg-white/10 rounded">&#10005;</button>
+        </div>
+      )}
     </div>
   );
 }

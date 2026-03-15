@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Copy,
   Trash2,
+  ArrowUpDown,
 } from "lucide-react";
 
 const pages = [
@@ -49,11 +50,29 @@ export default function WebsitePagesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
 
-  const filtered = pages.filter((p) => {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const filteredBase = pages.filter((p) => {
     const matchSearch = p.title.includes(search) || p.url.includes(search);
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const filtered = [...filteredBase].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalViews = pages.reduce((sum, p) => sum + p.views, 0);
 
@@ -145,13 +164,13 @@ export default function WebsitePagesPage() {
                 variant="search"
                 placeholder="ページ名、URLで検索..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               />
             </div>
             <select
               className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             >
               <option value="all">すべてのステータス</option>
               <option value="published">公開中</option>
@@ -163,9 +182,9 @@ export default function WebsitePagesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ページ名</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">URL</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">テンプレート</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("title")}><div className="flex items-center gap-1">ページ名 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("url")}><div className="flex items-center gap-1">URL <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("template")}><div className="flex items-center gap-1">テンプレート <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">最終更新</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">PV</th>
@@ -173,7 +192,7 @@ export default function WebsitePagesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((page) => (
+              {paginatedItems.map((page) => (
                 <tr key={page.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <span className="font-medium text-gray-900">
@@ -214,9 +233,16 @@ export default function WebsitePagesPage() {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-gray-200 px-4 py-3">
-          <p className="text-sm text-gray-500">{filtered.length}件のページを表示</p>
-        </div>
+        {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
+
       </Card>
     </div>
   );

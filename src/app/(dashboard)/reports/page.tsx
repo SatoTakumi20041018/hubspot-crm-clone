@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,6 +11,12 @@ import {
   DollarSign,
   CheckSquare,
   ArrowUpRight,
+  Search,
+  MoreHorizontal,
+  Pencil,
+  Copy,
+  Trash2,
+  ArrowUpDown,
 } from "lucide-react";
 
 const dateRanges = [
@@ -81,11 +87,75 @@ const topPerformers = [
   { name: "山本 健太", deals: 8, revenue: 12400000, tasks: 45 },
 ];
 
+function RowActions() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("編集"); setOpen(false); }}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("複製"); setOpen(false); }}>
+            <Copy className="h-3.5 w-3.5" /> 複製
+          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); alert("削除"); setOpen(false); }}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
   const [dateRange, setDateRange] = useState("今月");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+  const sortedPerformers = [...topPerformers].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(sortedPerformers.length / itemsPerPage);
+  const paginatedItems = sortedPerformers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const [searchQuery, setSearchQuery] = useState("");
 
 
   if (loading) {
@@ -417,28 +487,33 @@ export default function ReportsPage() {
       {/* Top Performers */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>トップパフォーマー</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>トップパフォーマー</CardTitle>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-6 py-3 text-left font-medium text-gray-500">
-                  担当者
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">
-                  成約件数
-                </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">
-                  売上合計
-                </th>
+                <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">担当者 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("deals")}><div className="flex items-center justify-end gap-1">成約件数 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("revenue")}><div className="flex items-center justify-end gap-1">売上合計 <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">
                   完了タスク
                 </th>
+                <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
-              {topPerformers.map((person, i) => (
+              {paginatedItems.filter(item => {
+                if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+                return true;
+              }).map((person, i) => (
                 <tr
                   key={person.name}
                   className="border-b border-gray-100 hover:bg-gray-50"
@@ -469,12 +544,22 @@ export default function ReportsPage() {
                   <td className="px-4 py-3 text-right text-gray-600">
                     {person.tasks}件
                   </td>
+                  <td className="px-4 py-3"><RowActions /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </CardContent>
       </Card>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+          <p className="text-sm text-gray-500">{sortedPerformers.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sortedPerformers.length)}件</p>
+          <div className="flex gap-1">
+            <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

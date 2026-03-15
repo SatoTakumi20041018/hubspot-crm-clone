@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   AlertTriangle,
   Plus,
+  ArrowUpDown,
 } from "lucide-react";
 
 const subscriptions = [
@@ -80,11 +81,29 @@ export default function SubscriptionsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const filtered = subscriptions.filter((s) => {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const filteredBase = subscriptions.filter((s) => {
     const matchSearch = s.customer.includes(search) || s.plan.includes(search);
     const matchStatus = statusFilter === "all" || s.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const filtered = [...filteredBase].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const toggleAll = () => {
     if (selectedIds.size === filtered.length) {
@@ -244,13 +263,13 @@ export default function SubscriptionsPage() {
                 variant="search"
                 placeholder="顧客名、プランで検索..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               />
             </div>
             <select
               className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
             >
               <option value="all">すべてのステータス</option>
               <option value="active">アクティブ</option>
@@ -264,9 +283,9 @@ export default function SubscriptionsPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filtered.length > 0 && selectedIds.size === filtered.length} /></th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">顧客</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">プラン</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">MRR</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("customer")}><div className="flex items-center gap-1">顧客 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("plan")}><div className="flex items-center gap-1">プラン <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("mrr")}><div className="flex items-center justify-end gap-1">MRR <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">課金</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">開始日</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">次回請求</th>
@@ -275,7 +294,7 @@ export default function SubscriptionsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((sub) => (
+              {paginatedItems.map((sub) => (
                 <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(String(sub.id))} onChange={() => toggle(String(sub.id))} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3 font-medium text-gray-900">{sub.customer}</td>
@@ -301,9 +320,16 @@ export default function SubscriptionsPage() {
             </tbody>
           </table>
         </div>
-        <div className="border-t border-gray-200 px-4 py-3">
-          <p className="text-sm text-gray-500">{filtered.length}件のサブスクリプションを表示</p>
-        </div>
+        {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
+
       </Card>
     </div>
   );

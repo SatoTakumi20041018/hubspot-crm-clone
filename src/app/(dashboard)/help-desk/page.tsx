@@ -20,6 +20,7 @@ import {
   Timer,
   MoreHorizontal,
   Inbox,
+  ArrowUpDown,
 } from "lucide-react";
 
 const tickets = [
@@ -56,11 +57,29 @@ export default function HelpDeskPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [quickReply, setQuickReply] = useState("");
 
-  const filtered = tickets.filter((t) => {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const filteredBase = tickets.filter((t) => {
     const matchSearch = t.title.includes(search) || t.customer.includes(search) || t.id.includes(search);
     const matchStatus = statusFilter === "all" || t.status === statusFilter;
     return matchSearch && matchStatus;
   });
+  const filtered = [...filteredBase].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const openCount = tickets.filter((t) => t.status === "open").length;
   const inProgressCount = tickets.filter((t) => t.status === "in_progress").length;
@@ -82,6 +101,8 @@ export default function HelpDeskPage() {
         ]}
       />
 
+      <p className="text-sm text-gray-500">{tickets.length}件のチケット</p>
+
       {/* KPI Stats */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatsCard label="未対応チケット" value={openCount} change={-15} changeLabel="昨日比" icon={Inbox} />
@@ -101,13 +122,13 @@ export default function HelpDeskPage() {
                     variant="search"
                     placeholder="チケットID、タイトル、顧客名..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   />
                 </div>
                 <select
                   className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
+                  onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                 >
                   <option value="all">すべてのステータス</option>
                   <option value="open">未対応</option>
@@ -121,9 +142,9 @@ export default function HelpDeskPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">ID</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">タイトル</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">顧客</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("id")}><div className="flex items-center gap-1">ID <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("title")}><div className="flex items-center gap-1">タイトル <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("customer")}><div className="flex items-center gap-1">顧客 <ArrowUpDown className="h-3 w-3" /></div></th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">優先度</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">SLA</th>
@@ -131,7 +152,7 @@ export default function HelpDeskPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((ticket) => (
+                  {paginatedItems.map((ticket) => (
                     <tr
                       key={ticket.id}
                       className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${
@@ -182,6 +203,15 @@ export default function HelpDeskPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 

@@ -212,11 +212,17 @@ export default function KnowledgeBasePage() {
   ];
   const [selectedCategory, setSelectedCategory] = useState("すべて");
 
+
   const filtered = articles.filter((a) => {
     const matchSearch = a.title.toLowerCase().includes(search.toLowerCase());
     const matchCategory = selectedCategory === "すべて" || a.category === selectedCategory;
     return matchSearch && matchCategory;
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   if (loading) {
@@ -264,7 +270,7 @@ export default function KnowledgeBasePage() {
             <h3 className="text-sm font-semibold text-gray-900 mb-3">カテゴリ</h3>
             <div className="space-y-1">
               <button
-                onClick={() => setSelectedCategory("すべて")}
+                onClick={() => { setSelectedCategory("すべて"); setCurrentPage(1); }}
                 className={`flex items-center justify-between w-full rounded-md px-3 py-2 text-sm transition-colors ${
                   selectedCategory === "すべて"
                     ? "bg-[#FFF1ED] text-[#ff4800] font-medium"
@@ -280,7 +286,7 @@ export default function KnowledgeBasePage() {
               {categories.map((cat) => (
                 <button
                   key={cat.name}
-                  onClick={() => setSelectedCategory(cat.name)}
+                  onClick={() => { setSelectedCategory(cat.name); setCurrentPage(1); }}
                   className={`flex items-center justify-between w-full rounded-md px-3 py-2 text-sm transition-colors ${
                     selectedCategory === cat.name
                       ? "bg-[#FFF1ED] text-[#ff4800] font-medium"
@@ -305,7 +311,7 @@ export default function KnowledgeBasePage() {
               variant="search"
               placeholder="記事を検索..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             />
           </div>
 
@@ -334,7 +340,7 @@ export default function KnowledgeBasePage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((article) => (
+                  {paginatedItems.map((article) => (
                     <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -380,6 +386,15 @@ export default function KnowledgeBasePage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
       </div>

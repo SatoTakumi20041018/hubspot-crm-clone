@@ -22,6 +22,7 @@ import {
   UserPlus,
   ChevronDown,
   ChevronRight as ChevronRightIcon,
+  Search,
 } from "lucide-react";
 
 interface Deal {
@@ -199,6 +200,7 @@ export default function DealsPage() {
   const [collapsedStages, setCollapsedStages] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -236,8 +238,13 @@ export default function DealsPage() {
     ? [...selectedPipeline.stages].sort((a, b) => a.displayOrder - b.displayOrder)
     : [];
 
+  const filteredDeals = deals.filter(item => {
+    if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  });
+
   const dealsByStage = stages.map((stage) => {
-    const stageDeals = deals.filter((d) => d.properties.dealstage === stage.id);
+    const stageDeals = filteredDeals.filter((d) => d.properties.dealstage === stage.id);
     const stageTotal = stageDeals.reduce((sum, d) => sum + (Number(d.properties.amount) || 0), 0);
     const weightedTotal = stageDeals.reduce((sum, d) => {
       const amount = Number(d.properties.amount) || 0;
@@ -333,6 +340,13 @@ export default function DealsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+              placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+          </div>
+
           {/* Pipeline Selector */}
           <select
             className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
@@ -592,14 +606,14 @@ export default function DealsPage() {
                       </td>
                     </tr>
                   ))
-                ) : deals.length === 0 ? (
+                ) : filteredDeals.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
                       取引が見つかりません
                     </td>
                   </tr>
                 ) : (
-                  deals.map((deal) => (
+                  filteredDeals.map((deal) => (
                     <tr
                       key={deal.id}
                       className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(deal.id) ? "bg-blue-50/50" : ""}`}

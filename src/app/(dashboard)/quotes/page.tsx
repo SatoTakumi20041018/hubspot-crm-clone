@@ -231,6 +231,7 @@ export default function QuotesPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("すべて");
 
+
   const filtered = quotes.filter((q) => {
     const matchSearch =
       q.quoteNumber.toLowerCase().includes(search.toLowerCase()) ||
@@ -239,6 +240,11 @@ export default function QuotesPage() {
     const matchStatus = filterStatus === "すべて" || q.status === filterStatus;
     return matchSearch && matchStatus;
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalAmount = quotes.reduce((s, q) => s + q.amount, 0);
   const signedAmount = quotes.filter((q) => q.status === "署名済み").reduce((s, q) => s + q.amount, 0);
@@ -341,7 +347,7 @@ export default function QuotesPage() {
                 variant="search"
                 placeholder="見積番号、取引名で検索..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -349,7 +355,7 @@ export default function QuotesPage() {
               <select
                 className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
+                onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
               >
                 <option>すべて</option>
                 <option>下書き</option>
@@ -393,7 +399,7 @@ export default function QuotesPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((quote) => (
+              {paginatedItems.map((quote) => (
                 <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" onClick={(e) => e.stopPropagation()} />
@@ -429,6 +435,15 @@ export default function QuotesPage() {
             </tbody>
           </table>
         </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
       </Card>
     </div>
   );

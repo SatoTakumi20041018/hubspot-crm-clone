@@ -19,6 +19,7 @@ import {
   ChevronRight,
   MoreHorizontal,
   Calendar,
+  ArrowUpDown,
 } from "lucide-react";
 
 const customers = [
@@ -56,11 +57,29 @@ export default function CustomerSuccessPage() {
   const [search, setSearch] = useState("");
   const [healthFilter, setHealthFilter] = useState("all");
 
-  const filtered = customers.filter((c) => {
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const filteredBase = customers.filter((c) => {
     const matchSearch = c.name.includes(search);
     const matchHealth = healthFilter === "all" || c.health === healthFilter;
     return matchSearch && matchHealth;
   });
+  const filtered = [...filteredBase].sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const healthCounts = {
     green: customers.filter((c) => c.health === "green").length,
@@ -137,13 +156,13 @@ export default function CustomerSuccessPage() {
                     variant="search"
                     placeholder="顧客名で検索..."
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   />
                 </div>
                 <select
                   className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm"
                   value={healthFilter}
-                  onChange={(e) => setHealthFilter(e.target.value)}
+                  onChange={(e) => { setHealthFilter(e.target.value); setCurrentPage(1); }}
                 >
                   <option value="all">すべてのステータス</option>
                   <option value="green">健全</option>
@@ -156,9 +175,9 @@ export default function CustomerSuccessPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">顧客名</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">ヘルス</th>
-                    <th className="px-4 py-3 text-left font-medium text-gray-500">MRR</th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">顧客名 <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("healthScore")}><div className="flex items-center gap-1">ヘルス <ArrowUpDown className="h-3 w-3" /></div></th>
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("mrr")}><div className="flex items-center gap-1">MRR <ArrowUpDown className="h-3 w-3" /></div></th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">最終活動</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">更新日</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">CSM</th>
@@ -166,7 +185,7 @@ export default function CustomerSuccessPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((customer) => (
+                  {paginatedItems.map((customer) => (
                     <tr
                       key={customer.id}
                       className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${
@@ -198,6 +217,15 @@ export default function CustomerSuccessPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
           </Card>
         </div>
 

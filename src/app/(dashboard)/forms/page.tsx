@@ -183,6 +183,7 @@ export default function FormsPage() {
   const [activeView, setActiveView] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+
   const views = [
     { key: "all", label: "すべてのフォーム" },
     { key: "mine", label: "マイフォーム" },
@@ -206,6 +207,11 @@ export default function FormsPage() {
   const filtered = forms.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalSubmissions = forms.reduce((s, f) => s + f.submissions, 0);
   const totalViews = forms.reduce((s, f) => s + f.views, 0);
@@ -300,7 +306,7 @@ export default function FormsPage() {
           variant="search"
           placeholder="フォーム名で検索..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
         />
       </div>
 
@@ -333,7 +339,7 @@ export default function FormsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((form) => (
+              {paginatedItems.map((form) => (
                 <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(form.id)} onChange={() => toggle(form.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3">
@@ -381,6 +387,15 @@ export default function FormsPage() {
             </tbody>
           </table>
         </div>
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <div className="flex gap-1">
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+                </div>
+              </div>
+            )}
       </Card>
     </div>
   );
