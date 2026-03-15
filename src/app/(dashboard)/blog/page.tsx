@@ -17,6 +17,7 @@ import {
   TrendingUp,
   FileText,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 
 const blogPosts = [
@@ -78,11 +79,30 @@ export default function BlogPage() {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeView, setActiveView] = useState("all");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const savedViews = [
+    { key: "all", label: "すべて" },
+    { key: "published", label: "公開中" },
+    { key: "draft", label: "下書き" },
+  ];
 
   const filtered = blogPosts.filter((p) => {
     const matchSearch = p.title.includes(search) || p.author.includes(search);
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchView = activeView === "all" || p.status === activeView;
+    return matchSearch && matchStatus && matchView;
+  }).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -135,12 +155,34 @@ export default function BlogPage() {
           { label: "ブログ" },
         ]}
         actions={
-          <Button size="sm" onClick={() => alert("記事作成は準備中です")}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm" onClick={() => alert("記事作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{blogPosts.length}件のブログ記事</p>
+
             記事作成
           </Button>
+          </div>
         }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {savedViews.map((v) => (
+          <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
+
+      <p className="text-sm text-gray-500">{filtered.length}件の記事</p>
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -197,13 +239,13 @@ export default function BlogPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">タイトル</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">著者</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("date")}>
+                  <div className="flex items-center gap-1">
                     日付 <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">
-                  <div className="flex items-center justify-end gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("views")}>
+                  <div className="flex items-center justify-end gap-1">
                     PV <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>

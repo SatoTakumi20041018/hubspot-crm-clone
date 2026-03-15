@@ -283,6 +283,9 @@ export default function EmailPage() {
         actions={
           <Button size="sm" onClick={() => alert("メール作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{campaigns.length}件のキャンペーン</p>
+
             メール作成
           </Button>
         }
@@ -516,6 +519,16 @@ export default function EmailPage() {
             削除
           </Button>
           <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-xs text-gray-500 hover:text-gray-700">選択解除</button>
+        </div>
+      )}
+
+      {sorted.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Mail className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいメールキャンペーンを作成して始めましょう</p>
         </div>
       )}
     </div>

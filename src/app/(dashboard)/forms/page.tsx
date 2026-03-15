@@ -15,6 +15,7 @@ import {
   MousePointerClick,
   Clock,
   BarChart3,
+  Download,
 } from "lucide-react";
 
 interface Form {
@@ -182,7 +183,12 @@ export default function FormsPage() {
   const [search, setSearch] = useState("");
   const [activeView, setActiveView] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
 
   const views = [
     { key: "all", label: "すべてのフォーム" },
@@ -206,7 +212,12 @@ export default function FormsPage() {
 
   const filtered = forms.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
-  );
+  ).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -238,10 +249,19 @@ export default function FormsPage() {
         title="フォーム"
         description="リードキャプチャフォームの管理"
         actions={
-          <Button size="sm" onClick={() => alert("フォーム作成は準備中です")}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm" onClick={() => alert("フォーム作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{forms.length}件のフォーム</p>
+
             フォーム作成
           </Button>
+          </div>
         }
       />
 
@@ -317,24 +337,36 @@ export default function FormsPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filtered.length > 0 && selectedIds.size === filtered.length} /></th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}>
+                  <div className="flex items-center gap-1">
                     フォーム名
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">タイプ</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">
-                  <div className="flex items-center justify-end gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("type")}>
+                  <div className="flex items-center gap-1">タイプ <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("status")}>
+                  <div className="flex items-center gap-1">ステータス <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("submissions")}>
+                  <div className="flex items-center justify-end gap-1">
                     送信数
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">表示数</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">CVR</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">最終送信</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">作成日</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("views")}>
+                  <div className="flex items-center justify-end gap-1">表示数 <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("conversionRate")}>
+                  <div className="flex items-center justify-end gap-1">CVR <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("lastSubmission")}>
+                  <div className="flex items-center gap-1">最終送信 <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("createdAt")}>
+                  <div className="flex items-center gap-1">作成日 <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -397,6 +429,16 @@ export default function FormsPage() {
               </div>
             )}
       </Card>
+
+      {filtered.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <FileText className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいフォームを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

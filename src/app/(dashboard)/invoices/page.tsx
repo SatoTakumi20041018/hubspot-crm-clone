@@ -162,6 +162,21 @@ export default function InvoicesPage() {
         }
       />
 
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {[
+          { key: "all", label: "すべて" },
+          { key: "sent", label: "未払い" },
+          { key: "paid", label: "支払済" },
+        ].map((v) => (
+          <button key={v.key} onClick={() => { setStatusFilter(v.key === "all" ? "all" : v.key); setCurrentPage(1); }}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              statusFilter === (v.key === "all" ? "all" : v.key) ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
+
       {/* KPI */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatsCard label="未払い合計" value={`¥${totalOutstanding.toLocaleString()}`} icon={DollarSign} />

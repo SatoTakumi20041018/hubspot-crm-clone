@@ -87,12 +87,30 @@ export default function PaymentsPage() {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState("all");
+  const [activeView, setActiveView] = useState("all");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
 
+  const savedViews = [
+    { key: "all", label: "すべて" },
+    { key: "completed", label: "完了" },
+    { key: "refunded", label: "返金" },
+  ];
 
   const filtered = payments.filter((p) => {
     const matchSearch = p.customer.includes(search) || p.id.includes(search);
     const matchStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchSearch && matchStatus;
+    const matchView = activeView === "all" || p.status === activeView;
+    return matchSearch && matchStatus && matchView;
+  }).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -149,10 +167,24 @@ export default function PaymentsPage() {
         actions={
           <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
             <Download className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{payments.length}件の支払い</p>
+
             エクスポート
           </Button>
         }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {savedViews.map((v) => (
+          <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -233,10 +265,10 @@ export default function PaymentsPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filtered.length > 0 && selectedIds.size === filtered.length} /></th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">日付</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">支払いID</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">顧客</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-500">金額</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("date")}><div className="flex items-center gap-1">日付 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("id")}><div className="flex items-center gap-1">支払いID <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("customer")}><div className="flex items-center gap-1">顧客 <ArrowUpDown className="h-3 w-3" /></div></th>
+                <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("amount")}><div className="flex items-center justify-end gap-1">金額 <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">決済方法</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
                 <th className="px-4 py-3"></th>

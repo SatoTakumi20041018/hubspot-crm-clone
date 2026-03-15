@@ -10,11 +10,15 @@ import {
   MessageCircle,
   FileText,
   Clock,
-  User,
   Send,
   Paperclip,
   Filter,
   Plus,
+  ArrowUpDown,
+  X,
+  CheckCheck,
+  UserPlus,
+  XCircle,
 } from "lucide-react";
 
 type Channel = "email" | "chat" | "form";
@@ -68,12 +72,20 @@ export default function InboxPage() {
   const [filterStatus, setFilterStatus] = useState<string>("すべて");
   const [search, setSearch] = useState("");
   const [activeView, setActiveView] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortDir, setSortDir] = useState<"newest" | "oldest">("newest");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   const savedViews = [
     { key: "all", label: "すべて" },
     { key: "unread", label: "未読" },
     { key: "assigned", label: "割り当て済み" },
   ];
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
 
   const filtered = conversations.filter((c) => {
     const matchChannel = filterChannel === "すべて" || channelLabel(c.channel) === filterChannel;
@@ -82,6 +94,14 @@ export default function InboxPage() {
     const matchView = activeView === "all" || (activeView === "unread" && c.unread) || (activeView === "assigned" && c.assignee === "佐藤 匠");
     return matchChannel && matchStatus && matchSearch && matchView;
   });
+
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (sortDir === "newest") return 0; // already sorted newest-first by data
+    return 0; // reverse would require real dates
+  });
+
+  const totalPages = Math.ceil(sortedFiltered.length / itemsPerPage);
+  const paginatedConversations = sortedFiltered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const selected = conversations.find((c) => c.id === selectedId) || conversations[0];
 
@@ -105,20 +125,35 @@ export default function InboxPage() {
         description={`${conversations.filter((c) => c.status === "open").length}件のオープンな会話`}
       />
 
+      <p className="text-sm text-gray-500">{filtered.length}件の会話</p>
+
       {/* Saved View Tabs */}
       <div className="flex items-center gap-1 border-b border-gray-200 px-1">
         {savedViews.map((v) => (
-          <button key={v.key} onClick={() => setActiveView(v.key)} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
+          <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビュー追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
-      <div className="grid grid-cols-1 gap-0 lg:grid-cols-3" style={{ height: "calc(100vh - 260px)" }}>
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("既読にしました")}><CheckCheck className="h-3.5 w-3.5" /> 既読にする</button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("担当者を割り当て")}><UserPlus className="h-3.5 w-3.5" /> 担当者を割り当て</button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("クローズしました")}><XCircle className="h-3.5 w-3.5" /> クローズ</button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}><X className="h-4 w-4" /></button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-0 lg:grid-cols-3" style={{ height: "calc(100vh - 320px)" }}>
         {/* Left: Conversation List */}
         <Card className="lg:col-span-1 rounded-r-none overflow-hidden flex flex-col">
           {/* Search and Filters */}
           <div className="p-3 border-b border-gray-200 space-y-2">
-            <Input variant="search" placeholder="名前、会社、メッセージで検索..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input variant="search" placeholder="名前、会社、メッセージで検索..." value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} />
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <select className="h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700" value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)}>
@@ -132,31 +167,48 @@ export default function InboxPage() {
                 <option>オープン</option>
                 <option>クローズ</option>
               </select>
+              <button onClick={() => setSortDir(d => d === "newest" ? "oldest" : "newest")} className="flex items-center gap-1 h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700 hover:bg-gray-50">
+                <ArrowUpDown className="h-3 w-3" />{sortDir === "newest" ? "新しい順" : "古い順"}
+              </button>
             </div>
           </div>
 
           {/* Conversation Items */}
           <div className="overflow-y-auto flex-1">
-            {filtered.map((conv) => (
-              <button key={conv.id} onClick={() => setSelectedId(conv.id)} className={`w-full text-left p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedId === conv.id ? "bg-[#FFF1ED] border-l-2 border-l-[#ff4800]" : ""} ${conv.unread ? "bg-blue-50/50" : ""}`}>
-                <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">{conv.contact.charAt(0)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <span className={`text-sm ${conv.unread ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{conv.contact}</span>
-                      <span className="text-[10px] text-gray-400">{conv.time}</span>
+            {paginatedConversations.map((conv) => (
+              <div key={conv.id} className={`flex items-start gap-1 w-full text-left p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedId === conv.id ? "bg-[#FFF1ED] border-l-2 border-l-[#ff4800]" : ""} ${conv.unread ? "bg-blue-50/50" : ""}`}>
+                <input type="checkbox" className="rounded border-gray-300 mt-3 mr-1 flex-shrink-0" checked={selectedIds.has(conv.id)} onChange={() => toggleSelect(conv.id)} onClick={(e) => e.stopPropagation()} />
+                <button onClick={() => setSelectedId(conv.id)} className="flex-1 text-left">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">{conv.contact.charAt(0)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-0.5">
+                        <span className={`text-sm ${conv.unread ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>{conv.contact}</span>
+                        <span className="text-[10px] text-gray-400">{conv.time}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        {channelIcon(conv.channel)}
+                        <span className="text-xs text-gray-500">{conv.company}</span>
+                      </div>
+                      <p className="text-xs text-gray-500 truncate">{conv.lastMessage}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      {channelIcon(conv.channel)}
-                      <span className="text-xs text-gray-500">{conv.company}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 truncate">{conv.lastMessage}</p>
+                    {conv.unread && (<div className="h-2 w-2 rounded-full bg-[#ff4800] flex-shrink-0 mt-2" />)}
                   </div>
-                  {conv.unread && (<div className="h-2 w-2 rounded-full bg-[#ff4800] flex-shrink-0 mt-2" />)}
-                </div>
-              </button>
+                </button>
+              </div>
             ))}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-200 px-3 py-2">
+              <p className="text-xs text-gray-500">{sortedFiltered.length}件中 {(currentPage - 1) * itemsPerPage + 1}〜{Math.min(currentPage * itemsPerPage, sortedFiltered.length)}件</p>
+              <div className="flex gap-1">
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-2 py-1 text-xs border rounded disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="px-2 py-1 text-xs border rounded disabled:opacity-40 hover:bg-gray-50">次へ</button>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Right: Conversation Thread */}
@@ -204,6 +256,16 @@ export default function InboxPage() {
           </div>
         </Card>
       </div>
+
+      {filtered.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Mail className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しい会話を作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

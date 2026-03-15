@@ -21,6 +21,7 @@ import {
   Trash2,
   Pencil,
   UserPlus,
+  Users,
 } from "lucide-react";
 
 const lifecycleStages = [
@@ -615,6 +616,16 @@ export default function ContactsPage() {
           </div>
         </div>
       </Card>
+
+      {contacts.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Users className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいコンタクトを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/layout/page-header";
+import { Input } from "@/components/ui/input";
 import {
   Plus,
   Calendar,
@@ -16,6 +17,8 @@ import {
   MoreHorizontal,
   ChevronLeft,
   ChevronRight,
+  ArrowUpDown,
+  Search,
 } from "lucide-react";
 
 interface Meeting {
@@ -172,6 +175,13 @@ export default function MeetingsPage() {
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [activeView, setActiveView] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
 
   const views = [
     { key: "all", label: "すべて" },
@@ -179,11 +189,29 @@ export default function MeetingsPage() {
     { key: "past", label: "過去" },
   ];
 
+  const filteredMeetings = meetings.filter((m) => {
+    if (search) {
+      const q = search.toLowerCase();
+      return m.title.toLowerCase().includes(q) || m.attendees.some(a => a.toLowerCase().includes(q)) || m.location.toLowerCase().includes(q);
+    }
+    return true;
+  }).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredMeetings.length / itemsPerPage);
+  const paginatedMeetings = filteredMeetings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
   const toggleAll = () => {
-    if (selectedIds.size === meetings.length) {
+    if (selectedIds.size === filteredMeetings.length) {
       setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(meetings.map((item) => item.id)));
+      setSelectedIds(new Set(filteredMeetings.map((item) => item.id)));
     }
   };
 
@@ -238,7 +266,7 @@ export default function MeetingsPage() {
                 リスト
               </button>
             </div>
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert("ミーティングリンク作成は準備中です")}>
               <Plus className="h-4 w-4 mr-1" />
               ミーティングリンク作成
             </Button>
@@ -246,7 +274,19 @@ export default function MeetingsPage() {
         }
       />
 
-      
+      {/* Search & Record Count */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">{filteredMeetings.length}件のミーティング</p>
+        <div className="w-72">
+          <Input
+            variant="search"
+            placeholder="タイトル、参加者で検索..."
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+          />
+        </div>
+      </div>
+
       {/* Empty State */}
       {meetings.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -337,7 +377,7 @@ export default function MeetingsPage() {
       ) : (
         /* List View */
         <div className="space-y-3">
-          {meetings.map((meeting) => (
+          {paginatedMeetings.map((meeting) => (
             <Card key={meeting.id} className="hover:border-gray-300 transition-all">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
@@ -392,6 +432,15 @@ export default function MeetingsPage() {
               </CardContent>
             </Card>
           ))}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
+              <p className="text-sm text-gray-500">{filteredMeetings.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filteredMeetings.length)}件</p>
+              <div className="flex gap-1">
+                <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

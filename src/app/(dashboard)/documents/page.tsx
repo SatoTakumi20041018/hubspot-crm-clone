@@ -211,6 +211,11 @@ export default function DocumentsPage() {
           <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-xs text-gray-500 hover:text-gray-700">選択解除</button>
         </div>
       )}
-    </div>
+    
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+          </div>
   );
 }

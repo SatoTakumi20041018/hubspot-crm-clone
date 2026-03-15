@@ -17,6 +17,10 @@ import {
   Square,
   CheckCircle2,
   Clock,
+  MessageSquare,
+  Mail,
+  Phone,
+  FileText,
 } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -486,6 +490,64 @@ export default function TaskDetailPage() {
                     "完了にする"
                   )}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Related Activity */}
+          <Card className="mt-6">
+            <CardContent className="p-6">
+              <h2 className="text-base font-semibold text-gray-900 mb-4">関連アクティビティ</h2>
+              <div className="space-y-4">
+                {/* Task creation event */}
+                <div className="flex gap-3">
+                  <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-500">
+                    <CheckSquare className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-gray-900">タスク作成</h3>
+                      <span className="text-xs text-gray-400">{formatDateTime(task.createdAt)}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-600">{title}</p>
+                    <p className="mt-1 text-xs text-gray-400">{ownerName}</p>
+                  </div>
+                </div>
+
+                {/* Status change event if completed */}
+                {isCompleted && task.updatedAt && (
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-500">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-medium text-gray-900">タスク完了</h3>
+                        <span className="text-xs text-gray-400">{formatDateTime(task.updatedAt)}</span>
+                      </div>
+                      <p className="mt-1 text-sm text-gray-600">ステータスが「完了」に変更されました</p>
+                      <p className="mt-1 text-xs text-gray-400">{ownerName}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Related contact activity hint */}
+                {contactId && (
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-500">
+                      <MessageSquare className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500">
+                        関連コンタクトのアクティビティは
+                        <Link href={`/contacts/${contactId}`} className="text-[#ff4800] hover:underline mx-1">
+                          コンタクト詳細ページ
+                        </Link>
+                        で確認できます
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   ArrowUpDown,
   Search,
+  Download,
 } from "lucide-react";
 
 interface Survey {
@@ -131,6 +132,7 @@ const typeBadgeVariant = (type: string) => {
 export default function FeedbackPage() {
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -151,6 +153,17 @@ export default function FeedbackPage() {
   });
   const totalPages = Math.ceil(filteredSurveys.length / itemsPerPage);
   const paginatedItems = filteredSurveys.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const toggleAll = () => {
+    if (selectedIds.size === filteredSurveys.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredSurveys.map((s) => s.id)));
+  };
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
 
   const views = [
     { key: "all", label: "すべて" },
@@ -182,10 +195,19 @@ export default function FeedbackPage() {
         title="フィードバック"
         description="顧客満足度調査とフィードバックの管理"
         actions={
-          <Button size="sm" onClick={() => alert("アンケート作成は準備中です")}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm" onClick={() => alert("アンケート作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{surveys.length}件のアンケート</p>
+
             アンケート作成
           </Button>
+          </div>
         }
       />
 
@@ -346,6 +368,17 @@ export default function FeedbackPage() {
         </div>
       )}
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-[#ff4800]/20 bg-[#FFF1ED] px-4 py-2">
+          <span className="text-sm font-medium text-[#ff4800]">{selectedIds.size}件選択中</span>
+          <Button variant="outline" size="sm" onClick={() => alert("一括編集は準備中です")}>一括編集</Button>
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポートは準備中です")}>エクスポート</Button>
+          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => alert("一括削除は準備中です")}>削除</Button>
+          <button className="ml-auto text-sm text-gray-500 hover:text-gray-700" onClick={() => setSelectedIds(new Set())}>選択解除</button>
+        </div>
+      )}
+
       {/* Survey List */}
       <Card>
         <CardHeader className="pb-3">
@@ -363,6 +396,7 @@ export default function FeedbackPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filteredSurveys.length > 0 && selectedIds.size === filteredSurveys.length} /></th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">アンケート名 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("type")}><div className="flex items-center gap-1">タイプ <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("responses")}><div className="flex items-center justify-end gap-1">回答数 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -375,6 +409,7 @@ export default function FeedbackPage() {
               <tbody>
                 {paginatedItems.map((survey) => (
                   <tr key={survey.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(survey.id)} onChange={() => toggle(survey.id)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="px-6 py-3 font-medium text-gray-900">{survey.name}</td>
                     <td className="px-4 py-3">
                       <Badge variant={typeBadgeVariant(survey.type)}>{survey.type}</Badge>

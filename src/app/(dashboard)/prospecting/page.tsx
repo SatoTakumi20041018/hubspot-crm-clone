@@ -164,7 +164,7 @@ export default function ProspectingPage() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div><CardTitle>{selectedProspect.name}</CardTitle><p className="mt-1 text-sm text-gray-500">{selectedProspect.title} @ {selectedProspect.company}</p><p className="text-sm text-gray-400">{selectedProspect.email}</p></div>
-                <div className="flex gap-2"><Button variant="outline" size="sm"><Mail className="h-4 w-4 mr-1" />メール</Button><Button size="sm"><Send className="h-4 w-4 mr-1" />シーケンスに追加</Button></div>
+                <div className="flex gap-2"><Button variant="outline" size="sm" onClick={() => alert("メール送信は準備中です")}><Mail className="h-4 w-4 mr-1" />メール</Button><Button size="sm" onClick={() => alert("シーケンスに追加は準備中です")}><Send className="h-4 w-4 mr-1" />シーケンスに追加</Button></div>
               </div>
             </CardHeader>
             <CardContent>
@@ -191,6 +191,16 @@ export default function ProspectingPage() {
           </Card>
         </div>
       </div>
+
+      {prospects.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Users className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいプロスペクトを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

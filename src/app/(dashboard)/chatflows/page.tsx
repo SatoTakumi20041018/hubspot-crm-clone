@@ -127,6 +127,9 @@ export default function ChatflowsPage() {
     <div className="space-y-6">
       <PageHeader title="チャットフロー" description="ライブチャットとチャットボットの管理" actions={<Button size="sm" onClick={() => alert("チャットフロー作成は準備中です")}><Plus className="h-4 w-4 mr-1" />チャットフロー作成</Button>} />
 
+      <p className="text-sm text-gray-500">{chatflows.length}件のチャットフロー</p>
+
+
       <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
         {views.map((v) => (
           <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>

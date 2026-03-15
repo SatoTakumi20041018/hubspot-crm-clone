@@ -207,6 +207,9 @@ export default function DashboardsPage() {
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+
+      <p className="text-sm text-gray-500">{dashboards.length}件のダッシュボード</p>
+
               <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
                 placeholder="ダッシュボードを検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
             </div>
@@ -360,6 +363,16 @@ export default function DashboardsPage() {
           </Card>
         ))}
       </div>
+
+      {filtered.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <LayoutDashboard className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいダッシュボードを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   BarChart3,
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   Trash2,
   ArrowUpDown,
   Plus,
+  Download,
 } from "lucide-react";
 
 const dateRanges = [
@@ -142,6 +144,7 @@ export default function ReportsPage() {
 
   const [dateRange, setDateRange] = useState("今月");
   const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -160,6 +163,17 @@ export default function ReportsPage() {
   const totalPages = Math.ceil(sortedPerformers.length / itemsPerPage);
   const paginatedItems = sortedPerformers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const toggleAll = () => {
+    if (selectedIds.size === sortedPerformers.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(sortedPerformers.map((p) => p.name)));
+  };
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
 
 
   if (loading) {
@@ -188,6 +202,10 @@ export default function ReportsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+            <Download className="h-4 w-4 mr-1" />
+            エクスポート
+          </Button>
           <Calendar className="h-4 w-4 text-gray-400" />
           <select
             className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
@@ -225,6 +243,8 @@ export default function ReportsPage() {
           <Plus className="h-4 w-4" />
         </button>
       </div>
+
+      <p className="text-sm text-gray-500">{topPerformers.length}件のパフォーマー</p>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -511,6 +531,16 @@ export default function ReportsPage() {
         </Card>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-[#ff4800]/20 bg-[#FFF1ED] px-4 py-2">
+          <span className="text-sm font-medium text-[#ff4800]">{selectedIds.size}件選択中</span>
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポートは準備中です")}>エクスポート</Button>
+          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => alert("一括削除は準備中です")}>削除</Button>
+          <button className="ml-auto text-sm text-gray-500 hover:text-gray-700" onClick={() => setSelectedIds(new Set())}>選択解除</button>
+        </div>
+      )}
+
       {/* Top Performers */}
       <Card>
         <CardHeader className="pb-3">
@@ -527,6 +557,7 @@ export default function ReportsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={sortedPerformers.length > 0 && selectedIds.size === sortedPerformers.length} /></th>
                 <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">担当者 <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("deals")}><div className="flex items-center justify-end gap-1">成約件数 <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("revenue")}><div className="flex items-center justify-end gap-1">売上合計 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -545,6 +576,7 @@ export default function ReportsPage() {
                   key={person.name}
                   className="border-b border-gray-100 hover:bg-gray-50"
                 >
+                  <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(person.name)} onChange={() => toggle(person.name)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
@@ -585,6 +617,16 @@ export default function ReportsPage() {
             <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
             <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
           </div>
+        </div>
+      )}
+
+      {sortedPerformers.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <BarChart3 className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいレポートを作成して始めましょう</p>
         </div>
       )}
     </div>

@@ -279,6 +279,9 @@ export default function SeoPage() {
         description="サイトのSEOパフォーマンスを分析・最適化"
       />
 
+      <p className="text-sm text-gray-500">{recommendations.length}件の推奨事項</p>
+
+
       <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
         {views.map((v) => (
           <button key={v.key} onClick={() => setActiveView(v.key)}
@@ -500,6 +503,16 @@ export default function SeoPage() {
             )}
         </CardContent>
       </Card>
+
+      {recommendations.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Search className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいSEO推奨事項を作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

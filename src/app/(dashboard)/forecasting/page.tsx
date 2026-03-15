@@ -215,6 +215,9 @@ export default function ForecastingPage() {
         actions={
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
+
+      <p className="text-sm text-gray-500">{teamForecast.length}件のチーム予測</p>
+
             <select
               className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
               value={period}
@@ -491,6 +494,16 @@ export default function ForecastingPage() {
             )}
         </CardContent>
       </Card>
+
+      {teamForecast.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <TrendingUp className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しい予測データを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

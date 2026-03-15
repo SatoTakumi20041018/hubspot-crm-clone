@@ -17,6 +17,7 @@ import {
   BarChart3,
   ArrowUpDown,
   Search,
+  Download,
 } from "lucide-react";
 
 interface AdCampaign {
@@ -149,6 +150,7 @@ const maxClicks = Math.max(...performanceData.map((d) => d.clicks));
 export default function AdsPage() {
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -177,6 +179,20 @@ export default function AdsPage() {
   const totalPages = Math.ceil(filteredCampaigns.length / itemsPerPage);
   const paginatedItems = filteredCampaigns.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const toggleAll = () => {
+    if (selectedIds.size === filteredCampaigns.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredCampaigns.map((c) => c.id)));
+    }
+  };
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
 
   if (loading) {
     return (
@@ -199,10 +215,16 @@ export default function AdsPage() {
         title="広告管理"
         description="広告キャンペーンのパフォーマンスを一元管理"
         actions={
-          <Button size="sm" onClick={() => alert("キャンペーン作成は準備中です")}>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm" onClick={() => alert("キャンペーン作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             キャンペーン作成
           </Button>
+          </div>
         }
       />
 
@@ -294,6 +316,17 @@ export default function AdsPage() {
         </CardContent>
       </Card>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-[#ff4800]/20 bg-[#FFF1ED] px-4 py-2">
+          <span className="text-sm font-medium text-[#ff4800]">{selectedIds.size}件選択中</span>
+          <Button variant="outline" size="sm" onClick={() => alert("一括編集は準備中です")}>一括編集</Button>
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポートは準備中です")}>エクスポート</Button>
+          <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => alert("一括削除は準備中です")}>削除</Button>
+          <button className="ml-auto text-sm text-gray-500 hover:text-gray-700" onClick={() => setSelectedIds(new Set())}>選択解除</button>
+        </div>
+      )}
+
       {/* Campaign Table */}
       <Card>
         <CardHeader className="pb-3">
@@ -311,6 +344,7 @@ export default function AdsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filteredCampaigns.length > 0 && selectedIds.size === filteredCampaigns.length} /></th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">キャンペーン名 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("platform")}><div className="flex items-center gap-1">プラットフォーム <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("status")}><div className="flex items-center gap-1">ステータス <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -328,6 +362,7 @@ export default function AdsPage() {
                   const spentPercent = Math.round((campaign.spent / campaign.budget) * 100);
                   return (
                     <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(campaign.id)} onChange={() => toggle(campaign.id)} onClick={(e) => e.stopPropagation()} /></td>
                       <td className="px-6 py-3 font-medium text-gray-900">{campaign.name}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-medium ${pConfig.color} ${pConfig.bg} rounded px-2 py-1`}>
@@ -378,6 +413,16 @@ export default function AdsPage() {
             )}
         </CardContent>
       </Card>
+
+      {filteredCampaigns.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Megaphone className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいキャンペーンを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

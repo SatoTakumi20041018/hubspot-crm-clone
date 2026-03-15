@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   Plus,
   ArrowUpDown,
+  Download,
 } from "lucide-react";
 
 const subscriptions = [
@@ -151,7 +152,31 @@ export default function SubscriptionsPage() {
           { label: "コマース", href: "/commerce" },
           { label: "サブスクリプション" },
         ]}
+      
+        actions={
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+            <Download className="h-4 w-4 mr-1" />
+            エクスポート
+          </Button>
+        }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {[
+          { key: "all", label: "すべて" },
+          { key: "active", label: "アクティブ" },
+          { key: "canceling", label: "解約" },
+        ].map((v) => (
+          <button key={v.key} onClick={() => { setStatusFilter(v.key === "all" ? "all" : v.key); setCurrentPage(1); }}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              statusFilter === (v.key === "all" ? "all" : v.key) ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
+
+      <p className="text-sm text-gray-500">{filtered.length}件のサブスクリプション</p>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

@@ -23,6 +23,7 @@ import {
   FormInput,
   Lightbulb,
   Plus,
+  Download,
 } from "lucide-react";
 
 const savedViews = ["すべて", "エージェント", "インテリジェンス"];
@@ -199,10 +200,19 @@ export default function BreezePage() {
           { label: "Breeze" },
         ]}
         actions={
-          <Button size="sm">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm">
             <Sparkles className="h-4 w-4 mr-1" />
+
+      <p className="text-sm text-gray-500">{agents.length}件のエージェント</p>
+
             Breeze Studio
           </Button>
+          </div>
         }
       />
 
@@ -436,6 +446,16 @@ export default function BreezePage() {
           </div>
         </CardContent>
       </Card>
+
+      {agents.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Bot className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいエージェントを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

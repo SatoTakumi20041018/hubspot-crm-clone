@@ -139,6 +139,9 @@ export default function GoalsPage() {
     <div className="space-y-6">
       <PageHeader title="ゴール" description="個人・チームの目標設定と進捗管理" actions={<Button size="sm" onClick={() => alert("ゴール作成は準備中です")}><Plus className="h-4 w-4 mr-1" />ゴール作成</Button>} />
 
+      <p className="text-sm text-gray-500">{goals.length}件のゴール</p>
+
+
       <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
         {views.map((v) => (
           <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
@@ -218,6 +221,16 @@ export default function GoalsPage() {
           <Button size="sm" variant="outline" onClick={() => alert("エクスポートは準備中です")}><Download className="h-4 w-4 mr-1" />エクスポート</Button>
           <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => alert("削除は準備中です")}><Trash2 className="h-4 w-4 mr-1" />削除</Button>
           <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-xs text-gray-500 hover:text-gray-700">選択解除</button>
+        </div>
+      )}
+
+      {sorted.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Target className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいゴールを作成して始めましょう</p>
         </div>
       )}
     </div>

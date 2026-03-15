@@ -17,6 +17,7 @@ import {
   ArrowUpDown,
   Filter,
   Plus,
+  Download,
 } from "lucide-react";
 
 interface Call {
@@ -229,6 +230,12 @@ export default function CallsPage() {
   const [search, setSearch] = useState("");
   const [activeView, setActiveView] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const handleSort = (field: string) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
 
   const views = [
     { key: "all", label: "すべての通話" },
@@ -245,6 +252,11 @@ export default function CallsPage() {
       (filterDirection === "発信" && c.direction === "outbound") ||
       (filterDirection === "着信" && c.direction === "inbound");
     return matchSearch && matchDirection;
+  }).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
 
   const toggleAll = () => {
@@ -289,10 +301,16 @@ export default function CallsPage() {
         title="コールログ"
         description="通話履歴と通話記録の管理"
         actions={
-          <Button size="sm">
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+            <Button size="sm" onClick={() => alert("発信機能は準備中です")}>
             <Phone className="h-4 w-4 mr-1" />
             発信する
           </Button>
+          </div>
         }
       />
 
@@ -402,18 +420,22 @@ export default function CallsPage() {
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filtered.length > 0 && selectedIds.size === filtered.length} /></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">方向</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("contact")}>
+                  <div className="flex items-center gap-1">
                     コンタクト
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">会社</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">通話時間</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("company")}>
+                  <div className="flex items-center gap-1">会社 <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("durationSec")}>
+                  <div className="flex items-center gap-1">通話時間 <ArrowUpDown className="h-3 w-3" /></div>
+                </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">結果</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">メモ</th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("date")}>
+                  <div className="flex items-center gap-1">
                     日時
                     <ArrowUpDown className="h-3 w-3" />
                   </div>

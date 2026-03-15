@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/page-header";
 import {
   Handshake,
@@ -23,54 +24,17 @@ import {
   Pencil,
   Copy,
   Trash2,
+  Plus,
+  X,
+  Download,
 } from "lucide-react";
 
 const kpis = [
-  {
-    label: "進行中の取引",
-    value: "42",
-    change: "+8.3%",
-    icon: Handshake,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-    tooltip: "現在パイプラインで進行中の取引数",
-  },
-  {
-    label: "今月の成約",
-    value: "12",
-    change: "+25.0%",
-    icon: Trophy,
-    color: "text-green-600",
-    bg: "bg-green-50",
-    tooltip: "今月成約（クローズ済み）した取引の件数",
-  },
-  {
-    label: "パイプライン金額",
-    value: "¥68.5M",
-    change: "+15.2%",
-    icon: TrendingUp,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-    tooltip: "パイプライン内の全取引の合計金額",
-  },
-  {
-    label: "平均取引サイズ",
-    value: "¥4.2M",
-    change: "+5.8%",
-    icon: DollarSign,
-    color: "text-orange-600",
-    bg: "bg-orange-50",
-    tooltip: "成約済み取引の平均金額",
-  },
-  {
-    label: "成約率",
-    value: "28.5%",
-    change: "+3.2%",
-    icon: Target,
-    color: "text-cyan-600",
-    bg: "bg-cyan-50",
-    tooltip: "全取引のうち成約に至った割合",
-  },
+  { label: "進行中の取引", value: "42", change: "+8.3%", icon: Handshake, color: "text-blue-600", bg: "bg-blue-50", tooltip: "現在パイプラインで進行中の取引数" },
+  { label: "今月の成約", value: "12", change: "+25.0%", icon: Trophy, color: "text-green-600", bg: "bg-green-50", tooltip: "今月成約（クローズ済み）した取引の件数" },
+  { label: "パイプライン金額", value: "¥68.5M", change: "+15.2%", icon: TrendingUp, color: "text-purple-600", bg: "bg-purple-50", tooltip: "パイプライン内の全取引の合計金額" },
+  { label: "平均取引サイズ", value: "¥4.2M", change: "+5.8%", icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50", tooltip: "成約済み取引の平均金額" },
+  { label: "成約率", value: "28.5%", change: "+3.2%", icon: Target, color: "text-cyan-600", bg: "bg-cyan-50", tooltip: "全取引のうち成約に至った割合" },
 ];
 
 const activityFeed = [
@@ -92,11 +56,11 @@ const upcomingTasks = [
 ];
 
 const topDeals = [
-  { name: "基幹システムリプレイス", company: "グローバルシステム", amount: 15000000, stage: "見積提出", probability: 50 },
-  { name: "クラウド移行プロジェクト", company: "鈴木テクノロジー", amount: 8500000, stage: "提案中", probability: 40 },
-  { name: "ECプラットフォーム導入", company: "太陽コーポレーション", amount: 7200000, stage: "契約締結", probability: 100 },
-  { name: "データ分析基盤構築", company: "デジタルソリューションズ", amount: 6800000, stage: "提案中", probability: 30 },
-  { name: "Webアプリ開発", company: "フューチャーテック", amount: 5500000, stage: "交渉中", probability: 80 },
+  { id: "d1", name: "基幹システムリプレイス", company: "グローバルシステム", amount: 15000000, stage: "見積提出", probability: 50 },
+  { id: "d2", name: "クラウド移行プロジェクト", company: "鈴木テクノロジー", amount: 8500000, stage: "提案中", probability: 40 },
+  { id: "d3", name: "ECプラットフォーム導入", company: "太陽コーポレーション", amount: 7200000, stage: "契約締結", probability: 100 },
+  { id: "d4", name: "データ分析基盤構築", company: "デジタルソリューションズ", amount: 6800000, stage: "提案中", probability: 30 },
+  { id: "d5", name: "Webアプリ開発", company: "フューチャーテック", amount: 5500000, stage: "交渉中", probability: 80 },
 ];
 
 const leaderboard = [
@@ -140,23 +104,14 @@ function RowActions() {
 
   return (
     <div className="relative" ref={ref}>
-      <button
-        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
-      >
+      <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
         <MoreHorizontal className="h-4 w-4" />
       </button>
       {open && (
         <div className="absolute right-0 top-8 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
-          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("編集"); setOpen(false); }}>
-            <Pencil className="h-3.5 w-3.5" /> 編集
-          </button>
-          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("複製"); setOpen(false); }}>
-            <Copy className="h-3.5 w-3.5" /> 複製
-          </button>
-          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); alert("削除"); setOpen(false); }}>
-            <Trash2 className="h-3.5 w-3.5" /> 削除
-          </button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("編集"); setOpen(false); }}><Pencil className="h-3.5 w-3.5" /> 編集</button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); alert("複製"); setOpen(false); }}><Copy className="h-3.5 w-3.5" /> 複製</button>
+          <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); alert("削除"); setOpen(false); }}><Trash2 className="h-3.5 w-3.5" /> 削除</button>
         </div>
       )}
     </div>
@@ -166,6 +121,8 @@ function RowActions() {
 export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeView, setActiveView] = useState("overview");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -177,8 +134,8 @@ export default function SalesPage() {
   };
   const sortedDeals = [...topDeals].sort((a, b) => {
     if (!sortField) return 0;
-    const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
-    const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
+    const aVal = String((a as unknown as Record<string, unknown>)[sortField] ?? "");
+    const bVal = String((b as unknown as Record<string, unknown>)[sortField] ?? "");
     return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
   const filteredDeals = sortedDeals.filter(item => {
@@ -188,6 +145,18 @@ export default function SalesPage() {
   const totalPages = Math.ceil(filteredDeals.length / itemsPerPage);
   const paginatedItems = filteredDeals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const savedViews = [
+    { key: "overview", label: "概要" },
+    { key: "performance", label: "パフォーマンス" },
+  ];
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  };
+  const toggleSelectAll = () => {
+    if (selectedIds.size === topDeals.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(topDeals.map(d => d.id)));
+  };
 
   if (loading) {
     return (
@@ -195,9 +164,7 @@ export default function SalesPage() {
         <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
         <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
         <div className="grid grid-cols-4 gap-4 mt-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
-          ))}
+          {[...Array(4)].map((_, i) => (<div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />))}
         </div>
         <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
       </div>
@@ -209,7 +176,18 @@ export default function SalesPage() {
       <PageHeader
         title="セールスワークスペース"
         description="営業活動の概要とパフォーマンス"
+        actions={<Button size="sm" onClick={() => alert("取引作成は準備中です")}><Plus className="h-4 w-4 mr-1" />取引を作成</Button>}
       />
+
+      <p className="text-sm text-gray-500">{topDeals.length}件の取引</p>
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {savedViews.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビュー追加は準備中です")}><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -217,113 +195,98 @@ export default function SalesPage() {
           const Icon = kpi.icon;
           return (
             <div key={kpi.label} title={kpi.tooltip}>
-            <Card>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${kpi.bg}`}>
-                    <Icon className={`h-5 w-5 ${kpi.color}`} />
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${kpi.bg}`}><Icon className={`h-5 w-5 ${kpi.color}`} /></div>
+                    <div className="flex items-center gap-0.5 text-green-600"><ArrowUpRight className="h-3 w-3" /><span className="text-xs font-medium">{kpi.change}</span></div>
                   </div>
-                  <div className="flex items-center gap-0.5 text-green-600">
-                    <ArrowUpRight className="h-3 w-3" />
-                    <span className="text-xs font-medium">{kpi.change}</span>
-                  </div>
-                </div>
-                <p className="text-xl font-bold text-gray-900">{kpi.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
-              </CardContent>
-            </Card>
+                  <p className="text-xl font-bold text-gray-900">{kpi.value}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
+                </CardContent>
+              </Card>
             </div>
           );
         })}
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}><Pencil className="h-3.5 w-3.5" /> 編集</button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}><Download className="h-3.5 w-3.5" /> エクスポート</button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}><Trash2 className="h-3.5 w-3.5" /> 削除</button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}><X className="h-4 w-4" /></button>
+        </div>
+      )}
+
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Activity Feed */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">最近のアクティビティ</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {activityFeed.map((activity, i) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={i} className="flex items-start gap-3">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100">
-                      <Icon className="h-4 w-4 text-gray-500" />
+      {(activeView === "overview") && (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-3"><CardTitle className="text-base">最近のアクティビティ</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {activityFeed.map((activity, i) => {
+                  const Icon = activity.icon;
+                  return (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100"><Icon className="h-4 w-4 text-gray-500" /></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">{activity.text}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1"><Clock className="h-3 w-3" />{activity.time}</p>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-3"><CardTitle className="text-base">今後のタスク</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {upcomingTasks.map((task, i) => (
+                  <div key={i} className="flex items-start gap-3 rounded-lg border border-gray-100 p-3">
+                    <CheckSquare className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">{activity.text}</p>
-                      <p className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {activity.time}
-                      </p>
+                      <p className="text-sm text-gray-900">{task.title}</p>
+                      <p className={`text-xs mt-1 ${task.dueDate === "期限超過" ? "text-red-600 font-medium" : "text-gray-500"}`}>{task.dueDate}</p>
+                    </div>
+                    <Badge variant={task.priority === "high" ? "danger" : task.priority === "medium" ? "warning" : "default"}>{task.priority === "high" ? "高" : task.priority === "medium" ? "中" : "低"}</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="lg:col-span-1">
+            <CardHeader className="pb-3"><CardTitle className="text-base">セールスリーダーボード</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {leaderboard.map((person, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">{person.name.charAt(0)}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium text-gray-900">{person.name}</p>
+                        {i === 0 && <span className="text-xs text-yellow-600 font-medium">Top</span>}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                        <span>{person.deals}件成約</span>
+                        <span>¥{(person.revenue / 10000).toLocaleString()}万</span>
+                        <span>成約率 {person.winRate}%</span>
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Upcoming Tasks */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">今後のタスク</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {upcomingTasks.map((task, i) => (
-                <div key={i} className="flex items-start gap-3 rounded-lg border border-gray-100 p-3">
-                  <CheckSquare className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900">{task.title}</p>
-                    <p className={`text-xs mt-1 ${task.dueDate === "期限超過" ? "text-red-600 font-medium" : "text-gray-500"}`}>
-                      {task.dueDate}
-                    </p>
-                  </div>
-                  <Badge variant={
-                    task.priority === "high" ? "danger" :
-                    task.priority === "medium" ? "warning" : "default"
-                  }>
-                    {task.priority === "high" ? "高" : task.priority === "medium" ? "中" : "低"}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sales Leaderboard */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">セールスリーダーボード</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {leaderboard.map((person, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
-                    {person.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-900">{person.name}</p>
-                      {i === 0 && <span className="text-xs text-yellow-600 font-medium">Top</span>}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-                      <span>{person.deals}件成約</span>
-                      <span>¥{(person.revenue / 10000).toLocaleString()}万</span>
-                      <span>成約率 {person.winRate}%</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Top Deals Table */}
       <Card>
@@ -342,6 +305,7 @@ export default function SalesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left w-10"><input type="checkbox" className="rounded border-gray-300" checked={topDeals.length > 0 && selectedIds.size === topDeals.length} onChange={toggleSelectAll} /></th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">取引名 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("company")}><div className="flex items-center gap-1">会社 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("amount")}><div className="flex items-center justify-end gap-1">金額 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -351,16 +315,13 @@ export default function SalesPage() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedItems.map((deal, i) => (
-                  <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                {paginatedItems.map((deal) => (
+                  <tr key={deal.id} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedIds.has(deal.id) ? "bg-blue-50/50" : ""}`}>
+                    <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(deal.id)} onChange={() => toggleSelect(deal.id)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="px-6 py-3 font-medium text-gray-900">{deal.name}</td>
                     <td className="px-4 py-3 text-gray-600">{deal.company}</td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-900">
-                      ¥{deal.amount.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={stageBadgeVariant(deal.stage)}>{deal.stage}</Badge>
-                    </td>
+                    <td className="px-4 py-3 text-right font-medium text-gray-900">¥{deal.amount.toLocaleString()}</td>
+                    <td className="px-4 py-3"><Badge variant={stageBadgeVariant(deal.stage)}>{deal.stage}</Badge></td>
                     <td className="px-4 py-3 text-right text-gray-600">{deal.probability}%</td>
                     <td className="px-4 py-3"><RowActions /></td>
                   </tr>
@@ -368,17 +329,25 @@ export default function SalesPage() {
               </tbody>
             </table>
           </div>
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
-                <p className="text-sm text-gray-500">{filteredDeals.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filteredDeals.length)}件</p>
-                <div className="flex gap-1">
-                  <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
-                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
-                </div>
-              </div>
-            )}
+          <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+            <p className="text-sm text-gray-500">{filteredDeals.length}件中 {(currentPage - 1) * itemsPerPage + 1}〜{Math.min(currentPage * itemsPerPage, filteredDeals.length)}件</p>
+            <div className="flex gap-1">
+              <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
+              <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
+            </div>
+          </div>
         </CardContent>
       </Card>
+
+      {topDeals.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <DollarSign className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいセールスデータを作成して始めましょう</p>
+        </div>
+      )}
     </div>
   );
 }

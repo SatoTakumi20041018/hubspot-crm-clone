@@ -7,12 +7,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
   Mail,
   Phone,
   Building2,
   Edit3,
-  MoreHorizontal,
   ChevronLeft,
+  ChevronDown,
   ChevronRight,
   FileText,
   CheckSquare,
@@ -23,6 +30,11 @@ import {
   Loader2,
   AlertCircle,
   Clock,
+  Bell,
+  Eye,
+  GitMerge,
+  Copy,
+  Trash2,
 } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -320,9 +332,36 @@ export default function TicketDetailPage() {
             <FileText className="h-4 w-4 mr-1" />
             メモ
           </Button>
-          <Button variant="ghost" size="sm">
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+              アクション
+              <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="right">
+              <DropdownMenuItem onClick={() => alert("フォロー")}>
+                <Bell className="h-4 w-4 mr-2" />
+                フォロー
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => alert("すべてのプロパティを表示")}>
+                <Eye className="h-4 w-4 mr-2" />
+                すべてのプロパティを表示
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => alert("マージ")}>
+                <GitMerge className="h-4 w-4 mr-2" />
+                マージ
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => alert("クローン")}>
+                <Copy className="h-4 w-4 mr-2" />
+                クローン
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem destructive onClick={() => alert("削除")}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                削除
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

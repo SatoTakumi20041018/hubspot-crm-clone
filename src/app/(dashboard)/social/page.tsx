@@ -154,6 +154,9 @@ export default function SocialPage() {
     <div className="space-y-6">
       <PageHeader title="ソーシャルメディア" description="ソーシャルメディア投稿の管理と分析" actions={<Button size="sm" onClick={() => alert("投稿作成は準備中です")}><Plus className="h-4 w-4 mr-1" />投稿作成</Button>} />
 
+      <p className="text-sm text-gray-500">{posts.length}件の投稿</p>
+
+
       <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
         {views.map((v) => (
           <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
@@ -196,7 +199,12 @@ export default function SocialPage() {
                 return (
                   <tr key={post.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(post.id) ? "bg-blue-50" : ""}`}>
                     <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(post.id)} onChange={() => toggleSelect(post.id)} onClick={(e) => e.stopPropagation()} /></td>
-                    <td className="px-4 py-3"><div className={`flex h-8 w-8 items-center justify-center rounded-lg ${config.bg}`}><span className={`text-xs font-bold ${config.color}`}>{config.label}</span></div></td>
+                    <td className="px-4 py-3"><div className={`flex h-8 w-8 items-center justify-center rounded-lg ${config.bg}`}><span className={`text-xs font-bold ${config.color}`}>{config.label}</span>
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
+              <Download className="h-4 w-4 mr-1" />
+              エクスポート
+            </Button>
+          </div></td>
                     <td className="px-4 py-3 max-w-xs"><p className="text-gray-900 text-sm truncate">{post.content}</p></td>
                     <td className="px-4 py-3"><Badge variant={statusBadgeVariant(post.status)}>{post.status}</Badge></td>
                     <td className="px-4 py-3 text-right text-gray-600">{post.engagement.impressions > 0 ? post.engagement.impressions.toLocaleString() : "-"}</td>
@@ -227,6 +235,16 @@ export default function SocialPage() {
           <Button size="sm" variant="outline" onClick={() => alert("アーカイブは準備中です")}><Archive className="h-4 w-4 mr-1" />アーカイブ</Button>
           <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => alert("削除は準備中です")}><Trash2 className="h-4 w-4 mr-1" />削除</Button>
           <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-xs text-gray-500 hover:text-gray-700">選択解除</button>
+        </div>
+      )}
+
+      {posts.length === 0 && !loading && (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Share2 className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500">新しいソーシャル投稿を作成して始めましょう</p>
         </div>
       )}
     </div>
