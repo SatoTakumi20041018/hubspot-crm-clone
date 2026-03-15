@@ -149,7 +149,7 @@ export default function AdsPage() {
         title="広告管理"
         description="広告キャンペーンのパフォーマンスを一元管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("キャンペーン作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             キャンペーン作成
           </Button>
