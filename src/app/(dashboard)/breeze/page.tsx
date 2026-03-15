@@ -325,7 +325,7 @@ export default function BreezePage() {
               {filteredPrompts.map((prompt) => (
                 <Card
                   key={prompt}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
+                  className="hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-center gap-3 p-4">
                     <Brain className="h-5 w-5 text-[#ff4800]" />

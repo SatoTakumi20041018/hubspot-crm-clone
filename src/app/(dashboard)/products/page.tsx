@@ -242,7 +242,7 @@ export default function ProductsPage() {
                       <div className="flex h-8 w-8 items-center justify-center rounded bg-gray-100">
                         <Package className="h-4 w-4 text-gray-500" />
                       </div>
-                      <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                      <span className="font-medium text-gray-900">
                         {product.name}
                       </span>
                     </div>

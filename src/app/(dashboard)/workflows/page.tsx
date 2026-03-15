@@ -207,7 +207,7 @@ export default function WorkflowsPage() {
           const config = typeConfig[wf.type];
           const TypeIcon = config.icon;
           return (
-            <Card key={wf.id} className="hover:border-gray-300 transition-all cursor-pointer">
+            <Card key={wf.id} className="hover:border-gray-300 transition-all">
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">

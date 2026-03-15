@@ -161,7 +161,7 @@ export default function ChatflowsPage() {
       {/* Chatflow Cards */}
       <div className="space-y-3">
         {chatflows.map((cf) => (
-          <Card key={cf.id} className="hover:border-gray-300 transition-all cursor-pointer">
+          <Card key={cf.id} className="hover:border-gray-300 transition-all">
             <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4 flex-1">

@@ -229,7 +229,7 @@ export default function ListsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                        <span className="font-medium text-gray-900">
                           {list.name}
                         </span>
                       </div>

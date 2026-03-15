@@ -256,11 +256,11 @@ export default function FormsPage() {
             </thead>
             <tbody>
               {filtered.map((form) => (
-                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
-                      <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                      <span className="font-medium text-gray-900">
                         {form.name}
                       </span>
                     </div>

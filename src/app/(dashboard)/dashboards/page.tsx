@@ -177,7 +177,7 @@ export default function DashboardsPage() {
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {filtered.map((dashboard) => (
-          <Card key={dashboard.id} className="hover:border-gray-300 transition-all cursor-pointer">
+          <Card key={dashboard.id} className="hover:border-gray-300 transition-all">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

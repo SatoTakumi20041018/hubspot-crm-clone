@@ -176,7 +176,7 @@ export default function WebsitePagesPage() {
               {filtered.map((page) => (
                 <tr key={page.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
-                    <span className="font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">
+                    <span className="font-medium text-gray-900">
                       {page.title}
                     </span>
                   </td>

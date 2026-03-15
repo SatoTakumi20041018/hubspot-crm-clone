@@ -252,7 +252,7 @@ export default function MarketingPage() {
           <div className="flex items-center justify-between">
             <CardTitle>メールキャンペーン</CardTitle>
             <Link
-              href="/marketing/email"
+              href="/email"
               className="text-sm text-[#ff4800] hover:underline"
             >
               すべて表示
@@ -334,7 +334,7 @@ export default function MarketingPage() {
             <div className="flex items-center justify-between">
               <CardTitle>フォーム</CardTitle>
               <Link
-                href="/marketing/forms"
+                href="/forms"
                 className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示
@@ -379,7 +379,7 @@ export default function MarketingPage() {
             <div className="flex items-center justify-between">
               <CardTitle>ランディングページ</CardTitle>
               <Link
-                href="/marketing/landing-pages"
+                href="/landing-pages"
                 className="text-sm text-[#ff4800] hover:underline"
               >
                 すべて表示

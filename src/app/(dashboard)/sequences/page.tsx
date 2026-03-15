@@ -255,7 +255,7 @@ export default function SequencesPage() {
       {/* Sequence List */}
       <div className="space-y-3">
         {filtered.map((seq) => (
-          <Card key={seq.id} className="hover:border-gray-300 transition-all cursor-pointer">
+          <Card key={seq.id} className="hover:border-gray-300 transition-all">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

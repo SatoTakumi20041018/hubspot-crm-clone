@@ -137,7 +137,7 @@ export default function BlogPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <PenTool className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">
+                      <span className="font-medium text-gray-900">
                         {post.title}
                       </span>
                     </div>

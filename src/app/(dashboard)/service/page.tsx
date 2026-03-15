@@ -244,7 +244,7 @@ export default function ServicePage() {
                 {recentTickets.map((ticket) => (
                   <tr key={ticket.id} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-3 text-gray-500 font-mono text-xs">{ticket.id}</td>
-                    <td className="px-4 py-3 font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">
+                    <td className="px-4 py-3 font-medium text-gray-900">
                       {ticket.subject}
                     </td>
                     <td className="px-4 py-3">

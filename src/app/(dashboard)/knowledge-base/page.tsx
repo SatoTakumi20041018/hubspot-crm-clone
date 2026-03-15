@@ -274,11 +274,11 @@ export default function KnowledgeBasePage() {
                 </thead>
                 <tbody>
                   {filtered.map((article) => (
-                    <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                    <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                          <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                          <span className="font-medium text-gray-900">
                             {article.title}
                           </span>
                         </div>

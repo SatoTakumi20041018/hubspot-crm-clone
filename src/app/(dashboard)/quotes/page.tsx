@@ -349,13 +349,13 @@ export default function QuotesPage() {
             </thead>
             <tbody>
               {filtered.map((quote) => (
-                <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
+                <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{quote.quoteNumber}</td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-gray-900 hover:text-[#FF7A59] cursor-pointer">
+                    <span className="font-medium text-gray-900">
                       {quote.dealName}
                     </span>
                   </td>

@@ -337,7 +337,7 @@ export default function CallsPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">
+                    <span className="font-medium text-gray-900">
                       {call.contact}
                     </span>
                   </td>

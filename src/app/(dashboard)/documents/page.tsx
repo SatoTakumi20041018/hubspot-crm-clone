@@ -197,7 +197,7 @@ export default function DocumentsPage() {
                     <div className="flex items-center gap-3">
                       {typeIcon(doc.type)}
                       <div>
-                        <p className="font-medium text-gray-900 hover:text-[#ff4800] cursor-pointer">{doc.name}</p>
+                        <p className="font-medium text-gray-900">{doc.name}</p>
                         <p className="text-xs text-gray-500">作成: {doc.createdAt} / {doc.owner}</p>
                       </div>
                     </div>
