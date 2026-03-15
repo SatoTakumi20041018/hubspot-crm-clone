@@ -328,7 +328,7 @@ export default function TicketDetailPage() {
             <Edit3 className="h-4 w-4 mr-1" />
             編集
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => alert("メモは準備中です")}>
             <FileText className="h-4 w-4 mr-1" />
             メモ
           </Button>

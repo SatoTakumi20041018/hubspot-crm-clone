@@ -234,7 +234,7 @@ export default function AEOPage() {
                     <td className="px-4 py-3 text-center">{tracking.trend === "up" ? (<span className="text-[#00823a]">&#9650; 上昇</span>) : tracking.trend === "down" ? (<span className="text-[#d9002b]">&#9660; 下降</span>) : (<span className="text-gray-500">&#8212; 安定</span>)}</td>
                     <td className="px-4 py-3 text-gray-600">{tracking.lastChecked}</td>
                     <td className="px-4 py-3"><RowActions /></td>
-                    <td className="px-4 py-3"><Button variant="ghost" size="sm">詳細 <ArrowRight className="ml-1 h-3 w-3" /></Button></td>
+                    <td className="px-4 py-3"><Button variant="ghost" size="sm" onClick={() => alert("詳細は準備中です")}>詳細 <ArrowRight className="ml-1 h-3 w-3" /></Button></td>
                   </tr>
                 ))}
               </tbody>
@@ -305,7 +305,7 @@ export default function AEOPage() {
       {activeView === "recommendations" && (
         <div className="space-y-4">
           {recommendations.map((rec) => (
-            <Card key={rec.id} className="hover:shadow-md transition-shadow">
+            <Card key={rec.id} className="transition-shadow">
               <div className="flex items-start gap-4 p-5">
                 <div className={`rounded-full p-2 ${rec.priority === "high" ? "bg-[#fcc6b1]" : rec.priority === "medium" ? "bg-[#ece6d9]" : "bg-gray-100"}`}>
                   <Lightbulb className={`h-5 w-5 ${rec.priority === "high" ? "text-[#ff4800]" : rec.priority === "medium" ? "text-[#8a6d00]" : "text-gray-500"}`} />
@@ -316,7 +316,7 @@ export default function AEOPage() {
                     <Badge variant={rec.priority === "high" ? "danger" : rec.priority === "medium" ? "warning" : "default"}>影響度: {rec.impact}</Badge>
                   </div>
                   <p className="mt-1 text-sm text-gray-600">{rec.description}</p>
-                  <Button variant="outline" size="sm" className="mt-3"><Sparkles className="h-4 w-4 mr-1" />AIで最適化を実行</Button>
+                  <Button variant="outline" size="sm" className="mt-3" onClick={() => alert("AIで最適化を実行は準備中です")}><Sparkles className="h-4 w-4 mr-1" />AIで最適化を実行</Button>
                 </div>
               </div>
             </Card>

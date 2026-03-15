@@ -205,7 +205,7 @@ export default function BreezePage() {
               <Download className="h-4 w-4 mr-1" />
               エクスポート
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert("Breeze Studioは準備中です")}>
             <Sparkles className="h-4 w-4 mr-1" />
 
       <p className="text-sm text-gray-500">{agents.length}件のエージェント</p>
@@ -277,7 +277,7 @@ export default function BreezePage() {
                         </div>
                       </div>
                     ) : (
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => alert("セットアップを開始は準備中です")}>
                         セットアップを開始
                         <ArrowRight className="h-4 w-4 ml-1" />
                       </Button>
@@ -323,7 +323,7 @@ export default function BreezePage() {
                           : (feature as { shortened: number }).shortened.toLocaleString()}
                       </span>
                     </div>
-                    <Button variant="outline" size="sm" className="mt-3 w-full">
+                    <Button variant="outline" size="sm" className="mt-3 w-full" onClick={() => alert("詳細を見るは準備中です")}>
                       詳細を見る
                     </Button>
                   </CardContent>

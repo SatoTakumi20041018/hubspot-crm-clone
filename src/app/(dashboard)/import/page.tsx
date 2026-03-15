@@ -186,7 +186,7 @@ export default function ImportPage() {
                   <Upload className="mx-auto h-12 w-12 text-gray-400" />
                   <p className="mt-4 text-lg font-medium text-gray-700">ファイルをここにドロップ</p>
                   <p className="mt-1 text-sm text-gray-500">CSV, XLSX 形式に対応（最大10MB）</p>
-                  <Button variant="outline" className="mt-4"><FileSpreadsheet className="h-4 w-4 mr-1" />ファイルを選択</Button>
+                  <Button variant="outline" className="mt-4" onClick={() => alert("ファイルを選択は準備中です")}><FileSpreadsheet className="h-4 w-4 mr-1" />ファイルを選択</Button>
                 </div>
               </CardContent>
             </Card>
@@ -284,7 +284,7 @@ export default function ImportPage() {
                 <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
               </div>
-              <Button variant="outline" size="sm"><RefreshCw className="h-4 w-4 mr-1" />更新</Button>
+              <Button variant="outline" size="sm" onClick={() => alert("更新は準備中です")}><RefreshCw className="h-4 w-4 mr-1" />更新</Button>
             </div>
           </div>
         </CardHeader>

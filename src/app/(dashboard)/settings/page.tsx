@@ -224,7 +224,7 @@ export default function SettingsPage() {
                       <td className="px-4 py-3"><Badge variant={user.role === "管理者" ? "purple" : "default"}>{user.role}</Badge></td>
                       <td className="px-4 py-3"><Badge variant={user.status === "アクティブ" ? "success" : "warning"}>{user.status}</Badge></td>
                       <td className="px-4 py-3 text-gray-600">{user.lastLogin}</td>
-                      <td className="px-4 py-3"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"><MoreHorizontal className="h-4 w-4" /></button></td>
+                      <td className="px-4 py-3"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); alert(`ユーザー「${user.name}」のオプション`); }}><MoreHorizontal className="h-4 w-4" /></button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                       <td className="px-4 py-3"><Badge>{prop.type}</Badge></td>
                       <td className="px-4 py-3 text-gray-600">{prop.group}</td>
                       <td className="px-4 py-3 text-center">{prop.required && (<Check className="h-4 w-4 text-green-500 mx-auto" />)}</td>
-                      <td className="px-4 py-3"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"><MoreHorizontal className="h-4 w-4" /></button></td>
+                      <td className="px-4 py-3"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); alert(`プロパティ「${prop.name}」のオプション`); }}><MoreHorizontal className="h-4 w-4" /></button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -294,7 +294,7 @@ export default function SettingsPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3"><CardTitle>{pipeline.name}</CardTitle><Badge variant="info">{pipeline.deals}件の取引</Badge></div>
-                  <Button variant="outline" size="sm">編集</Button>
+                  <Button variant="outline" size="sm" onClick={() => alert("編集は準備中です")}>編集</Button>
                 </div>
               </CardHeader>
               <CardContent>
@@ -329,7 +329,7 @@ export default function SettingsPage() {
                       </div>
                       <p className="text-xs text-gray-500 mt-1">{integration.description}</p>
                       <div className="mt-3">
-                        <Button variant={integration.status === "接続済み" ? "outline" : "primary"} size="sm" className="w-full">{integration.status === "接続済み" ? "設定" : "接続する"}</Button>
+                        <Button variant={integration.status === "接続済み" ? "outline" : "primary"} size="sm" className="w-full" onClick={() => alert(integration.status === "接続済み" ? "設定は準備中です" : "接続するは準備中です")}>{integration.status === "接続済み" ? "設定" : "接続する"}</Button>
                       </div>
                     </div>
                   </div>

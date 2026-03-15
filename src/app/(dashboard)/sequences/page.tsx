@@ -181,7 +181,7 @@ export default function SequencesPage() {
                   <h3 className="text-sm font-semibold text-gray-900">{seq.name}</h3>
                   <Badge variant={seq.active ? "success" : "default"}>{seq.active ? "有効" : "停止中"}</Badge>
                 </div>
-                <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
+                <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); alert(`シーケンス「${seq.name}」のオプション`); }}>
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
               </div>

@@ -209,7 +209,7 @@ export default function WorkflowsPage() {
                     <button onClick={(e) => e.stopPropagation()} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${wf.active ? "bg-green-500" : "bg-gray-300"}`}>
                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${wf.active ? "translate-x-6" : "translate-x-1"}`} />
                     </button>
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}><MoreHorizontal className="h-4 w-4" /></button>
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => { e.stopPropagation(); alert(`ワークフロー「${wf.name}」のオプション`); }}><MoreHorizontal className="h-4 w-4" /></button>
                   </div>
                 </div>
               </CardContent>

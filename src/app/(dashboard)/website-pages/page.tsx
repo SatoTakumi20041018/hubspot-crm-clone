@@ -275,6 +275,7 @@ export default function WebsitePagesPage() {
                 <button
                   key={template.name}
                   className="rounded-lg border-2 border-gray-200 p-4 text-center transition-colors hover:border-[#ff4800] hover:bg-orange-50"
+                  onClick={() => alert(`テンプレート「${template.name}」でページ作成は準備中です`)}
                 >
                   <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-gray-100 text-lg font-bold text-gray-600">
                     {template.icon}

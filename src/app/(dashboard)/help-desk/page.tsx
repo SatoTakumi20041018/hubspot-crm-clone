@@ -394,7 +394,7 @@ export default function HelpDeskPage() {
                   <Send className="h-4 w-4 mr-1" />
                   送信
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("AI生成は準備中です")}>
                   <Bot className="h-4 w-4 mr-1" />
                   AI生成
                 </Button>

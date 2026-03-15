@@ -321,7 +321,7 @@ export default function CallsPage() {
               activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       {/* Stats */}
@@ -480,7 +480,7 @@ export default function CallsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {call.recording && (
-                      <button className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200">
+                      <button className="flex items-center gap-1 rounded-md bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200" onClick={() => alert("再生は準備中です")}>
                         <Play className="h-3 w-3" />
                         再生
                       </button>

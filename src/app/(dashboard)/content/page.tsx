@@ -206,8 +206,8 @@ export default function ContentPage() {
       </div>
 
       <Card>
-        <CardHeader><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-[#ff4800]" /><CardTitle>Content Remix - AIコンテンツリパーパス</CardTitle></div><Button variant="outline" size="sm"><RefreshCw className="h-4 w-4 mr-1" />新しいリミックス</Button></div><CardDescription>既存コンテンツをAIが自動的に複数のフォーマットに変換します</CardDescription></CardHeader>
-        <CardContent><div className="space-y-4">{contentRemixItems.map((item) => (<div key={item.id} className="rounded-lg border border-gray-200 p-4"><div className="flex items-start justify-between"><div><p className="font-medium text-gray-900">{item.original}</p><Badge variant="info" className="mt-1">{item.type}</Badge></div><Button variant="outline" size="sm">リミックス実行</Button></div><div className="mt-3 flex flex-wrap gap-2">{item.remixes.map((remix) => (<span key={remix} className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">{remix}</span>))}</div></div>))}</div></CardContent>
+        <CardHeader><div className="flex items-center justify-between"><div className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-[#ff4800]" /><CardTitle>Content Remix - AIコンテンツリパーパス</CardTitle></div><Button variant="outline" size="sm" onClick={() => alert("新しいリミックスは準備中です")}><RefreshCw className="h-4 w-4 mr-1" />新しいリミックス</Button></div><CardDescription>既存コンテンツをAIが自動的に複数のフォーマットに変換します</CardDescription></CardHeader>
+        <CardContent><div className="space-y-4">{contentRemixItems.map((item) => (<div key={item.id} className="rounded-lg border border-gray-200 p-4"><div className="flex items-start justify-between"><div><p className="font-medium text-gray-900">{item.original}</p><Badge variant="info" className="mt-1">{item.type}</Badge></div><Button variant="outline" size="sm" onClick={() => alert("リミックス実行は準備中です")}>リミックス実行</Button></div><div className="mt-3 flex flex-wrap gap-2">{item.remixes.map((remix) => (<span key={remix} className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-600">{remix}</span>))}</div></div>))}</div></CardContent>
       </Card>
 
       {/* Search */}
@@ -308,7 +308,7 @@ export default function ContentPage() {
             <div className="rounded-lg bg-gray-50 p-4"><p className="text-sm font-medium text-gray-700">トーン</p><p className="mt-1 text-sm text-gray-600">プロフェッショナルでありながら親しみやすい</p></div>
             <div className="rounded-lg bg-gray-50 p-4"><p className="text-sm font-medium text-gray-700">ペルソナ</p><p className="mt-1 text-sm text-gray-600">BtoB SaaS企業のマーケティング・営業担当者</p></div>
             <div className="rounded-lg bg-gray-50 p-4"><p className="text-sm font-medium text-gray-700">キーワード</p><div className="mt-1 flex flex-wrap gap-1.5">{["DX推進", "業務効率化", "データドリブン", "ROI最大化", "カスタマーサクセス"].map((kw) => (<Badge key={kw} variant="orange">{kw}</Badge>))}</div></div>
-            <Button variant="outline" size="sm" className="w-full">設定を編集</Button>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => alert("設定を編集は準備中です")}>設定を編集</Button>
           </CardContent>
         </Card>
       </div>

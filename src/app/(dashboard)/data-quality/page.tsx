@@ -223,7 +223,7 @@ export default function DataQualityPage() {
               activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       {/* Top Row */}
@@ -322,7 +322,7 @@ export default function DataQualityPage() {
                 <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                   placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => alert("自動修正を実行は準備中です")}>
                 <Zap className="h-4 w-4 mr-1" />
                 自動修正を実行
               </Button>
@@ -392,7 +392,7 @@ export default function DataQualityPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" onClick={() => alert(issue.autoFixable ? "修正は準備中です" : "確認は準備中です")}>
                           {issue.autoFixable ? "修正" : "確認"}
                         </Button>
                       </td>

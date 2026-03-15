@@ -306,15 +306,15 @@ export default function MeetingsPage() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("前の週は準備中です")}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <h3 className="text-lg font-semibold text-gray-900">2026年3月 第3週</h3>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("次の週は準備中です")}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
-              <Button variant="outline" size="sm">今日</Button>
+              <Button variant="outline" size="sm" onClick={() => alert("今日は準備中です")}>今日</Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -355,6 +355,7 @@ export default function MeetingsPage() {
                           {dayMeetings.map((m) => (
                             <div
                               key={m.id}
+                              onClick={() => alert(`ミーティング: ${m.title}\n${m.date} ${m.time} (${m.duration})\n場所: ${m.location}`)}
                               className={`rounded px-1.5 py-1 text-[10px] leading-tight cursor-pointer mb-0.5 ${
                                 m.type === "external"
                                   ? "bg-blue-100 text-blue-800 border-l-2 border-blue-500"
@@ -421,7 +422,7 @@ export default function MeetingsPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {meeting.link && (
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => alert("参加は準備中です")}>
                         <ExternalLink className="h-3 w-3 mr-1" />
                         参加
                       </Button>

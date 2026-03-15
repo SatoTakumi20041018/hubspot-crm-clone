@@ -327,7 +327,7 @@ export default function CustomerSuccessPage() {
                       <td className="px-4 py-3 text-gray-600">{customer.renewalDate}</td>
                       <td className="px-4 py-3 text-gray-600">{customer.csm}</td>
                       <td className="px-4 py-3">
-                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100">
+                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100" onClick={(e) => { e.stopPropagation(); alert(`顧客「${customer.name}」のオプション`); }}>
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </td>

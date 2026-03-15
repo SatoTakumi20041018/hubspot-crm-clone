@@ -235,7 +235,7 @@ export default function AdsPage() {
               activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       {/* KPIs */}
@@ -392,7 +392,7 @@ export default function AdsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={() => alert("準備中です")}>
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </td>

@@ -249,8 +249,8 @@ export default function InboxPage() {
                 <textarea className="w-full rounded-md border border-gray-300 p-3 text-sm resize-none focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]" rows={2} placeholder="メッセージを入力..." />
               </div>
               <div className="flex items-center gap-1">
-                <button className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"><Paperclip className="h-4 w-4" /></button>
-                <button className="rounded-md bg-[#ff4800] p-2 text-white hover:bg-[#e64200]"><Send className="h-4 w-4" /></button>
+                <button className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={() => alert("準備中です")}><Paperclip className="h-4 w-4" /></button>
+                <button className="rounded-md bg-[#ff4800] p-2 text-white hover:bg-[#e64200]" onClick={() => alert("準備中です")}><Send className="h-4 w-4" /></button>
               </div>
             </div>
           </div>

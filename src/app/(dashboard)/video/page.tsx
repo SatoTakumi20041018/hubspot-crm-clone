@@ -150,14 +150,14 @@ export default function VideoPage() {
         ]}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => alert("アップロードは準備中です")}>
               <Upload className="h-4 w-4 mr-1" />
 
       <p className="text-sm text-gray-500">{videos.length}件の動画</p>
 
               アップロード
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert("録画開始は準備中です")}>
               <Camera className="h-4 w-4 mr-1" />
               録画開始
             </Button>
@@ -365,15 +365,15 @@ export default function VideoPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("トリミングは準備中です")}>
                   <Scissors className="h-4 w-4 mr-1" />
                   トリミング
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("字幕追加は準備中です")}>
                   <Type className="h-4 w-4 mr-1" />
                   字幕追加
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => alert("AI字幕生成は準備中です")}>
                   <Sparkles className="h-4 w-4 mr-1" />
                   AI字幕生成
                 </Button>

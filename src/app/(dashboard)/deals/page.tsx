@@ -510,7 +510,7 @@ export default function DealsPage() {
                               <h4 className="text-sm font-medium text-gray-900 leading-tight">
                                 {deal.properties.dealname || "名前なし"}
                               </h4>
-                              <button className="text-gray-400 hover:text-gray-600 flex-shrink-0">
+                              <button className="text-gray-400 hover:text-gray-600 flex-shrink-0" onClick={(e) => { e.preventDefault(); e.stopPropagation(); alert(`取引「${deal.properties.dealname || "名前なし"}」のオプション`); }}>
                                 <MoreHorizontal className="h-4 w-4" />
                               </button>
                             </div>
@@ -544,7 +544,7 @@ export default function DealsPage() {
                     ))}
 
                     {/* Add Deal Button */}
-                    <button className="w-full rounded-lg border-2 border-dashed border-gray-200 p-3 text-sm text-gray-400 hover:border-gray-300 hover:text-gray-500 transition-colors">
+                    <button className="w-full rounded-lg border-2 border-dashed border-gray-200 p-3 text-sm text-gray-400 hover:border-gray-300 hover:text-gray-500 transition-colors" onClick={() => alert("取引作成モーダルは準備中です")}>
                       <Plus className="h-4 w-4 mx-auto" />
                     </button>
                   </div>

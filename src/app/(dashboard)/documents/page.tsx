@@ -136,13 +136,13 @@ export default function DocumentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="ドキュメント" description="営業・マーケティング資料を管理・共有" actions={<Button size="sm"><Upload className="h-4 w-4 mr-1" />アップロード</Button>} />
+      <PageHeader title="ドキュメント" description="営業・マーケティング資料を管理・共有" actions={<Button size="sm" onClick={() => alert("アップロードは準備中です")}><Upload className="h-4 w-4 mr-1" />アップロード</Button>} />
 
       <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
         {views.map((v) => (
           <button key={v.key} onClick={() => setActiveView(v.key)} className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       <p className="text-sm text-gray-500">{documents.length}件のドキュメント</p>
@@ -185,7 +185,7 @@ export default function DocumentsPage() {
                   <td className="px-4 py-3"><div className="flex items-center gap-1"><Users className="h-3 w-3 text-gray-400" /><span className="text-gray-600 text-xs">{doc.sharedWith.length}名</span></div></td>
                   <td className="px-4 py-3 text-gray-500 text-xs">{doc.size}</td>
                   <td className="px-4 py-3 text-gray-600 text-xs">{doc.createdAt}</td>
-                  <td className="px-4 py-3"><div className="flex items-center gap-1"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"><ExternalLink className="h-4 w-4" /></button><RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} /></div></td>
+                  <td className="px-4 py-3"><div className="flex items-center gap-1"><button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={() => alert("プレビューは準備中です")}><ExternalLink className="h-4 w-4" /></button><RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} /></div></td>
                 </tr>
               ))}
             </tbody>

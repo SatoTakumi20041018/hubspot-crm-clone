@@ -173,7 +173,7 @@ export default function SubscriptionsPage() {
               statusFilter === (v.key === "all" ? "all" : v.key) ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       <p className="text-sm text-gray-500">{filtered.length}件のサブスクリプション</p>

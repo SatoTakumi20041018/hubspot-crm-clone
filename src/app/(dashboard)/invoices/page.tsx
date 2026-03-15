@@ -174,7 +174,7 @@ export default function InvoicesPage() {
               statusFilter === (v.key === "all" ? "all" : v.key) ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
             }`}>{v.label}</button>
         ))}
-        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
       </div>
 
       {/* KPI */}
@@ -198,7 +198,7 @@ export default function InvoicesPage() {
                 合計: ¥{invoices.filter(i => i.status === "overdue").reduce((s, i) => s + i.amount, 0).toLocaleString()}
               </p>
             </div>
-            <Button variant="outline" size="sm" className="ml-auto border-[#d9002b]/30 text-[#d9002b] hover:bg-red-100">
+            <Button variant="outline" size="sm" className="ml-auto border-[#d9002b]/30 text-[#d9002b] hover:bg-red-100" onClick={() => alert("リマインダー送信は準備中です")}>
               リマインダー送信
             </Button>
           </div>
@@ -280,11 +280,11 @@ export default function InvoicesPage() {
                   <td className="px-4 py-3 text-gray-600">{invoice.paidDate || "-"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1">
-                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="プレビュー">
+                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="プレビュー" onClick={() => alert("準備中です")}>
                         <Eye className="h-4 w-4" />
                       </button>
                       {invoice.status === "draft" && (
-                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="送信">
+                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="送信" onClick={() => alert("準備中です")}>
                           <Send className="h-4 w-4" />
                         </button>
                       )}
