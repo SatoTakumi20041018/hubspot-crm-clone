@@ -274,7 +274,7 @@ export default function KnowledgeBasePage() {
                 </thead>
                 <tbody>
                   {filtered.map((article) => (
-                    <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <tr key={article.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-gray-400 flex-shrink-0" />
@@ -312,7 +312,7 @@ export default function KnowledgeBasePage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </td>

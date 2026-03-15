@@ -261,6 +261,7 @@ export default function WorkflowsPage() {
 
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={(e) => e.stopPropagation()}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                         wf.active ? "bg-green-500" : "bg-gray-300"
                       }`}
@@ -271,7 +272,7 @@ export default function WorkflowsPage() {
                         }`}
                       />
                     </button>
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </div>

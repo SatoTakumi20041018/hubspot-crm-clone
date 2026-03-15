@@ -349,9 +349,9 @@ export default function QuotesPage() {
             </thead>
             <tbody>
               {filtered.map((quote) => (
-                <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={quote.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
-                    <input type="checkbox" className="rounded border-gray-300" />
+                    <input type="checkbox" className="rounded border-gray-300" onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{quote.quoteNumber}</td>
                   <td className="px-4 py-3">
@@ -376,7 +376,7 @@ export default function QuotesPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </td>

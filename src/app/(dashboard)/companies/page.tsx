@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,6 +99,7 @@ function LoadingSkeleton() {
 }
 
 export default function CompaniesPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("すべて");
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -287,12 +289,14 @@ export default function CompaniesPage() {
                   return (
                     <tr
                       key={company.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/companies/${company.id}`)}
                     >
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
                           className="rounded border-gray-300"
+                          onClick={(e) => e.stopPropagation()}
                         />
                       </td>
                       <td className="px-4 py-3">
@@ -338,7 +342,10 @@ export default function CompaniesPage() {
                         {company.properties.city || "-"}
                       </td>
                       <td className="px-4 py-3">
-                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <button
+                          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </td>

@@ -264,7 +264,7 @@ export default function SequencesPage() {
                     {seq.active ? "有効" : "停止中"}
                   </Badge>
                 </div>
-                <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                   <MoreHorizontal className="h-4 w-4" />
                 </button>
               </div>

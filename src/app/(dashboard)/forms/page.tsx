@@ -256,7 +256,7 @@ export default function FormsPage() {
             </thead>
             <tbody>
               {filtered.map((form) => (
-                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
@@ -294,7 +294,7 @@ export default function FormsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </td>

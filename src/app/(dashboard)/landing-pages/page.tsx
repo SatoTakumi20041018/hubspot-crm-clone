@@ -253,9 +253,9 @@ export default function LandingPagesPage() {
             </thead>
             <tbody>
               {filtered.map((page) => (
-                <tr key={page.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={page.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer">
                   <td className="px-4 py-3">
-                    <input type="checkbox" className="rounded border-gray-300" />
+                    <input type="checkbox" className="rounded border-gray-300" onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td className="px-4 py-3">
                     <div>
@@ -284,7 +284,7 @@ export default function LandingPagesPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs">{page.lastUpdated}</td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   </td>

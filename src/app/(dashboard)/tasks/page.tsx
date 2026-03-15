@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -174,6 +176,7 @@ function LoadingSkeleton() {
 }
 
 export default function TasksPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<TaskFilter>("all");
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -379,12 +382,13 @@ export default function TasksPage() {
           return (
             <Card
               key={task.id}
-              className={`transition-all ${completed ? "opacity-60" : ""}`}
+              className={`transition-all cursor-pointer hover:border-gray-300 ${completed ? "opacity-60" : ""}`}
+              onClick={() => router.push(`/tasks/${task.id}`)}
             >
               <div className="p-4 flex items-start gap-3">
                 {/* Checkbox */}
                 <button
-                  onClick={() => toggleTask(task.id)}
+                  onClick={(e) => { e.stopPropagation(); toggleTask(task.id); }}
                   className="mt-0.5 flex-shrink-0"
                 >
                   {completed ? (
@@ -401,15 +405,16 @@ export default function TasksPage() {
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p
-                    className={`text-sm font-medium ${
+                  <Link
+                    href={`/tasks/${task.id}`}
+                    className={`text-sm font-medium hover:underline ${
                       completed
                         ? "text-gray-400 line-through"
                         : "text-gray-900"
                     }`}
                   >
                     {task.properties.hs_task_subject || "件名なし"}
-                  </p>
+                  </Link>
                   <div className="flex flex-wrap items-center gap-3 mt-1.5">
                     {/* Due Date */}
                     <div
