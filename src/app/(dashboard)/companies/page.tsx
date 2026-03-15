@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,152 +30,32 @@ const industries = [
   "メディア",
 ];
 
-const companies = [
-  {
-    id: "1",
-    name: "田中商事株式会社",
-    domain: "tanaka-corp.jp",
-    industry: "小売・EC",
-    contactsCount: 5,
-    dealsCount: 2,
-    annualRevenue: 250000000,
-    city: "東京都",
-    owner: "佐藤 匠",
-    createdAt: "2025-10-01",
-  },
-  {
-    id: "2",
-    name: "鈴木テクノロジー",
-    domain: "suzuki-tech.co.jp",
-    industry: "IT・ソフトウェア",
-    contactsCount: 8,
-    dealsCount: 3,
-    annualRevenue: 500000000,
-    city: "大阪府",
-    owner: "佐藤 匠",
-    createdAt: "2025-09-15",
-  },
-  {
-    id: "3",
-    name: "ABC株式会社",
-    domain: "abc-corp.jp",
-    industry: "コンサルティング",
-    contactsCount: 3,
-    dealsCount: 1,
-    annualRevenue: 180000000,
-    city: "東京都",
-    owner: "佐藤 匠",
-    createdAt: "2025-11-20",
-  },
-  {
-    id: "4",
-    name: "デジタルソリューションズ",
-    domain: "digital-sol.jp",
-    industry: "IT・ソフトウェア",
-    contactsCount: 12,
-    dealsCount: 4,
-    annualRevenue: 800000000,
-    city: "東京都",
-    owner: "田村 愛",
-    createdAt: "2025-08-10",
-  },
-  {
-    id: "5",
-    name: "東京マーケティング",
-    domain: "tokyo-mktg.jp",
-    industry: "マーケティング",
-    contactsCount: 4,
-    dealsCount: 2,
-    annualRevenue: 120000000,
-    city: "東京都",
-    owner: "佐藤 匠",
-    createdAt: "2025-12-05",
-  },
-  {
-    id: "6",
-    name: "イノベーション株式会社",
-    domain: "innovation.jp",
-    industry: "IT・ソフトウェア",
-    contactsCount: 6,
-    dealsCount: 1,
-    annualRevenue: 350000000,
-    city: "福岡県",
-    owner: "田村 愛",
-    createdAt: "2025-07-20",
-  },
-  {
-    id: "7",
-    name: "グローバルシステム",
-    domain: "global-sys.jp",
-    industry: "IT・ソフトウェア",
-    contactsCount: 15,
-    dealsCount: 5,
-    annualRevenue: 1200000000,
-    city: "東京都",
-    owner: "佐藤 匠",
-    createdAt: "2025-06-15",
-  },
-  {
-    id: "8",
-    name: "さくらデザイン",
-    domain: "sakura-design.jp",
-    industry: "マーケティング",
-    contactsCount: 2,
-    dealsCount: 1,
-    annualRevenue: 50000000,
-    city: "京都府",
-    owner: "田村 愛",
-    createdAt: "2026-01-10",
-  },
-  {
-    id: "9",
-    name: "フューチャーテック",
-    domain: "future-tech.co.jp",
-    industry: "IT・ソフトウェア",
-    contactsCount: 7,
-    dealsCount: 3,
-    annualRevenue: 600000000,
-    city: "名古屋市",
-    owner: "佐藤 匠",
-    createdAt: "2025-11-01",
-  },
-  {
-    id: "10",
-    name: "サンライズメディア",
-    domain: "sunrise-media.jp",
-    industry: "メディア",
-    contactsCount: 3,
-    dealsCount: 0,
-    annualRevenue: 90000000,
-    city: "東京都",
-    owner: "田村 愛",
-    createdAt: "2026-02-01",
-  },
-  {
-    id: "11",
-    name: "太陽コーポレーション",
-    domain: "taiyo-corp.jp",
-    industry: "製造業",
-    contactsCount: 9,
-    dealsCount: 2,
-    annualRevenue: 2000000000,
-    city: "愛知県",
-    owner: "佐藤 匠",
-    createdAt: "2025-05-20",
-  },
-  {
-    id: "12",
-    name: "ハーモニー株式会社",
-    domain: "harmony-inc.jp",
-    industry: "コンサルティング",
-    contactsCount: 4,
-    dealsCount: 2,
-    annualRevenue: 150000000,
-    city: "大阪府",
-    owner: "佐藤 匠",
-    createdAt: "2025-12-20",
-  },
-];
+interface Company {
+  id: string;
+  properties: {
+    name?: string;
+    domain?: string;
+    industry?: string;
+    numberofemployees?: string;
+    annualrevenue?: string;
+    city?: string;
+    hubspot_owner_id?: string;
+    num_associated_contacts?: string;
+    num_associated_deals?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CompaniesResponse {
+  results: Company[];
+  total?: number;
+  paging?: {
+    next?: {
+      after: string;
+    };
+  };
+}
 
 const formatRevenue = (amount: number) => {
   if (amount >= 100000000) {
@@ -187,26 +67,107 @@ const formatRevenue = (amount: number) => {
   return `¥${amount.toLocaleString()}`;
 };
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-24 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <Card>
+        <div className="p-4">
+          <div className="h-9 w-72 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </Card>
+      <Card>
+        <div className="p-4 space-y-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-40 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function CompaniesPage() {
   const [search, setSearch] = useState("");
   const [selectedIndustry, setSelectedIndustry] = useState("すべて");
-  const [currentPage, setCurrentPage] = useState(1);
-  const perPage = 10;
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [afterCursor, setAfterCursor] = useState<string | undefined>(undefined);
+  const [prevCursors, setPrevCursors] = useState<string[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const filtered = companies.filter((c) => {
-    const matchSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.domain.toLowerCase().includes(search.toLowerCase());
-    const matchIndustry =
-      selectedIndustry === "すべて" || c.industry === selectedIndustry;
-    return matchSearch && matchIndustry;
-  });
+  const fetchCompanies = useCallback(async (cursor?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ limit: "50" });
+      if (cursor) params.set("after", cursor);
+      if (search) params.set("search", search);
+      if (selectedIndustry !== "すべて") params.set("industry", selectedIndustry);
 
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const paginated = filtered.slice(
-    (currentPage - 1) * perPage,
-    currentPage * perPage
-  );
+      const res = await fetch(`/api/companies?${params.toString()}`);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data: CompaniesResponse = await res.json();
+      setCompanies(data.results || []);
+      setAfterCursor(data.paging?.next?.after);
+      setTotal(data.total ?? data.results?.length ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "データの取得に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }, [search, selectedIndustry]);
+
+  useEffect(() => {
+    setPrevCursors([]);
+    fetchCompanies();
+  }, [fetchCompanies]);
+
+  const handleNextPage = () => {
+    if (afterCursor) {
+      setPrevCursors((prev) => [...prev, ""]);
+      fetchCompanies(afterCursor);
+    }
+  };
+
+  const handlePrevPage = () => {
+    const newPrev = [...prevCursors];
+    newPrev.pop();
+    setPrevCursors(newPrev);
+    fetchCompanies();
+  };
+
+  if (loading && companies.length === 0) return <LoadingSkeleton />;
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">会社</h1>
+        </div>
+        <Card>
+          <div className="p-8 text-center">
+            <p className="text-red-600 font-medium mb-2">エラーが発生しました</p>
+            <p className="text-sm text-gray-500 mb-4">{error}</p>
+            <Button size="sm" onClick={() => fetchCompanies()}>
+              再試行
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -215,7 +176,7 @@ export default function CompaniesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">会社</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {filtered.length}件の会社
+            {total}件の会社
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -241,7 +202,6 @@ export default function CompaniesPage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -252,7 +212,6 @@ export default function CompaniesPage() {
                 value={selectedIndustry}
                 onChange={(e) => {
                   setSelectedIndustry(e.target.value);
-                  setCurrentPage(1);
                 }}
               >
                 {industries.map((s) => (
@@ -306,56 +265,87 @@ export default function CompaniesPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((company) => (
-                <tr
-                  key={company.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/companies/${company.id}`}
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-blue-100 text-blue-600">
-                        <Building2 className="h-4 w-4" />
-                      </div>
-                      <span className="font-medium text-gray-900 group-hover:text-[#ff4800]">
-                        {company.name}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-1 text-gray-600">
-                      <Globe className="h-3.5 w-3.5 text-gray-400" />
-                      {company.domain}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge>{company.industry}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-600">
-                    {company.contactsCount}
-                  </td>
-                  <td className="px-4 py-3 text-right text-gray-600">
-                    {company.dealsCount}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-gray-900">
-                    {formatRevenue(company.annualRevenue)}
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{company.city}</td>
-                  <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="px-4 py-3" colSpan={9}>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : companies.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                    会社が見つかりません
                   </td>
                 </tr>
-              ))}
+              ) : (
+                companies.map((company) => {
+                  const revenue = company.properties.annualrevenue
+                    ? Number(company.properties.annualrevenue)
+                    : 0;
+                  return (
+                    <tr
+                      key={company.id}
+                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link
+                          href={`/companies/${company.id}`}
+                          className="flex items-center gap-3 group"
+                        >
+                          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded bg-blue-100 text-blue-600">
+                            <Building2 className="h-4 w-4" />
+                          </div>
+                          <span className="font-medium text-gray-900 group-hover:text-[#ff4800]">
+                            {company.properties.name || "名前なし"}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        {company.properties.domain ? (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Globe className="h-3.5 w-3.5 text-gray-400" />
+                            {company.properties.domain}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        {company.properties.industry ? (
+                          <Badge>{company.properties.industry}</Badge>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-600">
+                        {company.properties.num_associated_contacts || 0}
+                      </td>
+                      <td className="px-4 py-3 text-right text-gray-600">
+                        {company.properties.num_associated_deals || 0}
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">
+                        {revenue > 0 ? formatRevenue(revenue) : "-"}
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        {company.properties.city || "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
@@ -363,33 +353,22 @@ export default function CompaniesPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
-            {filtered.length}件中 {(currentPage - 1) * perPage + 1}-
-            {Math.min(currentPage * perPage, filtered.length)}件を表示
+            {total}件の会社
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={prevCursors.length === 0}
+              onClick={handlePrevPage}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === currentPage ? "primary" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(p)}
-              >
-                {p}
-              </Button>
-            ))}
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={!afterCursor}
+              onClick={handleNextPage}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

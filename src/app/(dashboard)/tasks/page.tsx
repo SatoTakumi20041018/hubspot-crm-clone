@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -20,188 +20,43 @@ import {
 
 type TaskFilter = "all" | "today" | "overdue" | "upcoming";
 
-interface Task {
-  id: string;
-  title: string;
-  type: "call" | "email" | "todo" | "follow_up";
-  dueDate: string;
-  dueDateLabel: string;
-  priority: "high" | "medium" | "low";
-  contact: string;
-  contactId: string;
-  owner: string;
-  completed: boolean;
-  overdue: boolean;
+interface TaskProperties {
+  hs_task_subject?: string;
+  hs_task_body?: string;
+  hs_task_type?: string;
+  hs_task_status?: string;
+  hs_task_priority?: string;
+  hs_timestamp?: string;
+  hubspot_owner_id?: string;
+  hs_task_completion_date?: string;
 }
 
-const tasks: Task[] = [
-  {
-    id: "1",
-    title: "田中様へフォローアップメール送信",
-    type: "email",
-    dueDate: "2026-03-14",
-    dueDateLabel: "今日",
-    priority: "high",
-    contact: "田中 太郎",
-    contactId: "1",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "2",
-    title: "鈴木テクノロジー 提案書修正",
-    type: "todo",
-    dueDate: "2026-03-14",
-    dueDateLabel: "今日",
-    priority: "high",
-    contact: "鈴木 花子",
-    contactId: "2",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "3",
-    title: "ABC株式会社 契約書送付",
-    type: "follow_up",
-    dueDate: "2026-03-15",
-    dueDateLabel: "明日",
-    priority: "medium",
-    contact: "山田 一郎",
-    contactId: "3",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "4",
-    title: "デジタルソリューションズ 進捗確認コール",
-    type: "call",
-    dueDate: "2026-03-15",
-    dueDateLabel: "明日",
-    priority: "medium",
-    contact: "佐々木 美咲",
-    contactId: "4",
-    owner: "田村 愛",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "5",
-    title: "展示会リードのCRMインポート",
-    type: "todo",
-    dueDate: "2026-03-16",
-    dueDateLabel: "3月16日",
-    priority: "low",
-    contact: "",
-    contactId: "",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "6",
-    title: "四半期営業レポート作成",
-    type: "todo",
-    dueDate: "2026-03-17",
-    dueDateLabel: "3月17日",
-    priority: "medium",
-    contact: "",
-    contactId: "",
-    owner: "佐藤 匠",
-    completed: true,
-    overdue: false,
-  },
-  {
-    id: "7",
-    title: "高橋様 見積書の確認連絡",
-    type: "call",
-    dueDate: "2026-03-12",
-    dueDateLabel: "3月12日",
-    priority: "high",
-    contact: "高橋 健一",
-    contactId: "5",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: true,
-  },
-  {
-    id: "8",
-    title: "イノベーション社 デモ環境準備",
-    type: "todo",
-    dueDate: "2026-03-13",
-    dueDateLabel: "昨日",
-    priority: "high",
-    contact: "伊藤 さくら",
-    contactId: "6",
-    owner: "田村 愛",
-    completed: false,
-    overdue: true,
-  },
-  {
-    id: "9",
-    title: "グローバルシステム 要件定義レビュー",
-    type: "follow_up",
-    dueDate: "2026-03-18",
-    dueDateLabel: "3月18日",
-    priority: "high",
-    contact: "渡辺 大輔",
-    contactId: "7",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "10",
-    title: "さくらデザイン ブランドガイドライン送付",
-    type: "email",
-    dueDate: "2026-03-16",
-    dueDateLabel: "3月16日",
-    priority: "low",
-    contact: "中村 真理",
-    contactId: "8",
-    owner: "田村 愛",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "11",
-    title: "フューチャーテック UAT確認",
-    type: "todo",
-    dueDate: "2026-03-19",
-    dueDateLabel: "3月19日",
-    priority: "medium",
-    contact: "小林 誠",
-    contactId: "9",
-    owner: "佐藤 匠",
-    completed: false,
-    overdue: false,
-  },
-  {
-    id: "12",
-    title: "太陽コーポレーション 納品物の最終確認",
-    type: "follow_up",
-    dueDate: "2026-03-11",
-    dueDateLabel: "3月11日",
-    priority: "medium",
-    contact: "松本 隆",
-    contactId: "11",
-    owner: "佐藤 匠",
-    completed: true,
-    overdue: false,
-  },
-];
+interface TaskItem {
+  id: string;
+  properties: TaskProperties;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TasksResponse {
+  results: TaskItem[];
+  total?: number;
+  paging?: {
+    next?: {
+      after: string;
+    };
+  };
+}
 
 const typeIcon = (type: string) => {
-  switch (type) {
-    case "call":
+  switch (type?.toUpperCase()) {
+    case "CALL":
       return <Phone className="h-4 w-4 text-green-500" />;
-    case "email":
+    case "EMAIL":
       return <Mail className="h-4 w-4 text-blue-500" />;
-    case "todo":
+    case "TODO":
       return <FileText className="h-4 w-4 text-gray-500" />;
-    case "follow_up":
+    case "FOLLOW_UP":
       return <Calendar className="h-4 w-4 text-purple-500" />;
     default:
       return <FileText className="h-4 w-4 text-gray-500" />;
@@ -209,12 +64,15 @@ const typeIcon = (type: string) => {
 };
 
 const priorityBadgeVariant = (priority: string) => {
-  switch (priority) {
-    case "high":
+  switch (priority?.toUpperCase()) {
+    case "HIGH":
+    case "高":
       return "danger" as const;
-    case "medium":
+    case "MEDIUM":
+    case "中":
       return "warning" as const;
-    case "low":
+    case "LOW":
+    case "低":
       return "default" as const;
     default:
       return "default" as const;
@@ -222,83 +80,232 @@ const priorityBadgeVariant = (priority: string) => {
 };
 
 const priorityLabel = (priority: string) => {
-  switch (priority) {
-    case "high":
+  switch (priority?.toUpperCase()) {
+    case "HIGH":
       return "高";
-    case "medium":
+    case "MEDIUM":
       return "中";
-    case "low":
+    case "LOW":
       return "低";
-    default:
+    case "高":
+    case "中":
+    case "低":
       return priority;
+    default:
+      return priority || "-";
   }
 };
 
+function isTaskCompleted(task: TaskItem): boolean {
+  const status = task.properties.hs_task_status?.toUpperCase();
+  return status === "COMPLETED" || status === "完了" || !!task.properties.hs_task_completion_date;
+}
+
+function isTaskOverdue(task: TaskItem): boolean {
+  if (isTaskCompleted(task)) return false;
+  const dueDate = task.properties.hs_timestamp;
+  if (!dueDate) return false;
+  return new Date(dueDate) < new Date();
+}
+
+function isTaskToday(task: TaskItem): boolean {
+  const dueDate = task.properties.hs_timestamp;
+  if (!dueDate) return false;
+  const today = new Date().toISOString().split("T")[0];
+  return new Date(dueDate).toISOString().split("T")[0] === today;
+}
+
+function getDueDateLabel(task: TaskItem): string {
+  const dueDate = task.properties.hs_timestamp;
+  if (!dueDate) return "-";
+  const date = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const dTarget = new Date(date);
+  dTarget.setHours(0, 0, 0, 0);
+
+  if (dTarget.getTime() === today.getTime()) return "今日";
+  if (dTarget.getTime() === tomorrow.getTime()) return "明日";
+  if (dTarget.getTime() === yesterday.getTime()) return "昨日";
+  return date.toLocaleDateString("ja-JP", { month: "long", day: "numeric" });
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-40 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <Card>
+        <div className="p-4">
+          <div className="h-9 w-full bg-gray-200 rounded animate-pulse" />
+        </div>
+      </Card>
+      <div className="flex gap-1 border-b border-gray-200 pb-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Card key={i}>
+            <div className="p-4 flex items-center gap-3">
+              <div className="h-5 w-5 bg-gray-200 rounded-full animate-pulse" />
+              <div className="h-4 w-4 bg-gray-200 rounded animate-pulse" />
+              <div className="flex-1">
+                <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mb-2" />
+                <div className="h-3 w-32 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-7 w-7 bg-gray-200 rounded-full animate-pulse" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function TasksPage() {
   const [filter, setFilter] = useState<TaskFilter>("all");
-  const [taskList, setTaskList] = useState(tasks);
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchTasks = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/tasks?limit=50");
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data: TasksResponse = await res.json();
+      setTasks(data.results || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "データの取得に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const filterTabs: { key: TaskFilter; label: string; count: number }[] = [
-    { key: "all", label: "すべて", count: taskList.filter((t) => !t.completed).length },
+    {
+      key: "all",
+      label: "すべて",
+      count: tasks.filter((t) => !isTaskCompleted(t)).length,
+    },
     {
       key: "today",
       label: "今日",
-      count: taskList.filter(
-        (t) => !t.completed && t.dueDate === "2026-03-14"
-      ).length,
+      count: tasks.filter((t) => !isTaskCompleted(t) && isTaskToday(t)).length,
     },
     {
       key: "overdue",
       label: "期限超過",
-      count: taskList.filter((t) => !t.completed && t.overdue).length,
+      count: tasks.filter((t) => isTaskOverdue(t)).length,
     },
     {
       key: "upcoming",
       label: "今後",
-      count: taskList.filter(
-        (t) => !t.completed && !t.overdue && t.dueDate > "2026-03-14"
+      count: tasks.filter(
+        (t) => !isTaskCompleted(t) && !isTaskOverdue(t) && !isTaskToday(t) &&
+          t.properties.hs_timestamp && new Date(t.properties.hs_timestamp) > new Date()
       ).length,
     },
   ];
 
-  const filteredTasks = taskList.filter((t) => {
+  const filteredTasks = tasks.filter((t) => {
     switch (filter) {
       case "today":
-        return t.dueDate === "2026-03-14";
+        return isTaskToday(t);
       case "overdue":
-        return !t.completed && t.overdue;
+        return isTaskOverdue(t);
       case "upcoming":
-        return !t.completed && !t.overdue && t.dueDate > "2026-03-14";
+        return !isTaskCompleted(t) && !isTaskOverdue(t) && !isTaskToday(t) &&
+          t.properties.hs_timestamp && new Date(t.properties.hs_timestamp) > new Date();
       default:
         return true;
     }
   });
 
-  const toggleTask = (id: string) => {
-    setTaskList((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+  const toggleTask = async (id: string) => {
+    // Optimistic toggle
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id !== id) return t;
+        const completed = isTaskCompleted(t);
+        return {
+          ...t,
+          properties: {
+            ...t.properties,
+            hs_task_status: completed ? "NOT_STARTED" : "COMPLETED",
+            hs_task_completion_date: completed ? undefined : new Date().toISOString(),
+          },
+        };
+      })
     );
   };
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTaskTitle.trim()) return;
-    const newTask: Task = {
-      id: `new-${Date.now()}`,
-      title: newTaskTitle,
-      type: "todo",
-      dueDate: "2026-03-14",
-      dueDateLabel: "今日",
-      priority: "medium",
-      contact: "",
-      contactId: "",
-      owner: "佐藤 匠",
-      completed: false,
-      overdue: false,
-    };
-    setTaskList((prev) => [newTask, ...prev]);
-    setNewTaskTitle("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          properties: {
+            hs_task_subject: newTaskTitle,
+            hs_task_type: "TODO",
+            hs_task_status: "NOT_STARTED",
+            hs_task_priority: "MEDIUM",
+            hs_timestamp: new Date().toISOString(),
+          },
+        }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const newTask: TaskItem = await res.json();
+      setTasks((prev) => [newTask, ...prev]);
+      setNewTaskTitle("");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "タスクの作成に失敗しました");
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (loading && tasks.length === 0) return <LoadingSkeleton />;
+
+  if (error && tasks.length === 0) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">タスク</h1>
+        </div>
+        <Card>
+          <div className="p-8 text-center">
+            <p className="text-red-600 font-medium mb-2">エラーが発生しました</p>
+            <p className="text-sm text-gray-500 mb-4">{error}</p>
+            <Button size="sm" onClick={() => fetchTasks()}>
+              再試行
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -307,7 +314,7 @@ export default function TasksPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">タスク</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {taskList.filter((t) => !t.completed).length}件の未完了タスク
+            {tasks.filter((t) => !isTaskCompleted(t)).length}件の未完了タスク
           </p>
         </div>
       </div>
@@ -324,13 +331,17 @@ export default function TasksPage() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addTask();
                 }}
+                disabled={submitting}
               />
             </div>
-            <Button size="sm" onClick={addTask}>
+            <Button size="sm" onClick={addTask} disabled={submitting}>
               <Plus className="h-4 w-4 mr-1" />
-              追加
+              {submitting ? "追加中..." : "追加"}
             </Button>
           </div>
+          {error && tasks.length > 0 && (
+            <p className="text-xs text-red-500 mt-2">{error}</p>
+          )}
         </div>
       </Card>
 
@@ -362,81 +373,79 @@ export default function TasksPage() {
 
       {/* Task List */}
       <div className="space-y-2">
-        {filteredTasks.map((task) => (
-          <Card
-            key={task.id}
-            className={`transition-all ${task.completed ? "opacity-60" : ""}`}
-          >
-            <div className="p-4 flex items-start gap-3">
-              {/* Checkbox */}
-              <button
-                onClick={() => toggleTask(task.id)}
-                className="mt-0.5 flex-shrink-0"
-              >
-                {task.completed ? (
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                ) : (
-                  <Circle className="h-5 w-5 text-gray-300 hover:text-gray-400" />
-                )}
-              </button>
-
-              {/* Type Icon */}
-              <div className="mt-0.5 flex-shrink-0">{typeIcon(task.type)}</div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm font-medium ${
-                    task.completed
-                      ? "text-gray-400 line-through"
-                      : "text-gray-900"
-                  }`}
+        {filteredTasks.map((task) => {
+          const completed = isTaskCompleted(task);
+          const overdue = isTaskOverdue(task);
+          return (
+            <Card
+              key={task.id}
+              className={`transition-all ${completed ? "opacity-60" : ""}`}
+            >
+              <div className="p-4 flex items-start gap-3">
+                {/* Checkbox */}
+                <button
+                  onClick={() => toggleTask(task.id)}
+                  className="mt-0.5 flex-shrink-0"
                 >
-                  {task.title}
-                </p>
-                <div className="flex flex-wrap items-center gap-3 mt-1.5">
-                  {/* Due Date */}
-                  <div
-                    className={`flex items-center gap-1 text-xs ${
-                      task.overdue && !task.completed
-                        ? "text-red-600 font-medium"
-                        : "text-gray-500"
+                  {completed ? (
+                    <CheckCircle2 className="h-5 w-5 text-green-500" />
+                  ) : (
+                    <Circle className="h-5 w-5 text-gray-300 hover:text-gray-400" />
+                  )}
+                </button>
+
+                {/* Type Icon */}
+                <div className="mt-0.5 flex-shrink-0">
+                  {typeIcon(task.properties.hs_task_type || "TODO")}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`text-sm font-medium ${
+                      completed
+                        ? "text-gray-400 line-through"
+                        : "text-gray-900"
                     }`}
                   >
-                    {task.overdue && !task.completed ? (
-                      <AlertTriangle className="h-3 w-3" />
-                    ) : (
-                      <Clock className="h-3 w-3" />
-                    )}
-                    {task.dueDateLabel}
-                  </div>
-
-                  {/* Priority */}
-                  <Badge variant={priorityBadgeVariant(task.priority)}>
-                    {priorityLabel(task.priority)}
-                  </Badge>
-
-                  {/* Contact */}
-                  {task.contact && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
-                      <User className="h-3 w-3" />
-                      {task.contact}
+                    {task.properties.hs_task_subject || "件名なし"}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 mt-1.5">
+                    {/* Due Date */}
+                    <div
+                      className={`flex items-center gap-1 text-xs ${
+                        overdue
+                          ? "text-red-600 font-medium"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {overdue ? (
+                        <AlertTriangle className="h-3 w-3" />
+                      ) : (
+                        <Clock className="h-3 w-3" />
+                      )}
+                      {getDueDateLabel(task)}
                     </div>
-                  )}
+
+                    {/* Priority */}
+                    <Badge variant={priorityBadgeVariant(task.properties.hs_task_priority || "")}>
+                      {priorityLabel(task.properties.hs_task_priority || "")}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Owner */}
+                <div className="flex-shrink-0">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
+                    {(task.properties.hubspot_owner_id || "?").charAt(0)}
+                  </div>
                 </div>
               </div>
+            </Card>
+          );
+        })}
 
-              {/* Owner */}
-              <div className="flex-shrink-0">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
-                  {task.owner.charAt(0)}
-                </div>
-              </div>
-            </div>
-          </Card>
-        ))}
-
-        {filteredTasks.length === 0 && (
+        {filteredTasks.length === 0 && !loading && (
           <div className="py-12 text-center">
             <CheckCircle2 className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">タスクはありません</p>

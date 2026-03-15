@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -12,182 +13,235 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  ArrowUpRight,
-  ArrowDownRight,
   MessageSquare,
+  Loader2,
+  CheckSquare,
+  FileText,
 } from "lucide-react";
 import Link from "next/link";
 
-const kpiData = [
-  {
-    label: "コンタクト合計",
-    value: "1,284",
-    change: "+12.5%",
-    trend: "up" as const,
-    icon: Users,
-    color: "text-blue-600",
-    bg: "bg-blue-50",
-  },
-  {
-    label: "進行中の取引",
-    value: "47",
-    change: "+8.3%",
-    trend: "up" as const,
-    icon: DollarSign,
-    color: "text-green-600",
-    bg: "bg-green-50",
-  },
-  {
-    label: "月間売上",
-    value: "¥12,450,000",
-    change: "+23.1%",
-    trend: "up" as const,
-    icon: TrendingUp,
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-  },
-  {
-    label: "未対応チケット",
-    value: "12",
-    change: "-5.2%",
-    trend: "down" as const,
-    icon: Ticket,
-    color: "text-orange-600",
-    bg: "bg-orange-50",
-  },
-];
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-const recentActivities = [
-  {
-    id: 1,
-    type: "email",
-    icon: Mail,
-    color: "text-blue-500",
-    description: "田中 太郎にメールを送信しました",
-    detail: "提案書のご確認について",
-    time: "10分前",
-  },
-  {
-    id: 2,
-    type: "call",
-    icon: Phone,
-    color: "text-green-500",
-    description: "鈴木 花子と通話しました",
-    detail: "契約内容の確認 - 15分",
-    time: "1時間前",
-  },
-  {
-    id: 3,
-    type: "deal",
-    icon: DollarSign,
-    color: "text-purple-500",
-    description: "取引「ECサイト構築案件」のステージを更新",
-    detail: "提案中 → 見積提出",
-    time: "2時間前",
-  },
-  {
-    id: 4,
-    type: "meeting",
-    icon: Calendar,
-    color: "text-orange-500",
-    description: "山田 一郎との会議を予約しました",
-    detail: "2026/03/15 14:00 - 15:00",
-    time: "3時間前",
-  },
-  {
-    id: 5,
-    type: "note",
-    icon: MessageSquare,
-    color: "text-gray-500",
-    description: "佐々木 美咲のコンタクトにメモを追加",
-    detail: "次回フォローアップ: 来週月曜日",
-    time: "5時間前",
-  },
-];
+const activityTypeIcons: Record<string, { icon: typeof Mail; color: string }> = {
+  EMAIL: { icon: Mail, color: "text-blue-500" },
+  CALL: { icon: Phone, color: "text-green-500" },
+  MEETING: { icon: Calendar, color: "text-orange-500" },
+  NOTE: { icon: MessageSquare, color: "text-gray-500" },
+  TASK: { icon: CheckSquare, color: "text-yellow-500" },
+  DEAL_CREATED: { icon: DollarSign, color: "text-purple-500" },
+  DEAL_STAGE_CHANGED: { icon: DollarSign, color: "text-purple-500" },
+  TICKET_CREATED: { icon: Ticket, color: "text-orange-500" },
+  FORM_SUBMISSION: { icon: FileText, color: "text-cyan-500" },
+  PAGE_VIEW: { icon: FileText, color: "text-gray-400" },
+  LIFECYCLE_CHANGE: { icon: Users, color: "text-indigo-500" },
+};
 
-const upcomingTasks = [
-  {
-    id: 1,
-    title: "田中様へフォローアップメール",
-    dueDate: "今日",
-    priority: "high" as const,
-    contact: "田中 太郎",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "鈴木商事 提案書の修正",
-    dueDate: "今日",
-    priority: "high" as const,
-    contact: "鈴木 花子",
-    completed: false,
-  },
-  {
-    id: 3,
-    title: "ABC株式会社 契約書の送付",
-    dueDate: "明日",
-    priority: "medium" as const,
-    contact: "山田 一郎",
-    completed: false,
-  },
-  {
-    id: 4,
-    title: "展示会リードのインポート",
-    dueDate: "3月16日",
-    priority: "low" as const,
-    contact: "",
-    completed: false,
-  },
-  {
-    id: 5,
-    title: "四半期レポート作成",
-    dueDate: "3月17日",
-    priority: "medium" as const,
-    contact: "",
-    completed: true,
-  },
-];
+function formatRelativeTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const diffHour = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDay = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-const pipelineStages = [
-  { name: "初回商談", count: 8, value: 4200000, color: "bg-blue-400" },
-  { name: "提案中", count: 12, value: 8500000, color: "bg-cyan-400" },
-  { name: "見積提出", count: 7, value: 6300000, color: "bg-yellow-400" },
-  { name: "交渉中", count: 5, value: 5100000, color: "bg-orange-400" },
-  { name: "契約締結", count: 15, value: 12400000, color: "bg-green-400" },
-  { name: "失注", count: 3, value: 1800000, color: "bg-red-400" },
-];
+    if (diffMin < 1) return "たった今";
+    if (diffMin < 60) return `${diffMin}分前`;
+    if (diffHour < 24) return `${diffHour}時間前`;
+    if (diffDay < 7) return `${diffDay}日前`;
+    return date.toLocaleDateString("ja-JP", {
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
-const maxPipelineValue = Math.max(...pipelineStages.map((s) => s.value));
+function formatActivityDescription(activity: any): string {
+  const type = activity.type;
+  const contactName =
+    activity.contact
+      ? `${activity.contact.lastName || ""} ${activity.contact.firstName || ""}`.trim()
+      : null;
+  const dealName = activity.deal?.name || null;
+  const ticketSubject = activity.ticket?.subject || null;
 
-const recentContacts = [
-  { id: "1", name: "田中 太郎", company: "田中商事株式会社", email: "tanaka@tanaka-corp.jp", stage: "商談中" },
-  { id: "2", name: "鈴木 花子", company: "鈴木テクノロジー", email: "suzuki@suzuki-tech.co.jp", stage: "顧客" },
-  { id: "3", name: "山田 一郎", company: "ABC株式会社", email: "yamada@abc-corp.jp", stage: "リード" },
-  { id: "4", name: "佐々木 美咲", company: "デジタルソリューションズ", email: "sasaki@digital-sol.jp", stage: "商談中" },
-  { id: "5", name: "高橋 健一", company: "東京マーケティング", email: "takahashi@tokyo-mktg.jp", stage: "MQL" },
-  { id: "6", name: "伊藤 さくら", company: "イノベーション株式会社", email: "ito@innovation.jp", stage: "顧客" },
-];
+  switch (type) {
+    case "EMAIL":
+      return contactName
+        ? `${contactName}にメールを送信しました`
+        : "メールを送信しました";
+    case "CALL":
+      return contactName
+        ? `${contactName}と通話しました`
+        : "通話を記録しました";
+    case "MEETING":
+      return contactName
+        ? `${contactName}との会議を記録しました`
+        : "会議を記録しました";
+    case "NOTE":
+      return contactName
+        ? `${contactName}のコンタクトにメモを追加`
+        : "メモを追加しました";
+    case "DEAL_CREATED":
+      return dealName
+        ? `取引「${dealName}」を作成しました`
+        : "新しい取引を作成しました";
+    case "DEAL_STAGE_CHANGED":
+      return dealName
+        ? `取引「${dealName}」のステージを更新`
+        : "取引のステージを更新しました";
+    case "TICKET_CREATED":
+      return ticketSubject
+        ? `チケット「${ticketSubject}」を作成しました`
+        : "新しいチケットを作成しました";
+    case "TASK":
+      return "タスクを更新しました";
+    default:
+      return activity.subject || "アクティビティを記録しました";
+  }
+}
 
 const priorityBadge = (priority: string) => {
   switch (priority) {
-    case "high":
-      return <Badge variant="danger">高</Badge>;
-    case "medium":
+    case "HIGH":
+    case "URGENT":
+      return <Badge variant="danger">{priority === "HIGH" ? "高" : "緊急"}</Badge>;
+    case "MEDIUM":
       return <Badge variant="warning">中</Badge>;
-    case "low":
+    case "LOW":
       return <Badge variant="info">低</Badge>;
     default:
       return <Badge>-</Badge>;
   }
 };
 
+const taskStatusLabel: Record<string, string> = {
+  NOT_STARTED: "未着手",
+  IN_PROGRESS: "進行中",
+  COMPLETED: "完了",
+  DEFERRED: "延期",
+};
+
+function formatTaskDueDate(dateStr: string | null): string {
+  if (!dateStr) return "-";
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today.getTime() + 86400000);
+    const dueDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+    if (dueDay.getTime() === today.getTime()) return "今日";
+    if (dueDay.getTime() === tomorrow.getTime()) return "明日";
+    if (dueDay < today) return "期限切れ";
+
+    return date.toLocaleDateString("ja-JP", { month: "long", day: "numeric" });
+  } catch {
+    return dateStr;
+  }
+}
+
 export default function DashboardPage() {
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [recentContacts, setRecentContacts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchDashboard() {
+      setLoading(true);
+      try {
+        const [dashRes, tasksRes, contactsRes] = await Promise.all([
+          fetch("/api/dashboard"),
+          fetch("/api/tasks?limit=5"),
+          fetch("/api/contacts?limit=6&associations=company"),
+        ]);
+
+        if (dashRes.ok) {
+          const data = await dashRes.json();
+          setDashboardData(data);
+        }
+
+        if (tasksRes.ok) {
+          const data = await tasksRes.json();
+          setTasks(data.results || []);
+        }
+
+        if (contactsRes.ok) {
+          const data = await contactsRes.json();
+          setRecentContacts(data.results || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchDashboard();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center" style={{ minHeight: "60vh" }}>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-[#ff4800] mx-auto" />
+          <p className="mt-3 text-sm text-gray-500">ダッシュボードを読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = dashboardData?.stats || {};
+  const recentActivities: any[] = dashboardData?.recentActivities || [];
+  const dealsByStage: any[] = dashboardData?.dealsByStage || [];
+
+  const kpiData = [
+    {
+      label: "コンタクト合計",
+      value: (stats.totalContacts || 0).toLocaleString(),
+      icon: Users,
+      color: "text-blue-600",
+      bg: "bg-blue-50",
+    },
+    {
+      label: "進行中の取引",
+      value: (stats.activeDeals || 0).toLocaleString(),
+      icon: DollarSign,
+      color: "text-green-600",
+      bg: "bg-green-50",
+    },
+    {
+      label: "合計売上",
+      value: stats.totalRevenue
+        ? `¥${Math.round(stats.totalRevenue).toLocaleString()}`
+        : "¥0",
+      icon: TrendingUp,
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+    },
+    {
+      label: "未対応チケット",
+      value: (stats.openTickets || 0).toLocaleString(),
+      icon: Ticket,
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+    },
+  ];
+
+  const maxPipelineValue =
+    dealsByStage.length > 0
+      ? Math.max(...dealsByStage.map((s: any) => s.totalAmount || 0))
+      : 1;
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">
-          おかえりなさい、佐藤さん
+          ダッシュボード
         </h1>
         <p className="text-sm text-gray-500 mt-1">
           今日の概要をご確認ください。
@@ -209,17 +263,6 @@ export default function DashboardPage() {
                     <p className="mt-1 text-2xl font-bold text-gray-900">
                       {kpi.value}
                     </p>
-                    <div className="mt-1 flex items-center gap-1">
-                      {kpi.trend === "up" ? (
-                        <ArrowUpRight className="h-3.5 w-3.5 text-green-500" />
-                      ) : (
-                        <ArrowDownRight className="h-3.5 w-3.5 text-green-500" />
-                      )}
-                      <span className="text-xs font-medium text-green-600">
-                        {kpi.change}
-                      </span>
-                      <span className="text-xs text-gray-400">先月比</span>
-                    </div>
                   </div>
                   <div
                     className={`flex h-12 w-12 items-center justify-center rounded-lg ${kpi.bg}`}
@@ -250,27 +293,36 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity) => {
-                const Icon = activity.icon;
-                return (
-                  <div key={activity.id} className="flex gap-3">
-                    <div
-                      className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 ${activity.color}`}
-                    >
-                      <Icon className="h-4 w-4" />
+              {recentActivities.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">
+                  アクティビティはまだありません
+                </p>
+              ) : (
+                recentActivities.map((activity: any) => {
+                  const typeConfig = activityTypeIcons[activity.type] || activityTypeIcons.NOTE;
+                  const Icon = typeConfig.icon;
+                  return (
+                    <div key={activity.id} className="flex gap-3">
+                      <div
+                        className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 ${typeConfig.color}`}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">
+                          {formatActivityDescription(activity)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {activity.subject || activity.body || ""}
+                        </p>
+                      </div>
+                      <span className="flex-shrink-0 text-xs text-gray-400 mt-0.5">
+                        {formatRelativeTime(activity.createdAt)}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        {activity.description}
-                      </p>
-                      <p className="text-xs text-gray-500">{activity.detail}</p>
-                    </div>
-                    <span className="flex-shrink-0 text-xs text-gray-400 mt-0.5">
-                      {activity.time}
-                    </span>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -290,34 +342,47 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {upcomingTasks.map((task) => (
-                <div
-                  key={task.id}
-                  className="flex items-start gap-3 rounded-md p-2 hover:bg-gray-50"
-                >
-                  <div className="mt-0.5">
-                    {task.completed ? (
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`text-sm ${task.completed ? "text-gray-400 line-through" : "text-gray-900"}`}
+              {tasks.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">
+                  タスクはありません
+                </p>
+              ) : (
+                tasks.map((task: any) => {
+                  const isCompleted = task.status === "COMPLETED";
+                  const dueDate = task.dueDate || task.properties?.hs_timestamp;
+                  const title = task.title || task.properties?.hs_task_subject || "";
+                  const priority = task.priority || task.properties?.hs_task_priority || "MEDIUM";
+
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-start gap-3 rounded-md p-2 hover:bg-gray-50"
                     >
-                      {task.title}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex items-center gap-1 text-xs text-gray-500">
-                        <Clock className="h-3 w-3" />
-                        {task.dueDate}
+                      <div className="mt-0.5">
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
+                        )}
                       </div>
-                      {priorityBadge(task.priority)}
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className={`text-sm ${isCompleted ? "text-gray-400 line-through" : "text-gray-900"}`}
+                        >
+                          {title}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <Clock className="h-3 w-3" />
+                            {formatTaskDueDate(dueDate)}
+                          </div>
+                          {priorityBadge(priority)}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>
@@ -340,25 +405,32 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {pipelineStages.map((stage) => (
-                <div key={stage.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-700">{stage.name}</span>
-                    <span className="text-gray-500">
-                      {stage.count}件 / ¥
-                      {(stage.value / 10000).toLocaleString()}万
-                    </span>
+              {dealsByStage.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">
+                  取引データはまだありません
+                </p>
+              ) : (
+                dealsByStage.map((stage: any) => (
+                  <div key={stage.stage.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-700">{stage.stage.name}</span>
+                      <span className="text-gray-500">
+                        {stage.count}件 / ¥
+                        {((stage.totalAmount || 0) / 10000).toLocaleString()}万
+                      </span>
+                    </div>
+                    <div className="h-4 w-full rounded-full bg-gray-100">
+                      <div
+                        className="h-4 rounded-full transition-all"
+                        style={{
+                          width: `${((stage.totalAmount || 0) / maxPipelineValue) * 100}%`,
+                          backgroundColor: stage.stage.color || "#3B82F6",
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-4 w-full rounded-full bg-gray-100">
-                    <div
-                      className={`h-4 rounded-full ${stage.color} transition-all`}
-                      style={{
-                        width: `${(stage.value / maxPipelineValue) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -378,36 +450,61 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {recentContacts.map((contact) => (
-                <Link
-                  key={contact.id}
-                  href={`/contacts/${contact.id}`}
-                  className="flex items-center gap-3 rounded-md p-2 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff4800] text-sm font-medium text-white">
-                    {contact.name.charAt(0)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {contact.name}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate">
-                      {contact.company}
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      contact.stage === "顧客"
-                        ? "success"
-                        : contact.stage === "商談中"
-                          ? "info"
-                          : "default"
-                    }
-                  >
-                    {contact.stage}
-                  </Badge>
-                </Link>
-              ))}
+              {recentContacts.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-6">
+                  コンタクトはまだありません
+                </p>
+              ) : (
+                recentContacts.map((contact: any) => {
+                  const firstName = contact.properties?.firstname || "";
+                  const lastName = contact.properties?.lastname || "";
+                  const displayName = `${lastName} ${firstName}`.trim() || "名前なし";
+                  const companyName = contact.company?.name || "";
+                  const lifecycleStage = contact.properties?.lifecyclestage || "";
+
+                  const stageLabels: Record<string, string> = {
+                    SUBSCRIBER: "登録者",
+                    LEAD: "リード",
+                    MQL: "MQL",
+                    SQL: "SQL",
+                    OPPORTUNITY: "商談中",
+                    CUSTOMER: "顧客",
+                    EVANGELIST: "推奨者",
+                    OTHER: "その他",
+                  };
+
+                  return (
+                    <Link
+                      key={contact.id}
+                      href={`/contacts/${contact.id}`}
+                      className="flex items-center gap-3 rounded-md p-2 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ff4800] text-sm font-medium text-white">
+                        {displayName.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {displayName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {companyName}
+                        </p>
+                      </div>
+                      <Badge
+                        variant={
+                          lifecycleStage === "CUSTOMER"
+                            ? "success"
+                            : lifecycleStage === "OPPORTUNITY" || lifecycleStage === "SQL"
+                              ? "info"
+                              : "default"
+                        }
+                      >
+                        {stageLabels[lifecycleStage] || lifecycleStage || "-"}
+                      </Badge>
+                    </Link>
+                  );
+                })
+              )}
             </div>
           </CardContent>
         </Card>

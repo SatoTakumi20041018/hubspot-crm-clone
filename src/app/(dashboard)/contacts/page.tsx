@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -35,200 +35,31 @@ const leadStatuses = [
   "対応済み",
 ];
 
-const contacts = [
-  {
-    id: "1",
-    name: "田中 太郎",
-    email: "tanaka@tanaka-corp.jp",
-    company: "田中商事株式会社",
-    phone: "03-1234-5678",
-    lifecycleStage: "商談中",
-    leadStatus: "進行中",
-    owner: "佐藤 匠",
-    createdAt: "2025-12-15",
-    avatar: "田",
-  },
-  {
-    id: "2",
-    name: "鈴木 花子",
-    email: "suzuki@suzuki-tech.co.jp",
-    company: "鈴木テクノロジー",
-    phone: "06-2345-6789",
-    lifecycleStage: "顧客",
-    leadStatus: "対応済み",
-    owner: "佐藤 匠",
-    createdAt: "2025-11-20",
-    avatar: "鈴",
-  },
-  {
-    id: "3",
-    name: "山田 一郎",
-    email: "yamada@abc-corp.jp",
-    company: "ABC株式会社",
-    phone: "03-3456-7890",
-    lifecycleStage: "リード",
-    leadStatus: "新規",
-    owner: "佐藤 匠",
-    createdAt: "2026-01-05",
-    avatar: "山",
-  },
-  {
-    id: "4",
-    name: "佐々木 美咲",
-    email: "sasaki@digital-sol.jp",
-    company: "デジタルソリューションズ",
-    phone: "03-4567-8901",
-    lifecycleStage: "商談中",
-    leadStatus: "進行中",
-    owner: "田村 愛",
-    createdAt: "2026-01-10",
-    avatar: "佐",
-  },
-  {
-    id: "5",
-    name: "高橋 健一",
-    email: "takahashi@tokyo-mktg.jp",
-    company: "東京マーケティング",
-    phone: "03-5678-9012",
-    lifecycleStage: "MQL",
-    leadStatus: "オープン",
-    owner: "佐藤 匠",
-    createdAt: "2026-01-18",
-    avatar: "高",
-  },
-  {
-    id: "6",
-    name: "伊藤 さくら",
-    email: "ito@innovation.jp",
-    company: "イノベーション株式会社",
-    phone: "045-6789-0123",
-    lifecycleStage: "顧客",
-    leadStatus: "対応済み",
-    owner: "田村 愛",
-    createdAt: "2025-10-08",
-    avatar: "伊",
-  },
-  {
-    id: "7",
-    name: "渡辺 大輔",
-    email: "watanabe@global-sys.jp",
-    company: "グローバルシステム",
-    phone: "03-7890-1234",
-    lifecycleStage: "SQL",
-    leadStatus: "進行中",
-    owner: "佐藤 匠",
-    createdAt: "2026-02-01",
-    avatar: "渡",
-  },
-  {
-    id: "8",
-    name: "中村 真理",
-    email: "nakamura@sakura-design.jp",
-    company: "さくらデザイン",
-    phone: "06-8901-2345",
-    lifecycleStage: "リード",
-    leadStatus: "新規",
-    owner: "田村 愛",
-    createdAt: "2026-02-10",
-    avatar: "中",
-  },
-  {
-    id: "9",
-    name: "小林 誠",
-    email: "kobayashi@future-tech.co.jp",
-    company: "フューチャーテック",
-    phone: "03-9012-3456",
-    lifecycleStage: "MQL",
-    leadStatus: "オープン",
-    owner: "佐藤 匠",
-    createdAt: "2026-02-15",
-    avatar: "小",
-  },
-  {
-    id: "10",
-    name: "加藤 由美",
-    email: "kato@sunrise-media.jp",
-    company: "サンライズメディア",
-    phone: "03-0123-4567",
-    lifecycleStage: "サブスクライバー",
-    leadStatus: "新規",
-    owner: "田村 愛",
-    createdAt: "2026-02-20",
-    avatar: "加",
-  },
-  {
-    id: "11",
-    name: "松本 隆",
-    email: "matsumoto@taiyo-corp.jp",
-    company: "太陽コーポレーション",
-    phone: "052-1234-5678",
-    lifecycleStage: "商談中",
-    leadStatus: "進行中",
-    owner: "佐藤 匠",
-    createdAt: "2026-02-25",
-    avatar: "松",
-  },
-  {
-    id: "12",
-    name: "井上 千春",
-    email: "inoue@harmony-inc.jp",
-    company: "ハーモニー株式会社",
-    phone: "03-2345-6789",
-    lifecycleStage: "SQL",
-    leadStatus: "オープン",
-    owner: "佐藤 匠",
-    createdAt: "2026-03-01",
-    avatar: "井",
-  },
-  {
-    id: "13",
-    name: "木村 翔太",
-    email: "kimura@cross-bridge.jp",
-    company: "クロスブリッジ",
-    phone: "06-3456-7890",
-    lifecycleStage: "リード",
-    leadStatus: "未対応",
-    owner: "田村 愛",
-    createdAt: "2026-03-05",
-    avatar: "木",
-  },
-  {
-    id: "14",
-    name: "林 美穂",
-    email: "hayashi@prime-data.jp",
-    company: "プライムデータ",
-    phone: "03-4567-8901",
-    lifecycleStage: "MQL",
-    leadStatus: "進行中",
-    owner: "佐藤 匠",
-    createdAt: "2026-03-08",
-    avatar: "林",
-  },
-  {
-    id: "15",
-    name: "清水 拓也",
-    email: "shimizu@nexus-corp.jp",
-    company: "ネクサス株式会社",
-    phone: "03-5678-9012",
-    lifecycleStage: "エバンジェリスト",
-    leadStatus: "対応済み",
-    owner: "佐藤 匠",
-    createdAt: "2025-08-15",
-    avatar: "清",
-  },
-  {
-    id: "16",
-    name: "森田 結衣",
-    email: "morita@pixel-lab.jp",
-    company: "ピクセルラボ",
-    phone: "045-6789-0123",
-    lifecycleStage: "顧客",
-    leadStatus: "対応済み",
-    owner: "田村 愛",
-    createdAt: "2025-09-20",
-    avatar: "森",
-  },
-];
+interface Contact {
+  id: string;
+  properties: {
+    firstname?: string;
+    lastname?: string;
+    email?: string;
+    phone?: string;
+    company?: string;
+    lifecyclestage?: string;
+    hs_lead_status?: string;
+    hubspot_owner_id?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ContactsResponse {
+  results: Contact[];
+  total?: number;
+  paging?: {
+    next?: {
+      after: string;
+    };
+  };
+}
 
 const stageBadgeVariant = (stage: string) => {
   switch (stage) {
@@ -247,30 +78,125 @@ const stageBadgeVariant = (stage: string) => {
   }
 };
 
+function getContactName(contact: Contact): string {
+  const first = contact.properties.firstname || "";
+  const last = contact.properties.lastname || "";
+  const full = `${last} ${first}`.trim();
+  return full || contact.properties.email || "名前なし";
+}
+
+function getContactAvatar(contact: Contact): string {
+  const last = contact.properties.lastname || "";
+  if (last) return last.charAt(0);
+  const first = contact.properties.firstname || "";
+  if (first) return first.charAt(0);
+  return "?";
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <Card>
+        <div className="p-4">
+          <div className="h-9 w-72 bg-gray-200 rounded animate-pulse" />
+        </div>
+      </Card>
+      <Card>
+        <div className="p-4 space-y-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <div className="h-8 w-8 bg-gray-200 rounded-full animate-pulse" />
+              <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-48 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function ContactsPage() {
   const [search, setSearch] = useState("");
   const [selectedStage, setSelectedStage] = useState("すべて");
   const [selectedStatus, setSelectedStatus] = useState("すべて");
-  const [currentPage, setCurrentPage] = useState(1);
-  const perPage = 10;
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [afterCursor, setAfterCursor] = useState<string | undefined>(undefined);
+  const [prevCursors, setPrevCursors] = useState<string[]>([]);
+  const [total, setTotal] = useState(0);
 
-  const filtered = contacts.filter((c) => {
-    const matchSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.company.toLowerCase().includes(search.toLowerCase());
-    const matchStage =
-      selectedStage === "すべて" || c.lifecycleStage === selectedStage;
-    const matchStatus =
-      selectedStatus === "すべて" || c.leadStatus === selectedStatus;
-    return matchSearch && matchStage && matchStatus;
-  });
+  const fetchContacts = useCallback(async (cursor?: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ limit: "50" });
+      if (cursor) params.set("after", cursor);
+      if (search) params.set("search", search);
+      if (selectedStage !== "すべて") params.set("lifecyclestage", selectedStage);
+      if (selectedStatus !== "すべて") params.set("hs_lead_status", selectedStatus);
 
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const paginated = filtered.slice(
-    (currentPage - 1) * perPage,
-    currentPage * perPage
-  );
+      const res = await fetch(`/api/contacts?${params.toString()}`);
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data: ContactsResponse = await res.json();
+      setContacts(data.results || []);
+      setAfterCursor(data.paging?.next?.after);
+      setTotal(data.total ?? data.results?.length ?? 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "データの取得に失敗しました");
+    } finally {
+      setLoading(false);
+    }
+  }, [search, selectedStage, selectedStatus]);
+
+  useEffect(() => {
+    setPrevCursors([]);
+    fetchContacts();
+  }, [fetchContacts]);
+
+  const handleNextPage = () => {
+    if (afterCursor) {
+      setPrevCursors((prev) => [...prev, ""]); // store current state marker
+      fetchContacts(afterCursor);
+    }
+  };
+
+  const handlePrevPage = () => {
+    const newPrev = [...prevCursors];
+    newPrev.pop();
+    setPrevCursors(newPrev);
+    // Re-fetch from beginning for simplicity (cursor-based pagination doesn't easily go back)
+    fetchContacts();
+  };
+
+  if (loading && contacts.length === 0) return <LoadingSkeleton />;
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">コンタクト</h1>
+        </div>
+        <Card>
+          <div className="p-8 text-center">
+            <p className="text-red-600 font-medium mb-2">エラーが発生しました</p>
+            <p className="text-sm text-gray-500 mb-4">{error}</p>
+            <Button size="sm" onClick={() => fetchContacts()}>
+              再試行
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -279,7 +205,7 @@ export default function ContactsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">コンタクト</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {filtered.length}件のコンタクト
+            {total}件のコンタクト
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -305,7 +231,6 @@ export default function ContactsPage() {
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
-                  setCurrentPage(1);
                 }}
               />
             </div>
@@ -316,7 +241,6 @@ export default function ContactsPage() {
                 value={selectedStage}
                 onChange={(e) => {
                   setSelectedStage(e.target.value);
-                  setCurrentPage(1);
                 }}
               >
                 {lifecycleStages.map((s) => (
@@ -330,7 +254,6 @@ export default function ContactsPage() {
                 value={selectedStatus}
                 onChange={(e) => {
                   setSelectedStatus(e.target.value);
-                  setCurrentPage(1);
                 }}
               >
                 {leadStatuses.map((s) => (
@@ -384,49 +307,79 @@ export default function ContactsPage() {
               </tr>
             </thead>
             <tbody>
-              {paginated.map((contact) => (
-                <tr
-                  key={contact.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-4 py-3">
-                    <input
-                      type="checkbox"
-                      className="rounded border-gray-300"
-                    />
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/contacts/${contact.id}`}
-                      className="flex items-center gap-3 group"
-                    >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
-                        {contact.avatar}
-                      </div>
-                      <span className="font-medium text-gray-900 group-hover:text-[#ff4800]">
-                        {contact.name}
-                      </span>
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{contact.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{contact.company}</td>
-                  <td className="px-4 py-3 text-gray-600">{contact.phone}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant={stageBadgeVariant(contact.lifecycleStage)}>
-                      {contact.lifecycleStage}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{contact.owner}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    {contact.createdAt}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-gray-100">
+                    <td className="px-4 py-3" colSpan={9}>
+                      <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                    </td>
+                  </tr>
+                ))
+              ) : contacts.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                    コンタクトが見つかりません
                   </td>
                 </tr>
-              ))}
+              ) : (
+                contacts.map((contact) => (
+                  <tr
+                    key={contact.id}
+                    className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/contacts/${contact.id}`}
+                        className="flex items-center gap-3 group"
+                      >
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
+                          {getContactAvatar(contact)}
+                        </div>
+                        <span className="font-medium text-gray-900 group-hover:text-[#ff4800]">
+                          {getContactName(contact)}
+                        </span>
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {contact.properties.email || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {contact.properties.company || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {contact.properties.phone || "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      {contact.properties.lifecyclestage ? (
+                        <Badge variant={stageBadgeVariant(contact.properties.lifecyclestage)}>
+                          {contact.properties.lifecyclestage}
+                        </Badge>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {contact.properties.hubspot_owner_id || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">
+                      {contact.createdAt
+                        ? new Date(contact.createdAt).toLocaleDateString("ja-JP")
+                        : "-"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -434,33 +387,22 @@ export default function ContactsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
-            {filtered.length}件中 {(currentPage - 1) * perPage + 1}-
-            {Math.min(currentPage * perPage, filtered.length)}件を表示
+            {total}件のコンタクト
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={prevCursors.length === 0}
+              onClick={handlePrevPage}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-              <Button
-                key={p}
-                variant={p === currentPage ? "primary" : "outline"}
-                size="sm"
-                onClick={() => setCurrentPage(p)}
-              >
-                {p}
-              </Button>
-            ))}
             <Button
               variant="outline"
               size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={!afterCursor}
+              onClick={handleNextPage}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

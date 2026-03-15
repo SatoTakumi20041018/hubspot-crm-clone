@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,205 +19,237 @@ import {
   MessageSquare,
   DollarSign,
   Ticket,
-  Users,
   MapPin,
   Plus,
   Calendar,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 
-const companiesData: Record<
-  string,
-  {
-    name: string;
-    domain: string;
-    phone: string;
-    industry: string;
-    description: string;
-    annualRevenue: string;
-    employees: number;
-    city: string;
-    address: string;
-    owner: string;
-    createdAt: string;
-    lastActivity: string;
-  }
-> = {
-  "1": {
-    name: "田中商事株式会社",
-    domain: "tanaka-corp.jp",
-    phone: "03-1234-5678",
-    industry: "小売・EC",
-    description:
-      "EC事業を中心とした総合商社。日用品からアパレルまで幅広い商品を取り扱う。",
-    annualRevenue: "¥2.5億",
-    employees: 150,
-    city: "東京都",
-    address: "東京都港区六本木1-2-3",
-    owner: "佐藤 匠",
-    createdAt: "2025-10-01",
-    lastActivity: "2026-03-14",
-  },
-  "2": {
-    name: "鈴木テクノロジー",
-    domain: "suzuki-tech.co.jp",
-    phone: "06-2345-6789",
-    industry: "IT・ソフトウェア",
-    description:
-      "クラウドソリューションとAI開発を手がけるテクノロジー企業。",
-    annualRevenue: "¥5億",
-    employees: 280,
-    city: "大阪府",
-    address: "大阪府大阪市北区梅田4-5-6",
-    owner: "佐藤 匠",
-    createdAt: "2025-09-15",
-    lastActivity: "2026-03-12",
-  },
-};
-
-const defaultCompany = {
-  name: "サンプル会社",
-  domain: "example.jp",
-  phone: "03-0000-0000",
-  industry: "IT・ソフトウェア",
-  description: "サンプルの会社情報です。",
-  annualRevenue: "¥1億",
-  employees: 50,
-  city: "東京都",
-  address: "東京都渋谷区1-1-1",
-  owner: "佐藤 匠",
-  createdAt: "2026-01-01",
-  lastActivity: "2026-03-14",
-};
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const activityTabs = ["アクティビティ", "メモ", "メール", "通話", "タスク"];
 
-const activities = [
-  {
-    id: 1,
-    type: "email",
-    icon: Mail,
-    color: "text-blue-500",
-    title: "田中 太郎 にメール送信",
-    description: "新サービスの提案書を送付しました。",
-    user: "佐藤 匠",
-    date: "2026-03-14 10:30",
+const activityTypeConfig: Record<
+  string,
+  { label: string; color: string; icon: typeof Mail }
+> = {
+  EMAIL: { label: "メール", color: "text-blue-500", icon: Mail },
+  CALL: { label: "通話", color: "text-green-500", icon: Phone },
+  MEETING: { label: "ミーティング", color: "text-purple-500", icon: Calendar },
+  NOTE: { label: "メモ", color: "text-gray-500", icon: MessageSquare },
+  TASK: { label: "タスク", color: "text-orange-500", icon: CheckSquare },
+  DEAL_CREATED: {
+    label: "取引作成",
+    color: "text-green-600",
+    icon: DollarSign,
   },
-  {
-    id: 2,
-    type: "call",
-    icon: Phone,
-    color: "text-green-500",
-    title: "田中 太郎 と通話",
-    description:
-      "ECサイトリニューアルについて打ち合わせ。現在のシステムの課題をヒアリング。",
-    user: "佐藤 匠",
-    date: "2026-03-12 15:00",
+  DEAL_STAGE_CHANGED: {
+    label: "ステージ変更",
+    color: "text-purple-600",
+    icon: DollarSign,
   },
-  {
-    id: 3,
-    type: "note",
+  TICKET_CREATED: {
+    label: "チケット作成",
+    color: "text-orange-600",
+    icon: Ticket,
+  },
+  FORM_SUBMISSION: {
+    label: "フォーム送信",
+    color: "text-cyan-500",
+    icon: FileText,
+  },
+  PAGE_VIEW: {
+    label: "ページビュー",
+    color: "text-gray-400",
+    icon: FileText,
+  },
+  LIFECYCLE_CHANGE: {
+    label: "ステージ変更",
+    color: "text-indigo-500",
     icon: MessageSquare,
-    color: "text-gray-500",
-    title: "メモ追加",
-    description:
-      "来期のIT投資計画で大型予算が確保される見込み。4月の新年度にあわせて提案を進める。",
-    user: "佐藤 匠",
-    date: "2026-03-10 09:15",
   },
-  {
-    id: 4,
-    type: "meeting",
-    icon: Calendar,
-    color: "text-purple-500",
-    title: "定例ミーティング",
-    description: "月次レビュー。次回は4月15日を予定。",
-    user: "佐藤 匠",
-    date: "2026-03-05 14:00",
-  },
-];
+};
 
-const associatedContacts = [
-  {
-    id: "1",
-    name: "田中 太郎",
-    jobTitle: "代表取締役",
-    email: "tanaka@tanaka-corp.jp",
-  },
-  {
-    id: "4",
-    name: "田中 美穂",
-    jobTitle: "経営企画部長",
-    email: "m-tanaka@tanaka-corp.jp",
-  },
-  {
-    id: "7",
-    name: "鈴木 一郎",
-    jobTitle: "システム部 マネージャー",
-    email: "i-suzuki@tanaka-corp.jp",
-  },
-];
+function formatDate(dateStr: string | null | undefined): string {
+  if (!dateStr) return "-";
+  try {
+    return new Date(dateStr).toLocaleDateString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
-const associatedDeals = [
-  {
-    id: "d1",
-    name: "ECサイト構築案件",
-    amount: "¥4,500,000",
-    stage: "見積提出",
-    closeDate: "2026-04-30",
-  },
-  {
-    id: "d2",
-    name: "MAツール導入",
-    amount: "¥1,200,000",
-    stage: "初回商談",
-    closeDate: "2026-06-15",
-  },
-];
+function formatDateTime(dateStr: string | null | undefined): string {
+  if (!dateStr) return "-";
+  try {
+    return new Date(dateStr).toLocaleString("ja-JP", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return dateStr;
+  }
+}
 
-const associatedTickets = [
-  {
-    id: "t1",
-    subject: "ログイン不具合の報告",
-    status: "対応中",
-    priority: "高",
-  },
-  {
-    id: "t2",
-    subject: "データエクスポート機能のリクエスト",
-    status: "新規",
-    priority: "中",
-  },
-];
+function formatCurrency(amount: number | null | undefined): string {
+  if (amount == null) return "-";
+  return `¥${amount.toLocaleString("ja-JP")}`;
+}
+
+function formatRevenue(amount: number | null | undefined): string {
+  if (amount == null) return "-";
+  if (amount >= 100000000) {
+    return `¥${(amount / 100000000).toFixed(1)}億`;
+  }
+  if (amount >= 10000) {
+    return `¥${(amount / 10000).toLocaleString("ja-JP")}万`;
+  }
+  return `¥${amount.toLocaleString("ja-JP")}`;
+}
 
 export default function CompanyDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
-  const company = companiesData[id] || defaultCompany;
+
+  const [company, setCompany] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("アクティビティ");
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const [companyRes, activitiesRes] = await Promise.all([
+          fetch(`/api/companies/${id}`),
+          fetch(`/api/activities?companyId=${id}&limit=50`),
+        ]);
+
+        if (!companyRes.ok) {
+          if (companyRes.status === 404) {
+            setError("会社が見つかりませんでした。");
+          } else {
+            setError("会社の取得に失敗しました。");
+          }
+          setLoading(false);
+          return;
+        }
+
+        const companyData = await companyRes.json();
+        setCompany(companyData);
+
+        if (activitiesRes.ok) {
+          const activitiesData = await activitiesRes.json();
+          setActivities(activitiesData.results || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch company:", err);
+        setError("データの取得中にエラーが発生しました。");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="-m-6 flex flex-col items-center justify-center" style={{ height: "calc(100vh - 4rem)" }}>
+        <Loader2 className="h-8 w-8 animate-spin text-[#ff4800]" />
+        <p className="mt-3 text-sm text-gray-500">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (error || !company) {
+    return (
+      <div className="-m-6 flex flex-col items-center justify-center" style={{ height: "calc(100vh - 4rem)" }}>
+        <AlertCircle className="h-12 w-12 text-red-400" />
+        <p className="mt-3 text-base font-medium text-gray-900">
+          {error || "会社が見つかりません"}
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4"
+          onClick={() => router.back()}
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          戻る
+        </Button>
+      </div>
+    );
+  }
+
+  const name = company.name || company.properties?.name || "名前なし";
+  const domain = company.domain || company.properties?.domain || "";
+  const phone = company.phone || company.properties?.phone || "";
+  const industry = company.industry || company.properties?.industry || "";
+  const description = company.description || company.properties?.description || "";
+  const annualRevenue = company.annualRevenue ?? company.properties?.annualrevenue ?? null;
+  const employeeCount = company.employeeCount ?? company.properties?.numberofemployees ?? null;
+  const city = company.city || company.properties?.city || "";
+  const state = company.state || company.properties?.state || "";
+  const country = company.country || company.properties?.country || "";
+  const ownerName = company.owner?.name || "-";
+
+  const addressParts = [city, state, country].filter(Boolean);
+  const address = addressParts.join("、");
+
+  // Associated records
+  const contacts: any[] = company.contacts || [];
+  const deals: any[] = company.deals || [];
+  const tickets: any[] = company.tickets || [];
+  const notes: any[] = company.notes || [];
+
+  const allActivities = activities.length > 0 ? activities : company.activities || [];
+
+  const filteredActivities = allActivities.filter((a: any) => {
+    const type = a.type || a.properties?.hs_activity_type;
+    if (activeTab === "アクティビティ") return true;
+    if (activeTab === "メモ") return type === "NOTE";
+    if (activeTab === "メール") return type === "EMAIL";
+    if (activeTab === "通話") return type === "CALL";
+    if (activeTab === "タスク") return type === "TASK";
+    return true;
+  });
 
   return (
     <div className="-m-6 flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       {/* Top Bar */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <Link
-            href="/companies"
+          <button
+            onClick={() => router.back()}
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <ChevronLeft className="h-5 w-5" />
-          </Link>
+          </button>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-100 text-blue-600">
               <Building2 className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">
-                {company.name}
-              </h1>
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Globe className="h-3.5 w-3.5" />
-                {company.domain}
-              </div>
+              <h1 className="text-lg font-bold text-gray-900">{name}</h1>
+              {domain && (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Globe className="h-3.5 w-3.5" />
+                  {domain}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -254,39 +286,43 @@ export default function CompanyDetailPage() {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500">
-                ドメイン
-              </label>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Globe className="h-3.5 w-3.5 text-gray-400" />
-                <p className="text-sm text-[#ff4800]">{company.domain}</p>
+            {domain && (
+              <div>
+                <label className="text-xs font-medium text-gray-500">
+                  ドメイン
+                </label>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Globe className="h-3.5 w-3.5 text-gray-400" />
+                  <p className="text-sm text-[#ff4800]">{domain}</p>
+                </div>
               </div>
-            </div>
+            )}
             <div>
               <label className="text-xs font-medium text-gray-500">
                 電話番号
               </label>
-              <p className="text-sm text-gray-900 mt-0.5">{company.phone}</p>
+              <p className="text-sm text-gray-900 mt-0.5">{phone || "-"}</p>
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">業界</label>
-              <div className="mt-1">
-                <Badge>{company.industry}</Badge>
+            {industry && (
+              <div>
+                <label className="text-xs font-medium text-gray-500">業界</label>
+                <div className="mt-1">
+                  <Badge>{industry}</Badge>
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">説明</label>
-              <p className="text-sm text-gray-900 mt-0.5">
-                {company.description}
-              </p>
-            </div>
+            )}
+            {description && (
+              <div>
+                <label className="text-xs font-medium text-gray-500">説明</label>
+                <p className="text-sm text-gray-900 mt-0.5">{description}</p>
+              </div>
+            )}
             <div>
               <label className="text-xs font-medium text-gray-500">
                 年間売上
               </label>
               <p className="text-sm font-medium text-gray-900 mt-0.5">
-                {company.annualRevenue}
+                {formatRevenue(annualRevenue)}
               </p>
             </div>
             <div>
@@ -294,16 +330,18 @@ export default function CompanyDetailPage() {
                 従業員数
               </label>
               <p className="text-sm text-gray-900 mt-0.5">
-                {company.employees}名
+                {employeeCount != null ? `${employeeCount}名` : "-"}
               </p>
             </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500">住所</label>
-              <div className="flex items-start gap-1 mt-0.5">
-                <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5" />
-                <p className="text-sm text-gray-900">{company.address}</p>
+            {address && (
+              <div>
+                <label className="text-xs font-medium text-gray-500">住所</label>
+                <div className="flex items-start gap-1 mt-0.5">
+                  <MapPin className="h-3.5 w-3.5 text-gray-400 mt-0.5" />
+                  <p className="text-sm text-gray-900">{address}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             <hr className="border-gray-200" />
 
@@ -313,9 +351,9 @@ export default function CompanyDetailPage() {
               </label>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white">
-                  {company.owner.charAt(0)}
+                  {ownerName.charAt(0)}
                 </div>
-                <p className="text-sm text-gray-900">{company.owner}</p>
+                <p className="text-sm text-gray-900">{ownerName}</p>
               </div>
             </div>
             <div>
@@ -323,7 +361,15 @@ export default function CompanyDetailPage() {
                 作成日
               </label>
               <p className="text-sm text-gray-900 mt-0.5">
-                {company.createdAt}
+                {formatDate(company.createdAt)}
+              </p>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-gray-500">
+                最終更新
+              </label>
+              <p className="text-sm text-gray-900 mt-0.5">
+                {formatDate(company.updatedAt)}
               </p>
             </div>
           </div>
@@ -348,40 +394,83 @@ export default function CompanyDetailPage() {
           </div>
 
           <div className="space-y-4">
-            {activities.map((activity) => {
-              const Icon = activity.icon;
-              return (
-                <Card key={activity.id}>
+            {filteredActivities.length === 0 ? (
+              <div className="text-center py-12 text-sm text-gray-400">
+                アクティビティはまだありません
+              </div>
+            ) : (
+              filteredActivities.map((activity: any) => {
+                const type = activity.type || activity.properties?.hs_activity_type || "NOTE";
+                const config = activityTypeConfig[type] || activityTypeConfig.NOTE;
+                const Icon = config.icon;
+                const userName = activity.user?.name || "-";
+                const subject = activity.subject || activity.properties?.hs_body_preview || "";
+                const body = activity.body || "";
+                const createdAt = activity.createdAt || "";
+
+                return (
+                  <Card key={activity.id}>
+                    <CardContent className="p-4">
+                      <div className="flex gap-3">
+                        <div
+                          className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 ${config.color}`}
+                        >
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium text-gray-900">
+                              {subject || config.label}
+                            </h3>
+                            <span className="text-xs text-gray-400">
+                              {formatDateTime(createdAt)}
+                            </span>
+                          </div>
+                          {body && (
+                            <p className="mt-1 text-sm text-gray-600">
+                              {body}
+                            </p>
+                          )}
+                          <p className="mt-2 text-xs text-gray-400">
+                            {userName}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+
+            {activeTab === "メモ" && notes.length > 0 && filteredActivities.length === 0 && (
+              notes.map((note: any) => (
+                <Card key={note.id}>
                   <CardContent className="p-4">
                     <div className="flex gap-3">
-                      <div
-                        className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 ${activity.color}`}
-                      >
-                        <Icon className="h-4 w-4" />
+                      <div className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500">
+                        <MessageSquare className="h-4 w-4" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <h3 className="text-sm font-medium text-gray-900">
-                            {activity.title}
+                            メモ
                           </h3>
                           <span className="text-xs text-gray-400">
-                            {activity.date}
+                            {formatDateTime(note.createdAt)}
                           </span>
                         </div>
-                        {activity.description && (
-                          <p className="mt-1 text-sm text-gray-600">
-                            {activity.description}
-                          </p>
-                        )}
+                        <p className="mt-1 text-sm text-gray-600">
+                          {note.body}
+                        </p>
                         <p className="mt-2 text-xs text-gray-400">
-                          {activity.user}
+                          {note.user?.name || "-"}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-              );
-            })}
+              ))
+            )}
           </div>
         </div>
 
@@ -399,31 +488,38 @@ export default function CompanyDetailPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {associatedContacts.map((contact) => (
-                <Card
-                  key={contact.id}
-                  className="hover:border-gray-300 transition-colors"
-                >
-                  <CardContent className="p-3">
-                    <Link
-                      href={`/contacts/${contact.id}`}
-                      className="flex items-center gap-2"
+              {contacts.length === 0 ? (
+                <p className="text-xs text-gray-400 py-2">コンタクトはありません</p>
+              ) : (
+                contacts.map((contact: any) => {
+                  const contactName = `${contact.lastName || ""} ${contact.firstName || ""}`.trim() || "名前なし";
+                  return (
+                    <Card
+                      key={contact.id}
+                      className="hover:border-gray-300 transition-colors"
                     >
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
-                        {contact.name.charAt(0)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {contact.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                          {contact.jobTitle}
-                        </p>
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                      <CardContent className="p-3">
+                        <Link
+                          href={`/contacts/${contact.id}`}
+                          className="flex items-center gap-2"
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
+                            {contactName.charAt(0)}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {contactName}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {contact.jobTitle || ""}
+                            </p>
+                          </div>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -439,27 +535,33 @@ export default function CompanyDetailPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {associatedDeals.map((deal) => (
-                <Card
-                  key={deal.id}
-                  className="hover:border-gray-300 transition-colors"
-                >
-                  <CardContent className="p-3">
-                    <Link href="/deals" className="block">
-                      <div className="flex items-center gap-2 mb-1">
-                        <DollarSign className="h-4 w-4 text-green-500" />
-                        <p className="text-sm font-medium text-gray-900">
-                          {deal.name}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{deal.amount}</span>
-                        <Badge variant="info">{deal.stage}</Badge>
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+              {deals.length === 0 ? (
+                <p className="text-xs text-gray-400 py-2">取引はありません</p>
+              ) : (
+                deals.map((deal: any) => (
+                  <Card
+                    key={deal.id}
+                    className="hover:border-gray-300 transition-colors"
+                  >
+                    <CardContent className="p-3">
+                      <Link href="/deals" className="block">
+                        <div className="flex items-center gap-2 mb-1">
+                          <DollarSign className="h-4 w-4 text-green-500" />
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {deal.name}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>{formatCurrency(deal.amount)}</span>
+                          {deal.stage && (
+                            <Badge variant="info">{deal.stage.name}</Badge>
+                          )}
+                        </div>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 
@@ -475,33 +577,55 @@ export default function CompanyDetailPage() {
               </button>
             </div>
             <div className="space-y-2">
-              {associatedTickets.map((ticket) => (
-                <Card
-                  key={ticket.id}
-                  className="hover:border-gray-300 transition-colors"
-                >
-                  <CardContent className="p-3">
-                    <Link href="/tickets" className="block">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Ticket className="h-4 w-4 text-orange-500" />
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {ticket.subject}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs">
-                        <Badge variant="warning">{ticket.status}</Badge>
-                        <Badge
-                          variant={
-                            ticket.priority === "高" ? "danger" : "default"
-                          }
-                        >
-                          {ticket.priority}
-                        </Badge>
-                      </div>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+              {tickets.length === 0 ? (
+                <p className="text-xs text-gray-400 py-2">チケットはありません</p>
+              ) : (
+                tickets.map((ticket: any) => {
+                  const priorityLabels: Record<string, string> = {
+                    LOW: "低",
+                    MEDIUM: "中",
+                    HIGH: "高",
+                    URGENT: "緊急",
+                  };
+                  const statusLabels: Record<string, string> = {
+                    OPEN: "新規",
+                    IN_PROGRESS: "対応中",
+                    WAITING: "待機中",
+                    CLOSED: "完了",
+                  };
+                  return (
+                    <Card
+                      key={ticket.id}
+                      className="hover:border-gray-300 transition-colors"
+                    >
+                      <CardContent className="p-3">
+                        <Link href="/tickets" className="block">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Ticket className="h-4 w-4 text-orange-500" />
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {ticket.subject}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <Badge variant="warning">
+                              {statusLabels[ticket.status] || ticket.status}
+                            </Badge>
+                            <Badge
+                              variant={
+                                ticket.priority === "HIGH" || ticket.priority === "URGENT"
+                                  ? "danger"
+                                  : "default"
+                              }
+                            >
+                              {priorityLabels[ticket.priority] || ticket.priority}
+                            </Badge>
+                          </div>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  );
+                })
+              )}
             </div>
           </div>
         </div>
