@@ -401,9 +401,9 @@ export default function ContactsPage() {
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs text-gray-500">クイックフィルター:</span>
         {["ライフサイクル", "担当者", "作成日"].map(f => (
-          <button key={f} className="px-2.5 py-1 text-xs rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50">{f} ▾</button>
+          <button key={f} className="px-2.5 py-1 text-xs rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50" onClick={() => alert(`${f}フィルターは準備中です`)}>{f} ▾</button>
         ))}
-        <button className="px-2 py-1 text-xs text-[#ff4800] hover:underline">+ フィルターを追加</button>
+        <button className="px-2 py-1 text-xs text-[#ff4800] hover:underline" onClick={() => alert("フィルター追加は準備中です")}>+ フィルターを追加</button>
       </div>
 
       {/* Quick Filters */}

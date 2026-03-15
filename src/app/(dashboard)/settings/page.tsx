@@ -482,7 +482,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-gray-500">CSV/XLSXファイルからデータをインポート</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">インポート</Button>
+                <Button variant="outline" size="sm" onClick={() => alert("インポートは準備中です")}>インポート</Button>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -492,7 +492,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-gray-500">CRMデータをCSV形式でエクスポート</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">エクスポート</Button>
+                <Button variant="outline" size="sm" onClick={() => alert("エクスポートは準備中です")}>エクスポート</Button>
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -502,7 +502,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-gray-500">重複レコードの検出と統合</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm">実行</Button>
+                <Button variant="outline" size="sm" onClick={() => alert("実行は準備中です")}>実行</Button>
               </div>
             </CardContent>
           </Card>
