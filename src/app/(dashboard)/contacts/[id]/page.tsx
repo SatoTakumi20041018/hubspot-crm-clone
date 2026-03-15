@@ -1079,7 +1079,7 @@ export default function ContactDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 関連取引
               </h2>
-              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1" onClick={() => alert("関連レコードの追加は準備中です")}>
                 <Plus className="h-3 w-3" />
                 追加
               </button>
@@ -1126,7 +1126,7 @@ export default function ContactDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 関連チケット
               </h2>
-              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1" onClick={() => alert("関連レコードの追加は準備中です")}>
                 <Plus className="h-3 w-3" />
                 追加
               </button>
@@ -1190,7 +1190,7 @@ export default function ContactDetailPage() {
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
                 添付ファイル
               </h2>
-              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1">
+              <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1" onClick={() => alert("関連レコードの追加は準備中です")}>
                 <Plus className="h-3 w-3" />
                 追加
               </button>
