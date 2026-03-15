@@ -218,7 +218,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center justify-between border-b border-white/10 px-4">
+      <div className="flex h-14 items-center justify-between border-b border-white/10 px-4">
         {!collapsed && (
           <Link href="/" className="text-xl font-bold tracking-tight text-[#f8f5ee]">
             HubSpot

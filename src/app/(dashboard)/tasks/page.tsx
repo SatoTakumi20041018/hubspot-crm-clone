@@ -17,10 +17,14 @@ import {
   Mail,
   FileText,
   AlertTriangle,
-  User,
+  X,
+  Trash2,
+  Download,
 } from "lucide-react";
 
 type TaskFilter = "all" | "today" | "overdue" | "upcoming";
+
+const savedViews = ["すべてのタスク", "マイタスク"];
 
 interface TaskProperties {
   hs_task_subject?: string;
@@ -183,6 +187,8 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -261,6 +267,32 @@ export default function TasksPage() {
     );
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const bulkComplete = () => {
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (!selectedIds.has(t.id)) return t;
+        return {
+          ...t,
+          properties: {
+            ...t.properties,
+            hs_task_status: "COMPLETED",
+            hs_task_completion_date: new Date().toISOString(),
+          },
+        };
+      })
+    );
+    setSelectedIds(new Set());
+  };
+
   const addTask = async () => {
     if (!newTaskTitle.trim()) return;
     setSubmitting(true);
@@ -322,6 +354,29 @@ export default function TasksPage() {
         </div>
       </div>
 
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+
       {/* Quick Add */}
       <Card>
         <div className="p-4">
@@ -374,19 +429,50 @@ export default function TasksPage() {
         ))}
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={bulkComplete}>
+            <CheckCircle2 className="h-3.5 w-3.5" /> 完了にする
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Task List */}
       <div className="space-y-2">
         {filteredTasks.map((task) => {
           const completed = isTaskCompleted(task);
           const overdue = isTaskOverdue(task);
+          const isSelected = selectedIds.has(task.id);
           return (
             <Card
               key={task.id}
-              className={`transition-all cursor-pointer hover:border-gray-300 ${completed ? "opacity-60" : ""}`}
+              className={`transition-all cursor-pointer hover:border-gray-300 ${completed ? "opacity-60" : ""} ${isSelected ? "ring-1 ring-[#ff4800]/30 border-[#ff4800]/30" : ""}`}
               onClick={() => router.push(`/tasks/${task.id}`)}
             >
               <div className="p-4 flex items-start gap-3">
-                {/* Checkbox */}
+                {/* Selection Checkbox */}
+                <input
+                  type="checkbox"
+                  className="mt-1 rounded border-gray-300 flex-shrink-0"
+                  checked={isSelected}
+                  onChange={() => toggleSelect(task.id)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+
+                {/* Completion Toggle */}
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleTask(task.id); }}
                   className="mt-0.5 flex-shrink-0"

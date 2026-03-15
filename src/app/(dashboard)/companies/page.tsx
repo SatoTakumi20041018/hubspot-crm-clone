@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -14,9 +14,15 @@ import {
   ArrowUpDown,
   Filter,
   Download,
+  Upload,
   MoreHorizontal,
   Building2,
   Globe,
+  Settings2,
+  X,
+  Trash2,
+  Pencil,
+  UserPlus,
 } from "lucide-react";
 
 const industries = [
@@ -30,6 +36,8 @@ const industries = [
   "金融",
   "メディア",
 ];
+
+const savedViews = ["すべての会社", "マイ会社"];
 
 interface Company {
   id: string;
@@ -98,6 +106,54 @@ function LoadingSkeleton() {
   );
 }
 
+function RowActionsMenu({ onEdit, onAssign, onDelete }: { onEdit: () => void; onAssign: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    if (open) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
+          >
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={(e) => { e.stopPropagation(); onAssign(); setOpen(false); }}
+          >
+            <UserPlus className="h-3.5 w-3.5" /> 担当者を割り当て
+          </button>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CompaniesPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -108,6 +164,10 @@ export default function CompaniesPage() {
   const [afterCursor, setAfterCursor] = useState<string | undefined>(undefined);
   const [prevCursors, setPrevCursors] = useState<string[]>([]);
   const [total, setTotal] = useState(0);
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   const fetchCompanies = useCallback(async (cursor?: string) => {
     setLoading(true);
@@ -133,6 +193,7 @@ export default function CompaniesPage() {
 
   useEffect(() => {
     setPrevCursors([]);
+    setSelectedIds(new Set());
     fetchCompanies();
   }, [fetchCompanies]);
 
@@ -148,6 +209,32 @@ export default function CompaniesPage() {
     newPrev.pop();
     setPrevCursors(newPrev);
     fetchCompanies();
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === companies.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(companies.map((c) => c.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
   };
 
   if (loading && companies.length === 0) return <LoadingSkeleton />;
@@ -178,13 +265,21 @@ export default function CompaniesPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">会社</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {total}件の会社
+            {total.toLocaleString()}件の会社
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => alert("カラム編集は準備中です")}>
+            <Settings2 className="h-4 w-4 mr-1" />
+            列を編集
+          </Button>
           <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
             <Download className="h-4 w-4 mr-1" />
             エクスポート
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => alert("インポート機能は準備中です")}>
+            <Upload className="h-4 w-4 mr-1" />
+            インポート
           </Button>
           <Button size="sm" onClick={() => alert("会社作成モーダルは準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
@@ -193,7 +288,30 @@ export default function CompaniesPage() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Quick Filters */}
       <Card>
         <div className="p-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -227,20 +345,49 @@ export default function CompaniesPage() {
         </div>
       </Card>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("担当者割り当ては準備中です")}>
+            <UserPlus className="h-3.5 w-3.5" /> 担当者を割り当て
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <input type="checkbox" className="rounded border-gray-300" />
+                <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={companies.length > 0 && selectedIds.size === companies.length}
+                    onChange={toggleSelectAll}
+                  />
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                  <button className="flex items-center gap-1 hover:text-gray-700" onClick={() => handleSort("name")}>
                     会社名
                     <ArrowUpDown className="h-3 w-3" />
-                  </div>
+                  </button>
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
                   ドメイン
@@ -255,15 +402,15 @@ export default function CompaniesPage() {
                   取引数
                 </th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">
-                  <div className="flex items-center justify-end gap-1 cursor-pointer hover:text-gray-700">
+                  <button className="flex items-center justify-end gap-1 hover:text-gray-700 ml-auto" onClick={() => handleSort("annualrevenue")}>
                     年間売上
                     <ArrowUpDown className="h-3 w-3" />
-                  </div>
+                  </button>
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
                   都市
                 </th>
-                <th className="px-4 py-3"></th>
+                <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
             <tbody>
@@ -289,13 +436,15 @@ export default function CompaniesPage() {
                   return (
                     <tr
                       key={company.id}
-                      className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(company.id) ? "bg-blue-50/50" : ""}`}
                       onClick={() => router.push(`/companies/${company.id}`)}
                     >
                       <td className="px-4 py-3">
                         <input
                           type="checkbox"
                           className="rounded border-gray-300"
+                          checked={selectedIds.has(company.id)}
+                          onChange={() => toggleSelect(company.id)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
@@ -342,12 +491,11 @@ export default function CompaniesPage() {
                         {company.properties.city || "-"}
                       </td>
                       <td className="px-4 py-3">
-                        <button
-                          className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
+                        <RowActionsMenu
+                          onEdit={() => alert(`編集: ${company.properties.name || "名前なし"}`)}
+                          onAssign={() => alert(`担当者を割り当て: ${company.properties.name || "名前なし"}`)}
+                          onDelete={() => alert(`削除: ${company.properties.name || "名前なし"}`)}
+                        />
                       </td>
                     </tr>
                   );
@@ -360,7 +508,7 @@ export default function CompaniesPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
-            {total}件の会社
+            {total.toLocaleString()}件の会社
           </p>
           <div className="flex items-center gap-2">
             <Button
