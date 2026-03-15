@@ -201,6 +201,8 @@ export default function DealsPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [localPage, setLocalPage] = useState(0);
+  const itemsPerPage = 20;
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -480,8 +482,8 @@ export default function DealsPage() {
                     <h3 className="text-sm font-semibold text-gray-900">
                       {stageGroup.stage.label}
                     </h3>
-                    <span className="text-xs text-gray-400">
-                      {stageGroup.deals.length}
+                    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                      {stageGroup.deals.length}件
                     </span>
                   </div>
                   <div className="flex items-center gap-2 ml-6">
@@ -501,7 +503,7 @@ export default function DealsPage() {
                   <div className="space-y-2">
                     {stageGroup.deals.map((deal) => (
                       <Link key={deal.id} href={`/deals/${deal.id}`}>
-                        <Card className="cursor-pointer hover:border-gray-300 hover:shadow-md transition-all">
+                        <Card className="cursor-grab active:cursor-grabbing hover:border-gray-300 hover:shadow-md transition-all">
                           <CardContent className="p-3">
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="text-sm font-medium text-gray-900 leading-tight">
@@ -613,7 +615,7 @@ export default function DealsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredDeals.map((deal) => (
+                  filteredDeals.slice(localPage * itemsPerPage, (localPage + 1) * itemsPerPage).map((deal) => (
                     <tr
                       key={deal.id}
                       className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(deal.id) ? "bg-blue-50/50" : ""}`}
@@ -690,6 +692,37 @@ export default function DealsPage() {
               </tbody>
             </table>
           </div>
+          {/* Table Pagination */}
+          {filteredDeals.length > itemsPerPage && (
+            <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+              <p className="text-sm text-gray-500">
+                {`${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, filteredDeals.length)}件 / ${filteredDeals.length}件`}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={localPage === 0}
+                  onClick={() => setLocalPage(localPage - 1)}
+                >
+                  <ChevronRightIcon className="h-4 w-4 rotate-180 mr-1" />
+                  前へ
+                </Button>
+                <span className="text-sm text-gray-500">
+                  {`${localPage + 1} / ${Math.ceil(filteredDeals.length / itemsPerPage)}`}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={(localPage + 1) * itemsPerPage >= filteredDeals.length}
+                  onClick={() => setLocalPage(localPage + 1)}
+                >
+                  次へ
+                  <ChevronRightIcon className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       )}
     </div>

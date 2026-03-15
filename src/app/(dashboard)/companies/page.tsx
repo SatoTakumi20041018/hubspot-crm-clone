@@ -187,6 +187,8 @@ export default function CompaniesPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [localPage, setLocalPage] = useState(0);
+  const itemsPerPage = 20;
 
   const fetchCompanies = useCallback(async (cursor?: string) => {
     setLoading(true);
@@ -454,7 +456,7 @@ export default function CompaniesPage() {
                   </td>
                 </tr>
               ) : (
-                companies.map((company) => {
+                companies.slice(localPage * itemsPerPage, (localPage + 1) * itemsPerPage).map((company) => {
                   const revenue = company.properties.annualrevenue
                     ? Number(company.properties.annualrevenue)
                     : 0;
@@ -544,24 +546,44 @@ export default function CompaniesPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
-            {total.toLocaleString()}件の会社
+            {companies.length > 0
+              ? `${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, companies.length)}件 / ${companies.length}件表示（全${total.toLocaleString()}件）`
+              : `${total.toLocaleString()}件の会社`}
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={prevCursors.length === 0}
-              onClick={handlePrevPage}
+              disabled={localPage === 0 && prevCursors.length === 0}
+              onClick={() => {
+                if (localPage > 0) {
+                  setLocalPage(localPage - 1);
+                } else {
+                  handlePrevPage();
+                }
+              }}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              前へ
             </Button>
+            <span className="text-sm text-gray-500">
+              {Math.ceil(companies.length / itemsPerPage) > 0 ? `${localPage + 1} / ${Math.ceil(companies.length / itemsPerPage)}` : ""}
+            </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={!afterCursor}
-              onClick={handleNextPage}
+              disabled={(localPage + 1) * itemsPerPage >= companies.length && !afterCursor}
+              onClick={() => {
+                if ((localPage + 1) * itemsPerPage < companies.length) {
+                  setLocalPage(localPage + 1);
+                } else {
+                  handleNextPage();
+                  setLocalPage(0);
+                }
+              }}
             >
-              <ChevronRight className="h-4 w-4" />
+              次へ
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>

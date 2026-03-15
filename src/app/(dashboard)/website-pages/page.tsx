@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,9 @@ import {
   Copy,
   Trash2,
   ArrowUpDown,
+  Pencil,
+  Download,
+  X,
 } from "lucide-react";
 
 const pages = [
@@ -45,10 +48,96 @@ const statusConfig = {
   review: { label: "レビュー中", variant: "warning" as const },
 };
 
+const savedViews = ["すべて", "公開中", "下書き"];
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+      <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+    </div>
+  );
+}
+
+function RowActionsMenu({ onEdit, onCopy, onDelete }: { onEdit: () => void; onCopy: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-50 w-48 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
+          >
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            onClick={(e) => { e.stopPropagation(); onCopy(); setOpen(false); }}
+          >
+            <Copy className="h-3.5 w-3.5" /> 複製
+          </button>
+          <button
+            className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
+          >
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function WebsitePagesPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showTemplates, setShowTemplates] = useState(false);
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -76,6 +165,25 @@ export default function WebsitePagesPage() {
 
   const totalViews = pages.reduce((sum, p) => sum + p.views, 0);
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((p) => p.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) return <LoadingSkeleton />;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -93,6 +201,56 @@ export default function WebsitePagesPage() {
           </Button>
         }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => {
+              setActiveView(view);
+              if (view === "公開中") setStatusFilter("published");
+              else if (view === "下書き") setStatusFilter("draft");
+              else setStatusFilter("all");
+              setCurrentPage(1);
+            }}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -182,6 +340,14 @@ export default function WebsitePagesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("title")}><div className="flex items-center gap-1">ページ名 <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("url")}><div className="flex items-center gap-1">URL <ArrowUpDown className="h-3 w-3" /></div></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("template")}><div className="flex items-center gap-1">テンプレート <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -193,7 +359,15 @@ export default function WebsitePagesPage() {
             </thead>
             <tbody>
               {paginatedItems.map((page) => (
-                <tr key={page.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={page.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(page.id) ? "bg-blue-50/50" : ""}`}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={selectedIds.has(page.id)}
+                      onChange={() => toggleSelect(page.id)}
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <span className="font-medium text-gray-900">
                       {page.title}
@@ -216,17 +390,11 @@ export default function WebsitePagesPage() {
                     {page.views > 0 ? page.views.toLocaleString() : "-"}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center gap-1">
-                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="編集">
-                        <Edit3 className="h-4 w-4" />
-                      </button>
-                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100" title="複製">
-                        <Copy className="h-4 w-4" />
-                      </button>
-                      <button className="rounded p-1 text-gray-400 hover:bg-gray-100">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </button>
-                    </div>
+                    <RowActionsMenu
+                      onEdit={() => alert(`編集: ${page.title}`)}
+                      onCopy={() => alert(`複製: ${page.title}`)}
+                      onDelete={() => { if (confirm("本当に削除しますか？")) alert("削除しました"); }}
+                    />
                   </td>
                 </tr>
               ))}

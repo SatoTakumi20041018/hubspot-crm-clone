@@ -17,6 +17,7 @@ import {
   Copy,
   Trash2,
   ArrowUpDown,
+  Plus,
 } from "lucide-react";
 
 const dateRanges = [
@@ -133,11 +134,14 @@ function RowActions() {
   );
 }
 
+const savedViews = ["すべて", "マイレポート"];
+
 export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
   const [dateRange, setDateRange] = useState("今月");
+  const [activeView, setActiveView] = useState(savedViews[0]);
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -197,6 +201,29 @@ export default function ReportsPage() {
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
       </div>
 
       {/* Summary KPIs */}

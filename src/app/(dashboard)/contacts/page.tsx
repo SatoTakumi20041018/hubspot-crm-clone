@@ -214,6 +214,8 @@ export default function ContactsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [localPage, setLocalPage] = useState(0);
+  const itemsPerPage = 20;
 
   const fetchContacts = useCallback(async (cursor?: string) => {
     setLoading(true);
@@ -492,7 +494,7 @@ export default function ContactsPage() {
                   </td>
                 </tr>
               ) : (
-                contacts.map((contact) => (
+                contacts.slice(localPage * itemsPerPage, (localPage + 1) * itemsPerPage).map((contact) => (
                   <tr
                     key={contact.id}
                     className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(contact.id) ? "bg-blue-50/50" : ""}`}
@@ -571,24 +573,44 @@ export default function ContactsPage() {
         {/* Pagination */}
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
-            {total.toLocaleString()}件のコンタクト
+            {contacts.length > 0
+              ? `${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, contacts.length)}件 / ${contacts.length}件表示（全${total.toLocaleString()}件）`
+              : `${total.toLocaleString()}件のコンタクト`}
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
-              disabled={prevCursors.length === 0}
-              onClick={handlePrevPage}
+              disabled={localPage === 0 && prevCursors.length === 0}
+              onClick={() => {
+                if (localPage > 0) {
+                  setLocalPage(localPage - 1);
+                } else {
+                  handlePrevPage();
+                }
+              }}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              前へ
             </Button>
+            <span className="text-sm text-gray-500">
+              {Math.ceil(contacts.length / itemsPerPage) > 0 ? `${localPage + 1} / ${Math.ceil(contacts.length / itemsPerPage)}` : ""}
+            </span>
             <Button
               variant="outline"
               size="sm"
-              disabled={!afterCursor}
-              onClick={handleNextPage}
+              disabled={(localPage + 1) * itemsPerPage >= contacts.length && !afterCursor}
+              onClick={() => {
+                if ((localPage + 1) * itemsPerPage < contacts.length) {
+                  setLocalPage(localPage + 1);
+                } else {
+                  handleNextPage();
+                  setLocalPage(0);
+                }
+              }}
             >
-              <ChevronRight className="h-4 w-4" />
+              次へ
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         </div>

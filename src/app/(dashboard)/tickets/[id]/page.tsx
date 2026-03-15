@@ -136,6 +136,10 @@ export default function TicketDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("すべて");
+  const [editing, setEditing] = useState(false);
+  const [editStatus, setEditStatus] = useState("");
+  const [editPriority, setEditPriority] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -238,6 +242,41 @@ export default function TicketDetailPage() {
   // Check if SLA is overdue
   const isOverdue = slaDeadline && new Date(slaDeadline) < new Date() && status !== "CLOSED";
 
+  const startEditing = () => {
+    setEditStatus(status);
+    setEditPriority(priority);
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+  };
+
+  const saveEditing = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          properties: {
+            hs_pipeline_stage: editStatus,
+            hs_ticket_priority: editPriority,
+          },
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTicket(updated);
+        setEditing(false);
+      }
+    } catch (err) {
+      console.error("Failed to save ticket:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="-m-6 flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
       {/* Breadcrumb */}
@@ -273,7 +312,7 @@ export default function TicketDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={startEditing}>
             <Edit3 className="h-4 w-4 mr-1" />
             編集
           </Button>
@@ -295,7 +334,7 @@ export default function TicketDetailPage() {
             <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
               概要
             </h2>
-            <button className="text-gray-400 hover:text-gray-600">
+            <button className="text-gray-400 hover:text-gray-600" onClick={startEditing}>
               <Edit3 className="h-3.5 w-3.5" />
             </button>
           </div>
@@ -313,6 +352,43 @@ export default function TicketDetailPage() {
                 </p>
               </div>
             )}
+            {editing ? (
+              <>
+                <div>
+                  <label className="text-xs font-medium text-gray-500">ステータス</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                  >
+                    {Object.entries(statusLabels).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-gray-500">優先度</label>
+                  <select
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                  >
+                    {Object.entries(priorityLabels).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 pt-2">
+                  <Button size="sm" onClick={saveEditing} disabled={saving}>
+                    {saving ? "保存中..." : "保存"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={cancelEditing} disabled={saving}>
+                    キャンセル
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
             <div>
               <label className="text-xs font-medium text-gray-500">ステータス</label>
               <div className="mt-1">
@@ -329,6 +405,8 @@ export default function TicketDetailPage() {
                 </Badge>
               </div>
             </div>
+              </>
+            )}
             {category && (
               <div>
                 <label className="text-xs font-medium text-gray-500">カテゴリ</label>

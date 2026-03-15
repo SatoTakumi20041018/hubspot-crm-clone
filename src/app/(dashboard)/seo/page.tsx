@@ -21,6 +21,8 @@ import {
   Pencil,
   Copy,
   Trash2,
+  Download,
+  X,
 } from "lucide-react";
 
 const auditScore = 78;
@@ -194,15 +196,46 @@ function RowActions() {
   );
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+      <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+    </div>
+  );
+}
+
 export default function SeoPage() {
   const [activeView, setActiveView] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
+
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("asc"); }
   };
-  const sortedRecs = [...recommendations].sort((a, b) => {
+  const sortedRecs = [...recommendations].filter(item => {
+    if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  }).sort((a, b) => {
     if (!sortField) return 0;
     const aVal = String((a as unknown as Record<string,unknown>)[sortField] ?? "");
     const bVal = String((b as unknown as Record<string,unknown>)[sortField] ?? "");
@@ -219,6 +252,26 @@ export default function SeoPage() {
     { key: "action", label: "対応必要" },
     { key: "done", label: "完了" },
   ];
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) return <LoadingSkeleton />;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -342,16 +395,52 @@ export default function SeoPage() {
         </Card>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括対応は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 対応開始
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括無視は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 無視
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Recommendations */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle>改善推奨事項</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>改善推奨事項</CardTitle>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                placeholder="検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("page")}><div className="flex items-center gap-1">ページ <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("issue")}><div className="flex items-center gap-1">問題 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("priority")}><div className="flex items-center gap-1">優先度 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -362,7 +451,15 @@ export default function SeoPage() {
               </thead>
               <tbody>
                 {paginatedItems.map((rec) => (
-                  <tr key={rec.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={rec.id} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedIds.has(rec.id) ? "bg-blue-50/50" : ""}`}>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300"
+                        checked={selectedIds.has(rec.id)}
+                        onChange={() => toggleSelect(rec.id)}
+                      />
+                    </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-1 text-gray-900 font-mono text-xs">
                         <ExternalLink className="h-3 w-3 text-gray-400" />

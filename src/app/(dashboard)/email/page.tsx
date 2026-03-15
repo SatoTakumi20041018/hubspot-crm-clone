@@ -18,6 +18,9 @@ import {
   ArrowUpRight,
   Filter,
   FlaskConical,
+  Trash2,
+  Download,
+  Archive,
 } from "lucide-react";
 
 interface Campaign {
@@ -189,18 +192,64 @@ export default function EmailPage() {
 
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("すべて");
+  const [activeView, setActiveView] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
+  const savedViews = [
+    { key: "all", label: "すべて" },
+    { key: "sent", label: "送信済み" },
+    { key: "draft", label: "下書き" },
+  ];
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
 
   const filtered = campaigns.filter((c) => {
     const matchSearch = c.name.toLowerCase().includes(search.toLowerCase());
     const matchStatus = filterStatus === "すべて" || c.status === filterStatus;
-    return matchSearch && matchStatus;
+    const matchView = activeView === "all" ||
+      (activeView === "sent" && c.status === "送信済み") ||
+      (activeView === "draft" && c.status === "下書き");
+    return matchSearch && matchStatus && matchView;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (!sortField) return 0;
+    let cmp = 0;
+    if (sortField === "name") cmp = a.name.localeCompare(b.name);
+    else if (sortField === "status") cmp = a.status.localeCompare(b.status);
+    else if (sortField === "date") cmp = a.date.localeCompare(b.date);
+    return sortDir === "asc" ? cmp : -cmp;
   });
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const totalPages = Math.ceil(filtered.length / itemsPerPage);
-  const paginatedItems = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.ceil(sorted.length / itemsPerPage);
+  const paginatedItems = sorted.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map(i => i.id)));
+    }
+  };
 
   const sentCampaigns = campaigns.filter((c) => c.status === "送信済み");
   const avgOpenRate = sentCampaigns.length > 0
@@ -238,6 +287,17 @@ export default function EmailPage() {
           </Button>
         }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1">
+        {savedViews.map((v) => (
+          <button key={v.key} onClick={() => { setActiveView(v.key); setCurrentPage(1); }}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
@@ -345,20 +405,25 @@ export default function EmailPage() {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <input type="checkbox" className="rounded border-gray-300" />
+                  <input type="checkbox" className="rounded border-gray-300" checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length} onChange={toggleAll} />
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}>
                     キャンペーン名
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-gray-500">ステータス</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700" onClick={() => handleSort("status")}>
+                    ステータス
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">送信数</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">開封率</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">クリック率</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
+                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700" onClick={() => handleSort("date")}>
                     送信日
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
@@ -369,9 +434,9 @@ export default function EmailPage() {
             </thead>
             <tbody>
               {paginatedItems.map((campaign) => (
-                <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={campaign.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(campaign.id) ? "bg-blue-50" : ""}`}>
                   <td className="px-4 py-3">
-                    <input type="checkbox" className="rounded border-gray-300" onClick={(e) => e.stopPropagation()} />
+                    <input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(campaign.id)} onChange={() => toggleSelect(campaign.id)} onClick={(e) => e.stopPropagation()} />
                   </td>
                   <td className="px-4 py-3">
                     <div>
@@ -424,7 +489,7 @@ export default function EmailPage() {
         </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
-                <p className="text-sm text-gray-500">{filtered.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, filtered.length)}件</p>
+                <p className="text-sm text-gray-500">{sorted.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sorted.length)}件</p>
                 <div className="flex gap-1">
                   <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
                   <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
@@ -432,6 +497,27 @@ export default function EmailPage() {
               </div>
             )}
       </Card>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border bg-white px-5 py-3 shadow-lg">
+          <span className="text-sm font-medium text-gray-700">{selectedIds.size}件選択中</span>
+          <div className="h-4 w-px bg-gray-200" />
+          <Button size="sm" variant="outline" onClick={() => alert("アーカイブは準備中です")}>
+            <Archive className="h-4 w-4 mr-1" />
+            アーカイブ
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-4 w-4 mr-1" />
+            エクスポート
+          </Button>
+          <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50" onClick={() => alert("削除は準備中です")}>
+            <Trash2 className="h-4 w-4 mr-1" />
+            削除
+          </Button>
+          <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-xs text-gray-500 hover:text-gray-700">選択解除</button>
+        </div>
+      )}
     </div>
   );
 }

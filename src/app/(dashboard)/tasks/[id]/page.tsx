@@ -94,6 +94,11 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editingDueDate, setEditingDueDate] = useState(false);
+  const [editDueDate, setEditDueDate] = useState("");
+  const [savingField, setSavingField] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -148,6 +153,57 @@ export default function TaskDetailPage() {
       console.error("Failed to update task:", err);
     } finally {
       setToggling(false);
+    }
+  };
+
+  const startEditingTitle = () => {
+    setEditTitle(task?.title || task?.properties?.hs_task_subject || "");
+    setEditingTitle(true);
+  };
+
+  const saveTitle = async () => {
+    setSavingField(true);
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ properties: { hs_task_subject: editTitle } }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTask(updated);
+        setEditingTitle(false);
+      }
+    } catch (err) {
+      console.error("Failed to save title:", err);
+    } finally {
+      setSavingField(false);
+    }
+  };
+
+  const startEditingDueDate = () => {
+    const d = task?.dueDate || task?.properties?.hs_timestamp;
+    setEditDueDate(d ? new Date(d).toISOString().slice(0, 16) : "");
+    setEditingDueDate(true);
+  };
+
+  const saveDueDate = async () => {
+    setSavingField(true);
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ properties: { hs_timestamp: editDueDate ? new Date(editDueDate).toISOString() : undefined } }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setTask(updated);
+        setEditingDueDate(false);
+      }
+    } catch (err) {
+      console.error("Failed to save due date:", err);
+    } finally {
+      setSavingField(false);
     }
   };
 
@@ -221,9 +277,33 @@ export default function TaskDetailPage() {
               <CheckSquare className="h-5 w-5" />
             </div>
             <div>
-              <h1 className={`text-lg font-bold ${isCompleted ? "text-gray-400 line-through" : "text-gray-900"}`}>
-                {title}
-              </h1>
+              {editingTitle ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") saveTitle(); if (e.key === "Escape") setEditingTitle(false); }}
+                    className="text-lg font-bold text-gray-900 border border-gray-300 rounded px-2 py-0.5 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                    autoFocus
+                    disabled={savingField}
+                  />
+                  <Button size="sm" onClick={saveTitle} disabled={savingField}>
+                    {savingField ? "..." : "保存"}
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setEditingTitle(false)} disabled={savingField}>
+                    取消
+                  </Button>
+                </div>
+              ) : (
+                <h1
+                  className={`text-lg font-bold cursor-pointer hover:bg-gray-50 rounded px-1 -mx-1 ${isCompleted ? "text-gray-400 line-through" : "text-gray-900"}`}
+                  onClick={startEditingTitle}
+                  title="クリックして編集"
+                >
+                  {title}
+                </h1>
+              )}
               <div className="flex items-center gap-2 text-sm">
                 <Badge variant={statusVariant[status] || "default"}>
                   {statusLabels[status] || status}
@@ -251,7 +331,7 @@ export default function TaskDetailPage() {
             )}
             {isCompleted ? "未完了に戻す" : "完了にする"}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={startEditingTitle}>
             <Edit3 className="h-4 w-4 mr-1" />
             編集
           </Button>
@@ -270,7 +350,11 @@ export default function TaskDetailPage() {
               <div className="space-y-5">
                 <div>
                   <label className="text-xs font-medium text-gray-500">タイトル</label>
-                  <p className={`text-sm mt-1 ${isCompleted ? "text-gray-400 line-through" : "text-gray-900"}`}>
+                  <p
+                    className={`text-sm mt-1 cursor-pointer hover:bg-gray-50 rounded px-1 -mx-1 py-0.5 ${isCompleted ? "text-gray-400 line-through" : "text-gray-900"}`}
+                    onClick={startEditingTitle}
+                    title="クリックして編集"
+                  >
                     {title}
                   </p>
                 </div>
@@ -309,13 +393,37 @@ export default function TaskDetailPage() {
                   </div>
                   <div>
                     <label className="text-xs font-medium text-gray-500">期限</label>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                      {isOverdue && <Clock className="h-3.5 w-3.5 text-red-500" />}
-                      <p className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-gray-900"}`}>
-                        {formatDateTime(dueDate)}
-                      </p>
-                    </div>
+                    {editingDueDate ? (
+                      <div className="mt-1 space-y-2">
+                        <input
+                          type="datetime-local"
+                          value={editDueDate}
+                          onChange={(e) => setEditDueDate(e.target.value)}
+                          className="w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                          disabled={savingField}
+                        />
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" onClick={saveDueDate} disabled={savingField}>
+                            {savingField ? "..." : "保存"}
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => setEditingDueDate(false)} disabled={savingField}>
+                            取消
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex items-center gap-1 mt-1 cursor-pointer hover:bg-gray-50 rounded px-1 -mx-1 py-0.5"
+                        onClick={startEditingDueDate}
+                        title="クリックして編集"
+                      >
+                        <Calendar className="h-3.5 w-3.5 text-gray-400" />
+                        {isOverdue && <Clock className="h-3.5 w-3.5 text-red-500" />}
+                        <p className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-gray-900"}`}>
+                          {formatDateTime(dueDate)}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

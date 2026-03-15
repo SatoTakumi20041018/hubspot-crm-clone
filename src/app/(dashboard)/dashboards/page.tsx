@@ -17,6 +17,12 @@ import {
   Eye,
   Clock,
   Star,
+  Search,
+  ArrowUpDown,
+  Pencil,
+  Download,
+  Trash2,
+  X,
 } from "lucide-react";
 
 type WidgetType = "chart" | "number" | "table" | "funnel";
@@ -132,16 +138,48 @@ export default function DashboardsPage() {
 
   const [filter, setFilter] = useState<"all" | "favorites" | "shared">("all");
   const [activeView, setActiveView] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [sortField, setSortField] = useState<"name" | "lastViewed" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const handleSort = (field: "name" | "lastViewed") => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
 
   const views = [
     { key: "all", label: "すべて" },
     { key: "mine", label: "マイダッシュボード" },
   ];
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((d) => d.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const filtered = dashboards.filter((db) => {
     if (filter === "favorites") return db.favorite;
     if (filter === "shared") return db.shared;
+    if (searchQuery && !db.name.toLowerCase().includes(searchQuery.toLowerCase()) && !db.description.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
+  }).sort((a, b) => {
+    if (!sortField) return 0;
+    const aVal = a[sortField];
+    const bVal = b[sortField];
+    return sortDir === "asc" ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
   });
 
 
@@ -166,10 +204,17 @@ export default function DashboardsPage() {
         title="ダッシュボード"
         description="カスタムダッシュボードでデータを可視化"
         actions={
-          <Button size="sm" onClick={() => alert("ダッシュボード作成は準備中です")}>
-            <Plus className="h-4 w-4 mr-1" />
-            ダッシュボード作成
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="ダッシュボードを検索..." className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg w-64 focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]" />
+            </div>
+            <Button size="sm" onClick={() => alert("ダッシュボード作成は準備中です")}>
+              <Plus className="h-4 w-4 mr-1" />
+              ダッシュボード作成
+            </Button>
+          </div>
         }
       />
 
@@ -209,13 +254,59 @@ export default function DashboardsPage() {
         ))}
       </div>
 
+      {/* Sort Controls */}
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-1.5 text-sm text-gray-500">
+          <input
+            type="checkbox"
+            className="rounded border-gray-300"
+            checked={filtered.length > 0 && selectedIds.size === filtered.length}
+            onChange={toggleSelectAll}
+          />
+          すべて選択
+        </label>
+        <button onClick={() => handleSort("name")} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          名前順 <ArrowUpDown className="h-3 w-3" />
+        </button>
+        <button onClick={() => handleSort("lastViewed")} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          最終閲覧順 <ArrowUpDown className="h-3 w-3" />
+        </button>
+      </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {filtered.map((dashboard) => (
-          <Card key={dashboard.id} className="hover:border-gray-300 transition-all">
+          <Card key={dashboard.id} className={`hover:border-gray-300 transition-all ${selectedIds.has(dashboard.id) ? "ring-2 ring-[#ff4800]/30" : ""}`}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 mt-1"
+                    checked={selectedIds.has(dashboard.id)}
+                    onChange={() => toggleSelect(dashboard.id)}
+                  />
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF1ED]">
                     <LayoutDashboard className="h-5 w-5 text-[#ff4800]" />
                   </div>

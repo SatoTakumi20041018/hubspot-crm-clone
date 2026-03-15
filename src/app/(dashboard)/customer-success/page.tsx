@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +16,17 @@ import {
   DollarSign,
   Activity,
   Shield,
-  ChevronRight,
   MoreHorizontal,
   Calendar,
   ArrowUpDown,
+  Plus,
+  Pencil,
+  Download,
+  Trash2,
+  X,
 } from "lucide-react";
+
+const savedViews = ["すべて", "リスク", "健全"];
 
 const customers = [
   { id: 1, name: "田中商事株式会社", health: "green" as const, healthScore: 92, mrr: 450000, lastActivity: "2026-03-14", renewalDate: "2026-09-15", csm: "佐藤 匠", plan: "Enterprise", tickets: 1, deals: 2 },
@@ -52,10 +58,37 @@ const riskAlerts = [
   { customer: "イノベーション株式会社", reason: "NPS回答でDetector判定。サポート満足度低下。", severity: "medium" as const, mrr: 180000 },
 ];
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-48 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+      <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+    </div>
+  );
+}
+
 export default function CustomerSuccessPage() {
   const [selectedCustomer, setSelectedCustomer] = useState(customers[0]);
   const [search, setSearch] = useState("");
   const [healthFilter, setHealthFilter] = useState("all");
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -67,6 +100,9 @@ export default function CustomerSuccessPage() {
   const filteredBase = customers.filter((c) => {
     const matchSearch = c.name.includes(search);
     const matchHealth = healthFilter === "all" || c.health === healthFilter;
+    // Filter by saved view
+    if (activeView === "リスク") return matchSearch && matchHealth && (c.health === "red" || c.health === "yellow");
+    if (activeView === "健全") return matchSearch && matchHealth && c.health === "green";
     return matchSearch && matchHealth;
   });
   const filtered = [...filteredBase].sort((a, b) => {
@@ -89,6 +125,25 @@ export default function CustomerSuccessPage() {
 
   const totalMRR = customers.reduce((sum, c) => sum + c.mrr, 0);
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((c) => c.id)));
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) return <LoadingSkeleton />;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -99,6 +154,29 @@ export default function CustomerSuccessPage() {
           { label: "カスタマーサクセス" },
         ]}
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => { setActiveView(view); setCurrentPage(1); }}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
 
       {/* Health Score Dashboard */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -145,6 +223,27 @@ export default function CustomerSuccessPage() {
         </Card>
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex gap-4">
         {/* Customer List */}
         <div className="flex-1">
@@ -175,6 +274,14 @@ export default function CustomerSuccessPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
+                    <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300"
+                        checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">顧客名 <ArrowUpDown className="h-3 w-3" /></div></th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("healthScore")}><div className="flex items-center gap-1">ヘルス <ArrowUpDown className="h-3 w-3" /></div></th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("mrr")}><div className="flex items-center gap-1">MRR <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -189,10 +296,19 @@ export default function CustomerSuccessPage() {
                     <tr
                       key={customer.id}
                       className={`border-b border-gray-100 cursor-pointer transition-colors hover:bg-gray-50 ${
-                        selectedCustomer.id === customer.id ? "bg-orange-50" : ""
+                        selectedIds.has(customer.id) ? "bg-blue-50/50" : selectedCustomer.id === customer.id ? "bg-orange-50" : ""
                       }`}
                       onClick={() => setSelectedCustomer(customer)}
                     >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={selectedIds.has(customer.id)}
+                          onChange={() => toggleSelect(customer.id)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
                       <td className="px-4 py-3 font-medium text-gray-900">{customer.name}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

@@ -18,6 +18,9 @@ import {
   Copy,
   Trash2,
   ArrowUpDown,
+  Plus,
+  Download,
+  X,
 } from "lucide-react";
 
 const forecastPeriods = ["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026"];
@@ -134,8 +137,38 @@ function RowActions() {
   );
 }
 
+const savedViews = ["月次", "四半期"];
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-64 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <div className="grid grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+        ))}
+      </div>
+      <div className="h-64 bg-gray-100 rounded-lg animate-pulse" />
+    </div>
+  );
+}
+
 export default function ForecastingPage() {
   const [period, setPeriod] = useState("Q1 2026");
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
+
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -154,6 +187,25 @@ export default function ForecastingPage() {
   const totalPages = Math.ceil(sortedTeam.length / itemsPerPage);
   const paginatedItems = sortedTeam.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((p) => p.name)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -175,6 +227,50 @@ export default function ForecastingPage() {
           </div>
         }
       />
+
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括編集は準備中です")}>
+            <Pencil className="h-3.5 w-3.5" /> 編集
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括削除は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 削除
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -312,6 +408,14 @@ export default function ForecastingPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">担当者 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("quota")}><div className="flex items-center justify-end gap-1">クォータ <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-right font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("forecast")}><div className="flex items-center justify-end gap-1">予測 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -327,7 +431,15 @@ export default function ForecastingPage() {
                   if (searchQuery && !JSON.stringify(item).toLowerCase().includes(searchQuery.toLowerCase())) return false;
                   return true;
                 }).map((person) => (
-                  <tr key={person.name} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={person.name} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedIds.has(person.name) ? "bg-blue-50/50" : ""}`}>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300"
+                        checked={selectedIds.has(person.name)}
+                        onChange={() => toggleSelect(person.name)}
+                      />
+                    </td>
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">

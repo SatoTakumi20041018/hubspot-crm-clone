@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Bot,
   Users,
@@ -23,7 +22,10 @@ import {
   Eye,
   FormInput,
   Lightbulb,
+  Plus,
 } from "lucide-react";
+
+const savedViews = ["すべて", "エージェント", "インテリジェンス"];
 
 const agents = [
   {
@@ -141,13 +143,51 @@ const promptLibrary = [
   "ABテストの結果を解釈",
 ];
 
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-80 bg-gray-200 rounded animate-pulse mt-2" />
+        </div>
+      </div>
+      <div className="h-10 w-64 bg-gray-200 rounded animate-pulse" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i}>
+            <div className="p-5 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="h-10 w-10 bg-gray-200 rounded-lg animate-pulse" />
+                <div className="h-5 w-16 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="h-5 w-40 bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
+              <div className="h-4 w-3/4 bg-gray-200 rounded animate-pulse" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function BreezePage() {
   const [promptSearch, setPromptSearch] = useState("");
   const [chatMessage, setChatMessage] = useState("");
+  const [activeView, setActiveView] = useState(savedViews[0]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(t);
+  }, []);
 
   const filteredPrompts = promptLibrary.filter((p) =>
     p.includes(promptSearch)
   );
+
+  if (loading) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-6">
@@ -166,16 +206,35 @@ export default function BreezePage() {
         }
       />
 
-      <Tabs defaultValue="agents">
-        <TabsList>
-          <TabsTrigger value="agents">エージェント</TabsTrigger>
-          <TabsTrigger value="intelligence">インテリジェンス</TabsTrigger>
-          <TabsTrigger value="insights">インサイト</TabsTrigger>
-          <TabsTrigger value="prompts">プロンプトライブラリ</TabsTrigger>
-        </TabsList>
+      {/* Saved View Tabs */}
+      <div className="flex items-center gap-1 border-b border-gray-200">
+        {savedViews.map((view) => (
+          <button
+            key={view}
+            onClick={() => setActiveView(view)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeView === view
+                ? "border-[#ff4800] text-[#ff4800]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {view}
+          </button>
+        ))}
+        <button
+          className="px-2 py-2 text-gray-400 hover:text-gray-600 -mb-px border-b-2 border-transparent"
+          onClick={() => alert("ビュー追加は準備中です")}
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
 
-        {/* Agents Tab */}
-        <TabsContent value="agents">
+      {/* Agents Section */}
+      {(activeView === "すべて" || activeView === "エージェント") && (
+        <>
+          {activeView === "すべて" && (
+            <h2 className="text-lg font-semibold text-gray-900">エージェント</h2>
+          )}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             {agents.map((agent) => {
               const Icon = agent.icon;
@@ -218,10 +277,15 @@ export default function BreezePage() {
               );
             })}
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        {/* Intelligence Tab */}
-        <TabsContent value="intelligence">
+      {/* Intelligence Section */}
+      {(activeView === "すべて" || activeView === "インテリジェンス") && (
+        <>
+          {activeView === "すべて" && (
+            <h2 className="text-lg font-semibold text-gray-900">インテリジェンス</h2>
+          )}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {intelligenceFeatures.map((feature) => {
               const Icon = feature.icon;
@@ -257,10 +321,13 @@ export default function BreezePage() {
               );
             })}
           </div>
-        </TabsContent>
+        </>
+      )}
 
-        {/* Insights Tab */}
-        <TabsContent value="insights">
+      {/* Insights Section - shown in all views */}
+      {activeView === "すべて" && (
+        <>
+          <h2 className="text-lg font-semibold text-gray-900">インサイト</h2>
           <div className="space-y-3">
             {insights.map((insight) => (
               <Card key={insight.id} className="hover:shadow-md transition-shadow">
@@ -308,10 +375,9 @@ export default function BreezePage() {
               </Card>
             ))}
           </div>
-        </TabsContent>
 
-        {/* Prompts Tab */}
-        <TabsContent value="prompts">
+          {/* Prompt Library */}
+          <h2 className="text-lg font-semibold text-gray-900">プロンプトライブラリ</h2>
           <div className="space-y-4">
             <div className="w-80">
               <Input
@@ -336,8 +402,8 @@ export default function BreezePage() {
               ))}
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </>
+      )}
 
       {/* Floating Breeze Assistant Panel */}
       <Card className="fixed bottom-6 right-6 z-50 w-80 shadow-xl">

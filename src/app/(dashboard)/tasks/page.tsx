@@ -20,6 +20,10 @@ import {
   X,
   Trash2,
   Download,
+  Search,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type TaskFilter = "all" | "today" | "overdue" | "upcoming";
@@ -189,6 +193,11 @@ export default function TasksPage() {
   const [submitting, setSubmitting] = useState(false);
   const [activeView, setActiveView] = useState(savedViews[0]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"dueDate" | "priority" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [localPage, setLocalPage] = useState(0);
+  const itemsPerPage = 10;
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -235,19 +244,55 @@ export default function TasksPage() {
     },
   ];
 
-  const filteredTasks = tasks.filter((t) => {
-    switch (filter) {
-      case "today":
-        return isTaskToday(t);
-      case "overdue":
-        return isTaskOverdue(t);
-      case "upcoming":
-        return !isTaskCompleted(t) && !isTaskOverdue(t) && !isTaskToday(t) &&
-          t.properties.hs_timestamp && new Date(t.properties.hs_timestamp) > new Date();
-      default:
-        return true;
+  const handleSort = (field: "dueDate" | "priority") => {
+    if (sortBy === field) {
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortDir("asc");
     }
-  });
+  };
+
+  const priorityOrder: Record<string, number> = { URGENT: 0, HIGH: 1, MEDIUM: 2, LOW: 3 };
+
+  const filteredTasks = tasks
+    .filter((t) => {
+      // Search filter
+      if (searchQuery) {
+        const subject = (t.properties.hs_task_subject || "").toLowerCase();
+        if (!subject.includes(searchQuery.toLowerCase())) return false;
+      }
+      // Tab filter
+      switch (filter) {
+        case "today":
+          return isTaskToday(t);
+        case "overdue":
+          return isTaskOverdue(t);
+        case "upcoming":
+          return !isTaskCompleted(t) && !isTaskOverdue(t) && !isTaskToday(t) &&
+            t.properties.hs_timestamp && new Date(t.properties.hs_timestamp) > new Date();
+        default:
+          return true;
+      }
+    })
+    .sort((a, b) => {
+      if (!sortBy) return 0;
+      const dir = sortDir === "asc" ? 1 : -1;
+      if (sortBy === "dueDate") {
+        const dateA = a.properties.hs_timestamp ? new Date(a.properties.hs_timestamp).getTime() : Infinity;
+        const dateB = b.properties.hs_timestamp ? new Date(b.properties.hs_timestamp).getTime() : Infinity;
+        return (dateA - dateB) * dir;
+      }
+      if (sortBy === "priority") {
+        const pA = priorityOrder[(a.properties.hs_task_priority || "MEDIUM").toUpperCase()] ?? 2;
+        const pB = priorityOrder[(b.properties.hs_task_priority || "MEDIUM").toUpperCase()] ?? 2;
+        return (pA - pB) * dir;
+      }
+      return 0;
+    });
+
+  const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
+  const paginatedTasks = filteredTasks.slice(localPage * itemsPerPage, (localPage + 1) * itemsPerPage);
 
   const toggleTask = async (id: string) => {
     // Optimistic toggle
@@ -403,6 +448,45 @@ export default function TasksPage() {
         </div>
       </Card>
 
+      {/* Search & Sort */}
+      <Card>
+        <div className="p-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setLocalPage(0); }}
+                placeholder="タスク名で検索..."
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#ff4800]/20 focus:border-[#ff4800]"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleSort("dueDate")}
+                className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                  sortBy === "dueDate" ? "border-[#ff4800] text-[#ff4800] bg-[#ff4800]/5" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <Calendar className="h-3.5 w-3.5" />
+                期限順
+                <ArrowUpDown className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => handleSort("priority")}
+                className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border transition-colors ${
+                  sortBy === "priority" ? "border-[#ff4800] text-[#ff4800] bg-[#ff4800]/5" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                優先度順
+                <ArrowUpDown className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
       {/* Filter Tabs */}
       <div className="flex gap-1 border-b border-gray-200">
         {filterTabs.map((tab) => (
@@ -452,7 +536,7 @@ export default function TasksPage() {
 
       {/* Task List */}
       <div className="space-y-2">
-        {filteredTasks.map((task) => {
+        {paginatedTasks.map((task) => {
           const completed = isTaskCompleted(task);
           const overdue = isTaskOverdue(task);
           const isSelected = selectedIds.has(task.id);
@@ -543,6 +627,38 @@ export default function TasksPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {`${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, filteredTasks.length)}件 / ${filteredTasks.length}件`}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={localPage === 0}
+              onClick={() => setLocalPage(localPage - 1)}
+            >
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              前へ
+            </Button>
+            <span className="text-sm text-gray-500">
+              {`${localPage + 1} / ${totalPages}`}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={localPage + 1 >= totalPages}
+              onClick={() => setLocalPage(localPage + 1)}
+            >
+              次へ
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

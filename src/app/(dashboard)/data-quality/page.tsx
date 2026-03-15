@@ -22,6 +22,10 @@ import {
   Plus,
   ArrowUpDown,
   Search,
+  Pencil,
+  Download,
+  Trash2,
+  X,
 } from "lucide-react";
 
 const overallScore = 82;
@@ -144,6 +148,7 @@ const priorityBadgeVariant = (priority: string) => {
 export default function DataQualityPage() {
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const handleSort = (field: string) => {
@@ -172,6 +177,22 @@ export default function DataQualityPage() {
   const totalPages = Math.ceil(filteredIssues.length / itemsPerPage);
   const paginatedItems = filteredIssues.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((i) => i.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   if (loading) {
     return (
@@ -269,6 +290,27 @@ export default function DataQualityPage() {
         })}
       </div>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg bg-[#1f1f1f] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size}件を選択中</span>
+          <div className="h-4 w-px bg-gray-600" />
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("一括修正は準備中です")}>
+            <Zap className="h-3.5 w-3.5" /> 一括修正
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm hover:bg-white/10 transition-colors" onClick={() => alert("エクスポートは準備中です")}>
+            <Download className="h-3.5 w-3.5" /> エクスポート
+          </button>
+          <button className="flex items-center gap-1.5 rounded px-2.5 py-1 text-sm text-red-400 hover:bg-white/10 transition-colors" onClick={() => alert("一括無視は準備中です")}>
+            <Trash2 className="h-3.5 w-3.5" /> 無視
+          </button>
+          <div className="flex-1" />
+          <button className="rounded p-1 hover:bg-white/10 transition-colors" onClick={() => setSelectedIds(new Set())}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* Issues List */}
       <Card>
         <CardHeader className="pb-3">
@@ -292,6 +334,14 @@ export default function DataQualityPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50">
+                  <th className="px-4 py-3 text-left font-medium text-gray-500 w-10">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300"
+                      checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("type")}><div className="flex items-center gap-1">問題の種類 <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("object")}><div className="flex items-center gap-1">オブジェクト <ArrowUpDown className="h-3 w-3" /></div></th>
                   <th className="px-4 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("description")}><div className="flex items-center gap-1">説明 <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -306,7 +356,15 @@ export default function DataQualityPage() {
                   const config = typeConfig[issue.type];
                   const TypeIcon = config.icon;
                   return (
-                    <tr key={issue.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={issue.id} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedIds.has(issue.id) ? "bg-blue-50/50" : ""}`}>
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300"
+                          checked={selectedIds.has(issue.id)}
+                          onChange={() => toggleSelect(issue.id)}
+                        />
+                      </td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <div className={`flex h-7 w-7 items-center justify-center rounded ${config.bg}`}>

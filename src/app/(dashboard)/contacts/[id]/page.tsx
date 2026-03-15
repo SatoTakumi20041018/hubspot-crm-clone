@@ -169,6 +169,15 @@ export default function ContactDetailPage() {
     subscriptions: true,
     website: true,
   });
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    email: "",
+    phone: "",
+    jobTitle: "",
+    lifecycleStage: "",
+    leadStatus: "",
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -285,6 +294,49 @@ export default function ContactDetailPage() {
 
   const toggleCard = (key: string) => {
     setCollapsedCards((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const startEditing = () => {
+    setEditForm({
+      email: email,
+      phone: phone,
+      jobTitle: jobTitle,
+      lifecycleStage: lifecycleStage,
+      leadStatus: leadStatus,
+    });
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+  };
+
+  const saveEditing = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/contacts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          properties: {
+            email: editForm.email,
+            phone: editForm.phone,
+            jobtitle: editForm.jobTitle,
+            lifecyclestage: editForm.lifecycleStage,
+            hs_lead_status: editForm.leadStatus,
+          },
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setContact(updated);
+        setEditing(false);
+      }
+    } catch (err) {
+      console.error("Failed to save contact:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -426,7 +478,7 @@ export default function ContactDetailPage() {
               </h2>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={(e) => { e.stopPropagation(); alert("プロパティを編集"); }}
+                  onClick={(e) => { e.stopPropagation(); startEditing(); }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -441,6 +493,72 @@ export default function ContactDetailPage() {
 
             {!collapsedCards.about && (
               <div className="space-y-4 mt-2">
+                {editing ? (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">メールアドレス</label>
+                      <input
+                        type="email"
+                        value={editForm.email}
+                        onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">電話番号</label>
+                      <input
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">役職</label>
+                      <input
+                        type="text"
+                        value={editForm.jobTitle}
+                        onChange={(e) => setEditForm({ ...editForm, jobTitle: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">ライフサイクルステージ</label>
+                      <select
+                        value={editForm.lifecycleStage}
+                        onChange={(e) => setEditForm({ ...editForm, lifecycleStage: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      >
+                        <option value="">-- 選択 --</option>
+                        {Object.entries(lifecycleStageLabels).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">リードステータス</label>
+                      <select
+                        value={editForm.leadStatus}
+                        onChange={(e) => setEditForm({ ...editForm, leadStatus: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      >
+                        <option value="">-- 選択 --</option>
+                        {Object.entries(leadStatusLabels).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Button size="sm" onClick={saveEditing} disabled={saving}>
+                        {saving ? "保存中..." : "保存"}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={cancelEditing} disabled={saving}>
+                        キャンセル
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 <div>
                   <label className="text-xs font-medium text-gray-500">
                     メールアドレス
@@ -549,6 +667,8 @@ export default function ContactDetailPage() {
                     {formatDate(contact.updatedAt)}
                   </p>
                 </div>
+                  </>
+                )}
               </div>
             )}
           </div>

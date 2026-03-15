@@ -160,6 +160,18 @@ export default function CompanyDetailPage() {
     subscriptions: true,
     website: true,
   });
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    domain: "",
+    phone: "",
+    industry: "",
+    description: "",
+    annualRevenue: "",
+    employeeCount: "",
+    city: "",
+  });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -280,6 +292,55 @@ export default function CompanyDetailPage() {
 
   const toggleCard = (key: string) => {
     setCollapsedCards((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const startEditing = () => {
+    setEditForm({
+      name: name,
+      domain: domain,
+      phone: phone,
+      industry: industry,
+      description: description,
+      annualRevenue: annualRevenue != null ? String(annualRevenue) : "",
+      employeeCount: employeeCount != null ? String(employeeCount) : "",
+      city: city,
+    });
+    setEditing(true);
+  };
+
+  const cancelEditing = () => {
+    setEditing(false);
+  };
+
+  const saveEditing = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/companies/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          properties: {
+            name: editForm.name,
+            domain: editForm.domain,
+            phone: editForm.phone,
+            industry: editForm.industry,
+            description: editForm.description,
+            annualrevenue: editForm.annualRevenue || undefined,
+            numberofemployees: editForm.employeeCount || undefined,
+            city: editForm.city,
+          },
+        }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setCompany(updated);
+        setEditing(false);
+      }
+    } catch (err) {
+      console.error("Failed to save company:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -420,7 +481,7 @@ export default function CompanyDetailPage() {
               </h2>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={(e) => { e.stopPropagation(); alert("プロパティを編集"); }}
+                  onClick={(e) => { e.stopPropagation(); startEditing(); }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <Edit3 className="h-3.5 w-3.5" />
@@ -435,6 +496,91 @@ export default function CompanyDetailPage() {
 
             {!collapsedCards.about && (
               <div className="space-y-4 mt-2">
+                {editing ? (
+                  <>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">会社名</label>
+                      <input
+                        type="text"
+                        value={editForm.name}
+                        onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">ドメイン</label>
+                      <input
+                        type="text"
+                        value={editForm.domain}
+                        onChange={(e) => setEditForm({ ...editForm, domain: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">電話番号</label>
+                      <input
+                        type="tel"
+                        value={editForm.phone}
+                        onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">業界</label>
+                      <input
+                        type="text"
+                        value={editForm.industry}
+                        onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">説明</label>
+                      <textarea
+                        value={editForm.description}
+                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                        rows={3}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">年間売上</label>
+                      <input
+                        type="number"
+                        value={editForm.annualRevenue}
+                        onChange={(e) => setEditForm({ ...editForm, annualRevenue: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">従業員数</label>
+                      <input
+                        type="number"
+                        value={editForm.employeeCount}
+                        onChange={(e) => setEditForm({ ...editForm, employeeCount: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-500">都市</label>
+                      <input
+                        type="text"
+                        value={editForm.city}
+                        onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-gray-300 px-2 py-1 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 pt-2">
+                      <Button size="sm" onClick={saveEditing} disabled={saving}>
+                        {saving ? "保存中..." : "保存"}
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={cancelEditing} disabled={saving}>
+                        キャンセル
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
                 {domain && (
                   <div>
                     <label className="text-xs font-medium text-gray-500">
@@ -521,6 +667,8 @@ export default function CompanyDetailPage() {
                     {formatDate(company.updatedAt)}
                   </p>
                 </div>
+                  </>
+                )}
               </div>
             )}
           </div>
