@@ -63,8 +63,14 @@ export default function LoginPage() {
   return (
     <div className="w-full max-w-md px-4">
       <div className="rounded-2xl bg-white p-8 shadow-2xl">
-        {/* Logo */}
+        {/* Logo - C1: HubSpot sprocket logo placeholder */}
         <div className="mb-8 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#ff4800]">
+            <svg className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-[#1f1f1f]">
             <span className="text-[#ff4800]">Hub</span>Spot
           </h1>
@@ -160,8 +166,18 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* Remember me + Forgot password */}
-              <div className="flex items-center justify-between">
+              {/* C2: Forgot password positioned right below password field */}
+              <div className="flex justify-end -mt-1">
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-[#ff4800] hover:underline"
+                >
+                  パスワードをお忘れですか？
+                </Link>
+              </div>
+
+              {/* Remember me */}
+              <div className="flex items-center">
                 <label className="flex items-center gap-2 text-sm text-gray-600">
                   <input
                     type="checkbox"
@@ -171,12 +187,6 @@ export default function LoginPage() {
                   />
                   ログイン状態を保持
                 </label>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-[#ff4800] hover:underline"
-                >
-                  パスワードをお忘れですか？
-                </Link>
               </div>
 
               <button

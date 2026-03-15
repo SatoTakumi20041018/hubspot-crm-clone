@@ -35,6 +35,7 @@ import {
   GitMerge,
   Copy,
   Trash2,
+  Star,
 } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -99,11 +100,26 @@ const priorityVariant: Record<string, "default" | "info" | "orange" | "danger"> 
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
   try {
-    return new Date(dateStr).toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
+  } catch {
+    return dateStr;
+  }
+}
+
+function formatRelativeTime(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMin = Math.floor(diffMs / (1000 * 60));
+    const diffHour = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDay = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffMin < 1) return "たった今";
+    if (diffMin < 60) return `${diffMin}分前`;
+    if (diffHour < 24) return `${diffHour}時間前`;
+    if (diffDay < 30) return `${diffDay}日前`;
+    return formatDate(dateStr);
   } catch {
     return dateStr;
   }
@@ -143,6 +159,8 @@ export default function DealDetailPage() {
   const [editAmount, setEditAmount] = useState("");
   const [editStage, setEditStage] = useState("");
   const [saving, setSaving] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!id) return;
@@ -325,15 +343,24 @@ export default function DealDetailPage() {
             <FileText className="h-4 w-4 mr-1" />
             メモ
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFollowing(!following)}
+            className={following ? "text-[#ff4800] border-[#ff4800]" : ""}
+          >
+            <Star className={`h-4 w-4 mr-1 ${following ? "fill-[#ff4800] text-[#ff4800]" : ""}`} />
+            {following ? "フォロー中" : "フォロー"}
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
               アクション
               <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="right">
-              <DropdownMenuItem onClick={() => alert("フォロー")}>
-                <Bell className="h-4 w-4 mr-2" />
-                フォロー
+              <DropdownMenuItem onClick={() => alert("すべてのプロパティを表示")}>
+                <Eye className="h-4 w-4 mr-2" />
+                すべてのプロパティを表示
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => alert("すべてのプロパティを表示")}>
                 <Eye className="h-4 w-4 mr-2" />
@@ -439,7 +466,7 @@ export default function DealDetailPage() {
               </p>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">クローズ予定日</label>
+              <label className="text-xs font-medium text-gray-500">成約予定日</label>
               <p className="text-sm text-gray-900 mt-0.5">
                 {formatDate(closeDate)}
               </p>
@@ -456,7 +483,7 @@ export default function DealDetailPage() {
             <hr className="border-gray-200" />
 
             <div>
-              <label className="text-xs font-medium text-gray-500">担当者</label>
+              <label className="text-xs font-medium text-gray-500">取引担当者</label>
               <div className="flex items-center gap-2 mt-1">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-500 text-[10px] text-white">
                   {ownerName.charAt(0)}
@@ -487,7 +514,7 @@ export default function DealDetailPage() {
               </p>
             </div>
             <div>
-              <label className="text-xs font-medium text-gray-500">最終更新</label>
+              <label className="text-xs font-medium text-gray-500">最終更新日</label>
               <p className="text-sm text-gray-900 mt-0.5">
                 {formatDate(deal.updatedAt)}
               </p>
@@ -528,36 +555,56 @@ export default function DealDetailPage() {
                 const config = activityTypeConfig[type] || activityTypeConfig.NOTE;
                 const Icon = config.icon;
                 const userName = activity.user?.name || "-";
+                const userInitial = userName.charAt(0);
+                const userColors = ["bg-blue-500", "bg-green-500", "bg-purple-500", "bg-orange-500", "bg-pink-500"];
+                const userColor = userColors[userName.charCodeAt(0) % userColors.length];
                 const subject = activity.subject || activity.properties?.hs_body_preview || "";
                 const body = activity.body || "";
                 const createdAt = activity.createdAt || "";
+                const isExpanded = expandedActivities.has(activity.id);
 
                 return (
                   <Card key={activity.id}>
                     <CardContent className="p-4">
                       <div className="flex gap-3">
-                        <div
-                          className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-100 ${config.color}`}
-                        >
-                          <Icon className="h-4 w-4" />
+                        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                          <div className={`flex h-8 w-8 items-center justify-center rounded-full ${userColor} text-[11px] font-medium text-white`}>
+                            {userInitial}
+                          </div>
+                          <div className={`flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 ${config.color}`}>
+                            <Icon className="h-3 w-3" />
+                          </div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h3 className="text-sm font-medium text-gray-900">
-                              {subject || config.label}
-                            </h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-gray-700">{userName}</span>
+                              <h3 className="text-sm font-medium text-gray-900">
+                                {subject || config.label}
+                              </h3>
+                            </div>
                             <span className="text-xs text-gray-400">
-                              {formatDateTime(createdAt)}
+                              {createdAt ? formatRelativeTime(createdAt) : "-"}
                             </span>
                           </div>
                           {body && (
-                            <p className="mt-1 text-sm text-gray-600">
-                              {body}
-                            </p>
+                            <div className="mt-1">
+                              <p className={`text-sm text-gray-600 ${!isExpanded ? "line-clamp-2" : ""}`}>{body}</p>
+                              {body.length > 100 && (
+                                <button
+                                  onClick={() => setExpandedActivities(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(activity.id)) next.delete(activity.id);
+                                    else next.add(activity.id);
+                                    return next;
+                                  })}
+                                  className="text-xs text-[#ff4800] hover:underline mt-0.5"
+                                >
+                                  {isExpanded ? "折りたたむ" : "もっと見る"}
+                                </button>
+                              )}
+                            </div>
                           )}
-                          <p className="mt-2 text-xs text-gray-400">
-                            {userName}
-                          </p>
                         </div>
                       </div>
                     </CardContent>
@@ -601,11 +648,11 @@ export default function DealDetailPage() {
 
         {/* RIGHT SIDEBAR */}
         <div className="w-72 flex-shrink-0 overflow-y-auto border-l border-gray-200 bg-white p-4">
-          {/* Contacts */}
+          {/* A3: Contacts with count */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-                コンタクト
+                関連コンタクト ({contacts.length})
               </h2>
               <button className="text-xs text-[#ff4800] hover:underline flex items-center gap-1" onClick={() => alert("関連レコードの追加は準備中です")}>
                 <Plus className="h-3 w-3" />

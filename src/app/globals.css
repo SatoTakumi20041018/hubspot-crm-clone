@@ -169,3 +169,65 @@ h3 { font-size: 1.25rem; font-weight: 600; }
 .animate-scale-in {
   animation: scaleIn 0.15s ease-out;
 }
+
+/* Modal fade-in (G1) */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-modal-in {
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+/* Dropdown slide-down (G2) */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down {
+  animation: slideDown 0.15s ease-out;
+}
+
+/* Toast notification (G3) */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(100%); }
+}
+.animate-toast-in {
+  animation: toastIn 0.3s ease-out;
+}
+.animate-toast-out {
+  animation: toastOut 0.3s ease-in forwards;
+}
+
+/* Shimmer loading skeleton (G4) */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Breeze AI pulse glow (D5) */
+@keyframes breezeGlow {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(255,72,0,0)); }
+  50% { filter: drop-shadow(0 0 4px rgba(255,72,0,0.4)); }
+}
+.animate-breeze-glow {
+  animation: breezeGlow 2.5s ease-in-out infinite;
+}
+
+/* Sticky table header (G5) */
+.sticky-thead th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #f9fafb;
+}

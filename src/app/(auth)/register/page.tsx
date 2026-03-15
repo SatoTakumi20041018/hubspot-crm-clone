@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [companyName, setCompanyName] = useState("");
+  const [companySize, setCompanySize] = useState("");
   const [password, setPassword] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState("");
@@ -81,6 +82,12 @@ export default function RegisterPage() {
       <div className="rounded-2xl bg-white p-8 shadow-2xl">
         {/* Logo */}
         <div className="mb-8 text-center">
+          <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#ff4800]">
+            <svg className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-[#1f1f1f]">
             <span className="text-[#ff4800]">Hub</span>Spot
           </h1>
@@ -201,6 +208,29 @@ export default function RegisterPage() {
             />
           </div>
 
+          {/* C3: Company size dropdown */}
+          <div>
+            <label
+              htmlFor="companySize"
+              className="mb-1 block text-sm font-medium text-gray-700"
+            >
+              会社規模
+            </label>
+            <select
+              id="companySize"
+              value={companySize}
+              onChange={(e) => setCompanySize(e.target.value)}
+              className="w-full rounded-[8px] border border-[rgba(0,0,0,0.11)] px-4 py-2.5 text-sm transition focus:border-[#2f7579] focus:outline-none focus:ring-2 focus:ring-[#2f7579]/20"
+            >
+              <option value="">選択してください</option>
+              <option value="1-10">1〜10名</option>
+              <option value="11-50">11〜50名</option>
+              <option value="51-200">51〜200名</option>
+              <option value="201-500">201〜500名</option>
+              <option value="500+">500名以上</option>
+            </select>
+          </div>
+
           <div>
             <label
               htmlFor="password"
@@ -243,12 +273,14 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        {/* Login link */}
-        <div className="mt-6 text-center text-sm text-gray-500">
-          既にアカウントをお持ちですか？{" "}
+        {/* C4: More prominent login link */}
+        <div className="mt-6 rounded-lg border border-[rgba(0,0,0,0.11)] bg-gray-50 p-4 text-center">
+          <p className="text-sm text-gray-700">
+            すでにアカウントをお持ちですか？
+          </p>
           <Link
             href="/login"
-            className="font-medium text-[#ff4800] hover:underline"
+            className="mt-1 inline-block text-sm font-semibold text-[#ff4800] hover:underline"
           >
             ログイン
           </Link>

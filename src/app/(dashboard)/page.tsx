@@ -20,6 +20,9 @@ import {
   ArrowRight,
   Video,
   CircleDot,
+  PhoneCall,
+  Send,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -271,6 +274,67 @@ export default function DashboardPage() {
         <p className="text-sm text-gray-500 mt-1">{todayStr}</p>
       </div>
 
+      {/* F5: Quick Actions */}
+      <div className="flex gap-3 flex-wrap">
+        <button
+          onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("通話記録は準備中です"); }}
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+        >
+          <PhoneCall className="h-4 w-4 text-green-500" />
+          通話を記録
+        </button>
+        <button
+          onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("メール送信は準備中です"); }}
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+        >
+          <Send className="h-4 w-4 text-blue-500" />
+          メールを送信
+        </button>
+        <button
+          onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("タスク作成は準備中です"); }}
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+        >
+          <CheckSquare className="h-4 w-4 text-orange-500" />
+          タスクを作成
+        </button>
+        <button
+          onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("ミーティング予約は準備中です"); }}
+          className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors shadow-sm"
+        >
+          <Calendar className="h-4 w-4 text-purple-500" />
+          ミーティングを予約
+        </button>
+      </div>
+
+      {/* F1: Today's Schedule */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-[#0091ae]" />
+            <CardTitle className="text-base">今日のスケジュール</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[
+              { time: "09:00", title: "チームミーティング", type: "meeting", color: "bg-purple-100 text-purple-600" },
+              { time: "11:00", title: "田中太郎 - 商談フォローアップ", type: "call", color: "bg-green-100 text-green-600" },
+              { time: "14:00", title: "サンプル株式会社 - 提案プレゼン", type: "meeting", color: "bg-purple-100 text-purple-600" },
+              { time: "16:30", title: "週次レポート提出", type: "task", color: "bg-orange-100 text-orange-600" },
+            ].map((event, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-lg p-2 hover:bg-gray-50 transition-colors">
+                <div className="text-xs font-medium text-gray-500 w-12 text-right flex-shrink-0">{event.time}</div>
+                <div className="h-8 w-px bg-gray-200 flex-shrink-0" />
+                <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${event.color} flex-shrink-0`}>
+                  {event.type === "meeting" ? <Video className="h-3.5 w-3.5" /> : event.type === "call" ? <Phone className="h-3.5 w-3.5" /> : <CheckSquare className="h-3.5 w-3.5" />}
+                </div>
+                <p className="text-sm text-gray-900">{event.title}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ── Main 2-column layout ── */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
         {/* Left Column - wider (3/5) */}
@@ -468,12 +532,18 @@ export default function DashboardPage() {
                     const typeConfig =
                       activityTypeIcons[activity.type] || activityTypeIcons.NOTE;
                     const Icon = typeConfig.icon;
+                    const userName = activity.user?.name || "";
+                    const userInitial = userName ? userName.charAt(0) : "?";
                     return (
                       <div key={activity.id} className="flex gap-3">
-                        <div
-                          className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gray-50 ${typeConfig.color}`}
-                        >
-                          <Icon className="h-4 w-4" />
+                        {/* F3: Avatars in recent activity */}
+                        <div className="mt-0.5 flex flex-col items-center gap-1 flex-shrink-0">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff4800] text-[10px] font-medium text-white">
+                            {userInitial}
+                          </div>
+                          <div className={`flex h-5 w-5 items-center justify-center rounded-full bg-gray-50 ${typeConfig.color}`}>
+                            <Icon className="h-3 w-3" />
+                          </div>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm text-gray-900">
@@ -485,6 +555,7 @@ export default function DashboardPage() {
                             </p>
                           )}
                         </div>
+                        {/* F3: Relative time */}
                         <span className="flex-shrink-0 text-xs text-gray-400 mt-0.5">
                           {formatRelativeTime(activity.createdAt)}
                         </span>
@@ -517,8 +588,11 @@ export default function DashboardPage() {
                       <span className="text-sm font-normal text-green-600 ml-1">件</span>
                     </p>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
-                    <DollarSign className="h-5 w-5 text-green-600" />
+                  {/* F2: Sparkline chart */}
+                  <div className="flex items-end gap-[2px] h-8">
+                    {[3, 5, 4, 7, 6, 8, 7, 9, 8, 10, 9, 11].map((v, i) => (
+                      <div key={i} className="w-[3px] rounded-sm bg-green-400/60" style={{ height: `${v * 3}px` }} />
+                    ))}
                   </div>
                 </div>
 
@@ -531,8 +605,11 @@ export default function DashboardPage() {
                         : "¥0"}
                     </p>
                   </div>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
-                    <TrendingUp className="h-5 w-5 text-purple-600" />
+                  {/* F2: Sparkline chart */}
+                  <div className="flex items-end gap-[2px] h-8">
+                    {[2, 4, 3, 5, 6, 5, 7, 8, 6, 9, 10, 12].map((v, i) => (
+                      <div key={i} className="w-[3px] rounded-sm bg-purple-400/60" style={{ height: `${v * 2.5}px` }} />
+                    ))}
                   </div>
                 </div>
 
@@ -588,13 +665,14 @@ export default function DashboardPage() {
                 ) : (
                   dealsByStage.map((stage: any) => (
                     <div key={stage.stage.id} className="space-y-1.5">
+                      {/* F4: Stage names and amounts labeled */}
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-700 font-medium text-xs">
+                        <span className="text-gray-700 font-medium text-xs flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: stage.stage.color || "#3B82F6" }} />
                           {stage.stage.name}
                         </span>
-                        <span className="text-gray-500 text-xs">
-                          {stage.count}件 / ¥
-                          {((stage.totalAmount || 0) / 10000).toLocaleString()}万
+                        <span className="text-gray-500 text-xs font-medium">
+                          {stage.count}件 / ¥{((stage.totalAmount || 0) / 10000).toLocaleString()}万
                         </span>
                       </div>
                       <div className="h-2.5 w-full rounded-full bg-gray-100">

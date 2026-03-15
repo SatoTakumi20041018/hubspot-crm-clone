@@ -20,14 +20,25 @@ import {
   Pencil,
   Trash2,
   Download,
+  Upload,
+  Bell,
+  Box,
+  Globe,
+  Shield,
 } from "lucide-react";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+// B1: Updated sidebar nav to match real HubSpot
 const tabs = [
-  { key: "general", label: "一般", icon: Settings },
-  { key: "users", label: "ユーザー", icon: Users },
+  { key: "account", label: "アカウントのデフォルト", icon: Settings },
+  { key: "users", label: "ユーザーとチーム", icon: Users },
   { key: "properties", label: "プロパティ", icon: Database },
+  { key: "objects", label: "オブジェクト", icon: Box },
   { key: "pipelines", label: "パイプライン", icon: GitBranch },
+  { key: "notifications", label: "通知", icon: Bell },
   { key: "integrations", label: "連携", icon: Puzzle },
+  { key: "data", label: "データ管理", icon: Globe },
 ];
 
 const users = [
@@ -54,23 +65,44 @@ const pipelines = [
   { name: "エンタープライズ", stages: ["初回接触", "ニーズ分析", "提案", "評価", "交渉", "成約", "失注"], deals: 12, active: true },
 ];
 
+// B4: Renamed to match real HubSpot categories
+const integrationCategories = [
+  { key: "connected", label: "Connected Apps" },
+  { key: "private", label: "Private Apps" },
+  { key: "email", label: "Email Service Provider" },
+];
+
 const integrations = [
-  { name: "Slack", description: "通知とアクティビティをSlackに送信", status: "接続済み", icon: "S", color: "bg-purple-500" },
-  { name: "Google Workspace", description: "メール、カレンダー、ドライブと連携", status: "接続済み", icon: "G", color: "bg-blue-500" },
-  { name: "Zoom", description: "ミーティングの自動記録と同期", status: "未接続", icon: "Z", color: "bg-sky-500" },
-  { name: "Salesforce", description: "データの双方向同期", status: "未接続", icon: "SF", color: "bg-blue-700" },
-  { name: "Stripe", description: "決済情報の自動連携", status: "未接続", icon: "St", color: "bg-indigo-500" },
-  { name: "LINE", description: "LINE公式アカウントとの連携", status: "接続済み", icon: "L", color: "bg-green-500" },
+  { name: "Slack", description: "通知とアクティビティをSlackに送信", status: "接続済み", icon: "S", color: "bg-purple-500", category: "connected" },
+  { name: "Google Workspace", description: "メール、カレンダー、ドライブと連携", status: "接続済み", icon: "G", color: "bg-blue-500", category: "connected" },
+  { name: "Zoom", description: "ミーティングの自動記録と同期", status: "未接続", icon: "Z", color: "bg-sky-500", category: "connected" },
+  { name: "Salesforce", description: "データの双方向同期", status: "未接続", icon: "SF", color: "bg-blue-700", category: "connected" },
+  { name: "Stripe", description: "決済情報の自動連携", status: "未接続", icon: "St", color: "bg-indigo-500", category: "private" },
+  { name: "LINE", description: "LINE公式アカウントとの連携", status: "接続済み", icon: "L", color: "bg-green-500", category: "email" },
+];
+
+// B3: Notification settings
+const notificationSettings = [
+  { key: "deal_assigned", label: "取引が割り当てられたとき", description: "新しい取引があなたに割り当てられた場合に通知", enabled: true },
+  { key: "ticket_assigned", label: "チケットが割り当てられたとき", description: "新しいチケットがあなたに割り当てられた場合に通知", enabled: true },
+  { key: "task_due", label: "タスクの期限が近づいたとき", description: "タスクの期限が24時間以内に迫った場合に通知", enabled: true },
+  { key: "contact_activity", label: "コンタクトのアクティビティ", description: "フォローしているコンタクトがアクティビティを記録した場合に通知", enabled: false },
+  { key: "deal_stage_change", label: "取引のステージ変更", description: "担当取引のステージが変更された場合に通知", enabled: true },
+  { key: "email_open", label: "メール開封", description: "送信したメールが開封された場合に通知", enabled: false },
+  { key: "form_submission", label: "フォーム送信", description: "新しいフォーム送信があった場合に通知", enabled: true },
+  { key: "weekly_report", label: "週次レポート", description: "毎週月曜日にパフォーマンスレポートをメールで受信", enabled: true },
 ];
 
 export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("account");
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+  const [notifications, setNotifications] = useState(notificationSettings);
+  const [integrationCategory, setIntegrationCategory] = useState("connected");
   const handleSort = (field: string) => {
     if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
     else { setSortField(field); setSortDir("asc"); }
@@ -96,15 +128,19 @@ export default function SettingsPage() {
     else setSelectedUserIds(new Set(users.map(u => u.id)));
   };
 
+  const toggleNotification = (key: string) => {
+    setNotifications(prev => prev.map(n => n.key === key ? { ...n, enabled: !n.enabled } : n));
+  };
+
   if (loading) {
     return (
       <div className="p-6 space-y-4">
-        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="h-8 w-48 rounded animate-shimmer" />
+        <div className="h-4 w-32 rounded animate-shimmer" />
         <div className="grid grid-cols-4 gap-4 mt-6">
-          {[...Array(4)].map((_, i) => (<div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />))}
+          {[...Array(4)].map((_, i) => (<div key={i} className="h-24 rounded-lg animate-shimmer" />))}
         </div>
-        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+        <div className="h-64 rounded-lg animate-shimmer mt-4" />
       </div>
     );
   }
@@ -124,13 +160,13 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200">
+      {/* B1: Updated tabs to match real HubSpot */}
+      <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${activeTab === tab.key ? "border-[#ff4800] text-[#ff4800]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap ${activeTab === tab.key ? "border-[#ff4800] text-[#ff4800]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
               <Icon className="h-4 w-4" />{tab.label}
             </button>
           );
@@ -149,26 +185,43 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* General Tab */}
-      {activeTab === "general" && (
+      {/* B2: Account Defaults Tab */}
+      {activeTab === "account" && (
         <div className="max-w-2xl space-y-6">
           <Card>
-            <CardHeader><CardTitle>アカウント情報</CardTitle></CardHeader>
+            <CardHeader><CardTitle>アカウントのデフォルト</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <Input label="会社名" defaultValue="サンプル株式会社" />
                 <Input label="ドメイン" defaultValue="sample-corp.jp" />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="電話番号" defaultValue="03-1234-5678" />
-                <Input label="業界" defaultValue="IT・ソフトウェア" />
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">タイムゾーン</label>
+                  <select className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]/20" defaultValue="Asia/Tokyo">
+                    <option value="Asia/Tokyo">Asia/Tokyo (UTC+9)</option>
+                    <option value="America/New_York">America/New_York (UTC-5)</option>
+                    <option value="Europe/London">Europe/London (UTC+0)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">通貨</label>
+                  <select className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]/20" defaultValue="JPY">
+                    <option value="JPY">JPY (日本円 ¥)</option>
+                    <option value="USD">USD (米ドル $)</option>
+                    <option value="EUR">EUR (ユーロ)</option>
+                  </select>
+                </div>
               </div>
-              <Input label="住所" defaultValue="東京都渋谷区神宮前1-2-3" />
-              <div className="grid grid-cols-2 gap-4">
-                <Input label="タイムゾーン" defaultValue="Asia/Tokyo (UTC+9)" />
-                <Input label="通貨" defaultValue="JPY (日本円)" />
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">言語</label>
+                <select className="w-full rounded-md border border-gray-200 px-3 py-2 text-sm focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]/20" defaultValue="ja">
+                  <option value="ja">日本語</option>
+                  <option value="en">English</option>
+                  <option value="zh">中文</option>
+                </select>
               </div>
-              <div className="flex justify-end"><Button onClick={() => alert("設定を保存しました")}>保存</Button></div>
+              <div className="flex justify-end"><Button onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("設定を保存しました"); }}>保存</Button></div>
             </CardContent>
           </Card>
           <Card>
@@ -180,7 +233,7 @@ export default function SettingsPage() {
                 <input type="checkbox" id="email-tracking" defaultChecked className="rounded border-gray-300 text-[#ff4800] focus:ring-[#ff4800]" />
                 <label htmlFor="email-tracking" className="text-sm text-gray-700">メール開封・クリックのトラッキングを有効にする</label>
               </div>
-              <div className="flex justify-end"><Button onClick={() => alert("設定を保存しました")}>保存</Button></div>
+              <div className="flex justify-end"><Button onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast("設定を保存しました"); }}>保存</Button></div>
             </CardContent>
           </Card>
         </div>
@@ -196,7 +249,7 @@ export default function SettingsPage() {
           <Card>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky-thead">
                   <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="px-4 py-3 text-left w-10"><input type="checkbox" className="rounded border-gray-300" checked={users.length > 0 && selectedUserIds.size === users.length} onChange={toggleUserSelectAll} /></th>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}><div className="flex items-center gap-1">ユーザー <ArrowUpDown className="h-3 w-3" /></div></th>
@@ -253,7 +306,7 @@ export default function SettingsPage() {
           <Card>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="sticky-thead">
                   <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="px-6 py-3 text-left font-medium text-gray-500">プロパティ名</th>
                     <th className="px-4 py-3 text-left font-medium text-gray-500">タイプ</th>
@@ -279,6 +332,34 @@ export default function SettingsPage() {
               </table>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* Objects Tab (B1) */}
+      {activeTab === "objects" && (
+        <div className="max-w-2xl space-y-4">
+          <p className="text-sm text-gray-500">CRMオブジェクトの設定を管理します</p>
+          {[
+            { name: "コンタクト", description: "個人のコンタクト情報を管理", count: 245 },
+            { name: "会社", description: "会社・組織の情報を管理", count: 67 },
+            { name: "取引", description: "商談・取引の進捗を管理", count: 89 },
+            { name: "チケット", description: "カスタマーサポートのチケットを管理", count: 34 },
+          ].map((obj) => (
+            <Card key={obj.name} className="hover:border-gray-300 transition-colors">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900">{obj.name}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{obj.description}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant="info">{obj.count}件</Badge>
+                    <Button variant="outline" size="sm" onClick={() => alert("オブジェクト設定は準備中です")}>設定</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
@@ -312,12 +393,48 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Integrations Tab */}
+      {/* B3: Notifications Tab */}
+      {activeTab === "notifications" && (
+        <div className="max-w-2xl space-y-6">
+          <Card>
+            <CardHeader><CardTitle>メール通知</CardTitle></CardHeader>
+            <CardContent className="space-y-1">
+              {notifications.map((n) => (
+                <div key={n.key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{n.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{n.description}</p>
+                  </div>
+                  <button
+                    onClick={() => toggleNotification(n.key)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${n.enabled ? "bg-[#ff4800]" : "bg-gray-300"}`}
+                  >
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${n.enabled ? "translate-x-6" : "translate-x-1"}`} />
+                  </button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* B4/B5: Integrations Tab */}
       {activeTab === "integrations" && (
         <div className="space-y-4">
+          <div className="flex gap-2 mb-4">
+            {integrationCategories.map((cat) => (
+              <button
+                key={cat.key}
+                onClick={() => setIntegrationCategory(cat.key)}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${integrationCategory === cat.key ? "bg-[#ff4800] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
           <p className="text-sm text-gray-500">外部サービスとの連携を管理</p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {integrations.map((integration) => (
+            {integrations.filter(i => i.category === integrationCategory).map((integration) => (
               <Card key={integration.name} className="hover:border-gray-300 transition-colors">
                 <CardContent className="p-5">
                   <div className="flex items-start gap-3">
@@ -325,28 +442,70 @@ export default function SettingsPage() {
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-gray-900">{integration.name}</h3>
-                        <Badge variant={integration.status === "接続済み" ? "success" : "default"}>{integration.status}</Badge>
+                        {/* B5: Status indicator with green dot */}
+                        <div className="flex items-center gap-1.5">
+                          {integration.status === "接続済み" && (
+                            <span className="h-2 w-2 rounded-full bg-green-500" />
+                          )}
+                          <Badge variant={integration.status === "接続済み" ? "success" : "default"}>{integration.status}</Badge>
+                        </div>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">{integration.description}</p>
                       <div className="mt-3">
-                        <Button variant={integration.status === "接続済み" ? "outline" : "primary"} size="sm" className="w-full" onClick={() => alert(integration.status === "接続済み" ? "設定は準備中です" : "接続するは準備中です")}>{integration.status === "接続済み" ? "設定" : "接続する"}</Button>
+                        <Button variant={integration.status === "接続済み" ? "outline" : "primary"} size="sm" className="w-full" onClick={() => { if (typeof window !== "undefined" && (window as any).__hubspotToast) (window as any).__hubspotToast(integration.status === "接続済み" ? "設定画面は準備中です" : "接続処理は準備中です"); }}>{integration.status === "接続済み" ? "設定" : "接続する"}</Button>
                       </div>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
+            {integrations.filter(i => i.category === integrationCategory).length === 0 && (
+              <div className="col-span-full text-center py-12 text-sm text-gray-400">
+                この カテゴリにはまだ連携がありません
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {sortedUsers.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-            <Settings className="h-8 w-8 text-gray-300" />
-          </div>
-          <h3 className="text-base font-medium text-gray-900 mb-1">データがありません</h3>
-          <p className="text-sm text-gray-500">新しい設定を作成して始めましょう</p>
+      {/* Data Management Tab (B1) */}
+      {activeTab === "data" && (
+        <div className="max-w-2xl space-y-4">
+          <p className="text-sm text-gray-500">データのインポート、エクスポート、クリーンアップを管理します</p>
+          <Card>
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Upload className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">データインポート</p>
+                    <p className="text-xs text-gray-500">CSV/XLSXファイルからデータをインポート</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">インポート</Button>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Download className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">データエクスポート</p>
+                    <p className="text-xs text-gray-500">CRMデータをCSV形式でエクスポート</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">エクスポート</Button>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Shield className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">データクリーンアップ</p>
+                    <p className="text-xs text-gray-500">重複レコードの検出と統合</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">実行</Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

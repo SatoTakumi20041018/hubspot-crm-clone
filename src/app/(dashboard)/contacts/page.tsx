@@ -22,6 +22,11 @@ import {
   Pencil,
   UserPlus,
   Users,
+  Eye,
+  List,
+  LayoutGrid,
+  ChevronDown,
+  MoreVertical,
 } from "lucide-react";
 
 const lifecycleStages = [
@@ -216,7 +221,20 @@ export default function ContactsPage() {
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [localPage, setLocalPage] = useState(0);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const columnMenuRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 20;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) setActionsOpen(false);
+      if (columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) setColumnMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchContacts = useCallback(async (cursor?: string) => {
     setLoading(true);
@@ -319,18 +337,36 @@ export default function ContactsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 border rounded-md p-0.5">
+            <button className="p-1.5 rounded bg-gray-100 text-gray-700"><List className="h-4 w-4" /></button>
+            <button className="p-1.5 rounded text-gray-400 hover:text-gray-600"><LayoutGrid className="h-4 w-4" /></button>
+          </div>
           <Button variant="outline" size="sm" onClick={() => alert("カラム編集は準備中です")}>
             <Settings2 className="h-4 w-4 mr-1" />
             列を編集
           </Button>
-          <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
-            <Download className="h-4 w-4 mr-1" />
-            エクスポート
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => alert("インポート機能は準備中です")}>
-            <Upload className="h-4 w-4 mr-1" />
-            インポート
-          </Button>
+          <div className="relative" ref={actionsRef}>
+            <Button variant="outline" size="sm" onClick={() => setActionsOpen(!actionsOpen)}>
+              アクション
+              <ChevronDown className="h-3 w-3 ml-1" />
+            </Button>
+            {actionsOpen && (
+              <div className="absolute right-0 top-9 z-50 w-52 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("インポート機能は準備中です"); setActionsOpen(false); }}>
+                  <Upload className="h-3.5 w-3.5" /> インポート
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("エクスポート機能は準備中です"); setActionsOpen(false); }}>
+                  <Download className="h-3.5 w-3.5" /> エクスポート
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("プロパティ編集は準備中です"); setActionsOpen(false); }}>
+                  <Settings2 className="h-3.5 w-3.5" /> プロパティを編集
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("レコード復元は準備中です"); setActionsOpen(false); }}>
+                  <Trash2 className="h-3.5 w-3.5" /> レコードを復元
+                </button>
+              </div>
+            )}
+          </div>
           <Button size="sm" onClick={() => alert("コンタクト作成モーダルは準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             コンタクトを作成
@@ -359,6 +395,15 @@ export default function ContactsPage() {
         >
           <Plus className="h-4 w-4" />
         </button>
+      </div>
+
+      {/* Quick Filter Pills */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs text-gray-500">クイックフィルター:</span>
+        {["ライフサイクル", "担当者", "作成日"].map(f => (
+          <button key={f} className="px-2.5 py-1 text-xs rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50">{f} ▾</button>
+        ))}
+        <button className="px-2 py-1 text-xs text-[#ff4800] hover:underline">+ フィルターを追加</button>
       </div>
 
       {/* Quick Filters */}
@@ -447,10 +492,26 @@ export default function ContactsPage() {
                   />
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <button className="flex items-center gap-1 hover:text-gray-700" onClick={() => handleSort("name")}>
-                    名前
-                    <ArrowUpDown className="h-3 w-3" />
-                  </button>
+                  <div className="flex items-center gap-1 group">
+                    <button className="flex items-center gap-1 hover:text-gray-700" onClick={() => handleSort("name")}>
+                      名前
+                      <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                    </button>
+                    <div className="relative" ref={columnMenuRef}>
+                      <button className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-gray-200" onClick={() => setColumnMenuOpen(!columnMenuOpen)}>
+                        <MoreVertical className="h-3 w-3" />
+                      </button>
+                      {columnMenuOpen && (
+                        <div className="absolute left-0 top-6 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { handleSort("name"); setColumnMenuOpen(false); }}>昇順でソート</button>
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { setSortField("name"); setSortDir("desc"); setColumnMenuOpen(false); }}>降順でソート</button>
+                          <div className="border-t border-gray-100 my-1" />
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { alert("列の固定は準備中です"); setColumnMenuOpen(false); }}>列を固定</button>
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { alert("列の削除は準備中です"); setColumnMenuOpen(false); }}>列を削除</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
                   メール
@@ -476,6 +537,7 @@ export default function ContactsPage() {
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
                   最終活動
                 </th>
+                <th className="px-2 py-3 w-10"></th>
                 <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
@@ -483,14 +545,14 @@ export default function ContactsPage() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-gray-100">
-                    <td className="px-4 py-3" colSpan={9}>
+                    <td className="px-4 py-3" colSpan={11}>
                       <div className="h-4 bg-gray-200 rounded animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : contacts.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={11} className="px-4 py-12 text-center text-gray-500">
                     コンタクトが見つかりません
                   </td>
                 </tr>
@@ -498,7 +560,7 @@ export default function ContactsPage() {
                 contacts.slice(localPage * itemsPerPage, (localPage + 1) * itemsPerPage).map((contact) => (
                   <tr
                     key={contact.id}
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(contact.id) ? "bg-blue-50/50" : ""}`}
+                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group ${selectedIds.has(contact.id) ? "bg-blue-50/50" : ""}`}
                     onClick={() => router.push(`/contacts/${contact.id}`)}
                   >
                     <td className="px-4 py-3">
@@ -557,6 +619,11 @@ export default function ContactsPage() {
                     <td className="px-4 py-3 text-gray-500 text-xs">
                       {contact.updatedAt ? relativeTime(contact.updatedAt) : "-"}
                     </td>
+                    <td className="px-2 py-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={(e) => { e.stopPropagation(); alert("プレビューは準備中です"); }} className="p-1 rounded hover:bg-gray-100" title="プレビュー">
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      </button>
+                    </td>
                     <td className="px-4 py-3">
                       <RowActionsMenu
                         onEdit={() => alert(`編集: ${getContactName(contact)}`)}
@@ -575,7 +642,7 @@ export default function ContactsPage() {
         <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3">
           <p className="text-sm text-gray-500">
             {contacts.length > 0
-              ? `${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, contacts.length)}件 / ${contacts.length}件表示（全${total.toLocaleString()}件）`
+              ? `${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, contacts.length)} / ${total.toLocaleString()}件`
               : `${total.toLocaleString()}件のコンタクト`}
           </p>
           <div className="flex items-center gap-2">

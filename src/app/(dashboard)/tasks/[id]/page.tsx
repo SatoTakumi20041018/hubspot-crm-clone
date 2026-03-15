@@ -21,6 +21,7 @@ import {
   Mail,
   Phone,
   FileText,
+  Star,
 } from "lucide-react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -64,11 +65,8 @@ const typeLabels: Record<string, string> = {
 function formatDate(dateStr: string | null | undefined): string {
   if (!dateStr) return "-";
   try {
-    return new Date(dateStr).toLocaleDateString("ja-JP", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`;
   } catch {
     return dateStr;
   }
@@ -103,6 +101,7 @@ export default function TaskDetailPage() {
   const [editingDueDate, setEditingDueDate] = useState(false);
   const [editDueDate, setEditDueDate] = useState("");
   const [savingField, setSavingField] = useState(false);
+  const [following, setFollowing] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -339,6 +338,15 @@ export default function TaskDetailPage() {
             <Edit3 className="h-4 w-4 mr-1" />
             編集
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setFollowing(!following)}
+            className={following ? "text-[#ff4800] border-[#ff4800]" : ""}
+          >
+            <Star className={`h-4 w-4 mr-1 ${following ? "fill-[#ff4800] text-[#ff4800]" : ""}`} />
+            {following ? "フォロー中" : "フォロー"}
+          </Button>
         </div>
       </div>
 
@@ -441,7 +449,7 @@ export default function TaskDetailPage() {
                     </p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-500">最終更新</label>
+                    <label className="text-xs font-medium text-gray-500">最終更新日</label>
                     <p className="text-sm text-gray-900 mt-0.5">
                       {formatDate(task.updatedAt)}
                     </p>

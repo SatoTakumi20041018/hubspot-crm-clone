@@ -43,7 +43,7 @@ function Modal({ open, onClose, children, className }: ModalProps) {
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-xl animate-in fade-in-0 zoom-in-95",
+          "relative z-50 w-full max-w-lg rounded-lg border border-gray-200 bg-white shadow-xl animate-modal-in",
           className
         )}
       >

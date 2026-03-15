@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -20,11 +20,15 @@ import {
   X,
   Trash2,
   Download,
+  Upload,
   Search,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   CheckSquare,
+  Eye,
+  Settings2,
 } from "lucide-react";
 
 type TaskFilter = "all" | "today" | "overdue" | "upcoming";
@@ -198,7 +202,17 @@ export default function TasksPage() {
   const [sortBy, setSortBy] = useState<"dueDate" | "priority" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [localPage, setLocalPage] = useState(0);
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const itemsPerPage = 10;
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) setActionsOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchTasks = useCallback(async () => {
     setLoading(true);
@@ -398,6 +412,30 @@ export default function TasksPage() {
             {tasks.filter((t) => !isTaskCompleted(t)).length}件の未完了タスク
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <div className="relative" ref={actionsRef}>
+            <Button variant="outline" size="sm" onClick={() => setActionsOpen(!actionsOpen)}>
+              アクション
+              <ChevronDown className="h-3 w-3 ml-1" />
+            </Button>
+            {actionsOpen && (
+              <div className="absolute right-0 top-9 z-50 w-52 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("インポート機能は準備中です"); setActionsOpen(false); }}>
+                  <Upload className="h-3.5 w-3.5" /> インポート
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("エクスポート機能は準備中です"); setActionsOpen(false); }}>
+                  <Download className="h-3.5 w-3.5" /> エクスポート
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("プロパティ編集は準備中です"); setActionsOpen(false); }}>
+                  <Settings2 className="h-3.5 w-3.5" /> プロパティを編集
+                </button>
+                <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("レコード復元は準備中です"); setActionsOpen(false); }}>
+                  <Trash2 className="h-3.5 w-3.5" /> レコードを復元
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Saved View Tabs */}
@@ -421,6 +459,15 @@ export default function TasksPage() {
         >
           <Plus className="h-4 w-4" />
         </button>
+      </div>
+
+      {/* Quick Filter Pills */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs text-gray-500">クイックフィルター:</span>
+        {["タイプ", "ステータス"].map(f => (
+          <button key={f} className="px-2.5 py-1 text-xs rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50">{f} ▾</button>
+        ))}
+        <button className="px-2 py-1 text-xs text-[#ff4800] hover:underline">+ フィルターを追加</button>
       </div>
 
       {/* Quick Add */}
@@ -544,7 +591,7 @@ export default function TasksPage() {
           return (
             <Card
               key={task.id}
-              className={`transition-all cursor-pointer hover:border-gray-300 ${completed ? "opacity-60" : ""} ${isSelected ? "ring-1 ring-[#ff4800]/30 border-[#ff4800]/30" : ""}`}
+              className={`transition-all cursor-pointer hover:border-gray-300 group ${completed ? "opacity-60" : ""} ${isSelected ? "ring-1 ring-[#ff4800]/30 border-[#ff4800]/30" : ""}`}
               onClick={() => router.push(`/tasks/${task.id}`)}
             >
               <div className="p-4 flex items-start gap-3">
@@ -610,6 +657,13 @@ export default function TasksPage() {
                   </div>
                 </div>
 
+                {/* Preview */}
+                <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={(e) => { e.stopPropagation(); alert("プレビューは準備中です"); }} className="p-1 rounded hover:bg-gray-100" title="プレビュー">
+                    <Eye className="h-4 w-4 text-gray-400" />
+                  </button>
+                </div>
+
                 {/* Owner */}
                 <div className="flex-shrink-0">
                   <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#ff4800] text-[10px] text-white">
@@ -633,7 +687,7 @@ export default function TasksPage() {
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500">
-            {`${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, filteredTasks.length)}件 / ${filteredTasks.length}件`}
+            {`${localPage * itemsPerPage + 1}-${Math.min((localPage + 1) * itemsPerPage, filteredTasks.length)} / ${filteredTasks.length.toLocaleString()}件`}
           </p>
           <div className="flex items-center gap-2">
             <Button

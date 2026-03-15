@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -52,8 +52,11 @@ import {
   Receipt,
   RefreshCw,
   Upload,
+  Star,
+  Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Tooltip } from "@/components/ui/tooltip";
 
 interface NavItem {
   label: string;
@@ -66,6 +69,13 @@ interface NavSection {
   label: string;
   items: NavItem[];
 }
+
+const bookmarks = [
+  { label: "コンタクト", href: "/contacts", icon: Users },
+  { label: "取引", href: "/deals", icon: Handshake },
+  { label: "タスク", href: "/tasks", icon: CheckSquare },
+  { label: "ダッシュボード", href: "/dashboards", icon: LayoutDashboard },
+];
 
 const navSections: NavSection[] = [
   {
@@ -179,6 +189,14 @@ const navSections: NavSection[] = [
   },
 ];
 
+// E5: Section record count badges
+const sectionCounts: Record<string, string> = {
+  CRM: "67",
+  Marketing: "",
+  Sales: "",
+  Service: "",
+};
+
 interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
@@ -200,6 +218,20 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
     "Data Management": false,
   });
 
+  // E4: Auto-expand active section when navigating
+  useEffect(() => {
+    for (const section of navSections) {
+      const hasActiveChild = section.items.some((item) => {
+        if (item.href === "/") return pathname === "/";
+        return pathname.startsWith(item.href);
+      });
+      if (hasActiveChild && !expandedSections[section.label]) {
+        setExpandedSections((prev) => ({ ...prev, [section.label]: true }));
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
   const toggleSection = (label: string) => {
     setExpandedSections((prev) => ({
       ...prev,
@@ -210,6 +242,18 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
     return pathname.startsWith(href);
+  };
+
+  const renderIcon = (Icon: React.ElementType, active: boolean, label?: string) => {
+    const icon = <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />;
+    if (collapsed && label) {
+      return (
+        <Tooltip content={label} side="right">
+          {icon}
+        </Tooltip>
+      );
+    }
+    return icon;
   };
 
   return (
@@ -244,6 +288,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
         {/* Home Link */}
         <Link
           href="/"
+          title={collapsed ? "Home" : undefined}
           className={cn(
             "mb-1 flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors",
             isActive("/") && pathname === "/"
@@ -252,25 +297,79 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
             collapsed && "justify-center px-2"
           )}
         >
-          <Home className={cn("h-5 w-5 shrink-0", isActive("/") && pathname === "/" ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
+          {collapsed ? (
+            <Tooltip content="Home" side="right">
+              <Home className={cn("h-5 w-5 shrink-0", isActive("/") && pathname === "/" ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
+            </Tooltip>
+          ) : (
+            <Home className={cn("h-5 w-5 shrink-0", isActive("/") && pathname === "/" ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
+          )}
           {!collapsed && <span>Home</span>}
         </Link>
+
+        {/* E1: Bookmarks section */}
+        {!collapsed && (
+          <div className="mt-2 mb-1">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 text-[0.75rem] font-medium uppercase tracking-[0.05em] text-[#f8f5ee]/40">
+              <Bookmark className="h-3 w-3" />
+              <span>Bookmarks</span>
+            </div>
+            <ul className="mt-0.5 space-y-0.5">
+              {bookmarks.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <li key={`bm-${item.href}`}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        "flex items-center gap-3 rounded-[8px] px-3 py-1.5 text-sm transition-colors",
+                        active
+                          ? "bg-white/10 font-medium text-[#f8f5ee]"
+                          : "text-[#f8f5ee]/60 hover:bg-white/10 hover:text-[#f8f5ee]"
+                      )}
+                    >
+                      <Star className={cn("h-3.5 w-3.5 shrink-0", active ? "text-[#ff4800] fill-[#ff4800]" : "text-[#f8f5ee]/30")} />
+                      <span>{item.label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+            {/* E2: Section divider line */}
+            <div className="mx-3 mt-2 mb-1 h-px bg-white/10" />
+          </div>
+        )}
 
         {/* Nav Sections */}
         {navSections.map((section) => (
           <div key={section.label} className="mt-3">
             {!collapsed && (
-              <button
-                onClick={() => toggleSection(section.label)}
-                className="flex w-full items-center justify-between px-3 py-1.5 text-[0.75rem] font-medium uppercase tracking-[0.05em] text-[#f8f5ee]/40 hover:text-[#f8f5ee]/60"
-              >
-                <span>{section.label}</span>
-                {expandedSections[section.label] ? (
-                  <ChevronDown className="h-3.5 w-3.5" />
-                ) : (
-                  <ChevronRight className="h-3.5 w-3.5" />
+              <>
+                <button
+                  onClick={() => toggleSection(section.label)}
+                  className="flex w-full items-center justify-between px-3 py-1.5 text-[0.75rem] font-medium uppercase tracking-[0.05em] text-[#f8f5ee]/40 hover:text-[#f8f5ee]/60"
+                >
+                  <span className="flex items-center gap-1.5">
+                    {section.label}
+                    {/* E5: Section count badges */}
+                    {sectionCounts[section.label] && (
+                      <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-white/10 px-1 text-[9px] font-bold text-[#f8f5ee]/50 leading-none">
+                        {sectionCounts[section.label]}
+                      </span>
+                    )}
+                  </span>
+                  {expandedSections[section.label] ? (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  )}
+                </button>
+                {/* E2: Section divider line */}
+                {!expandedSections[section.label] && (
+                  <div className="mx-3 mt-1 h-px bg-white/6" />
                 )}
-              </button>
+              </>
             )}
 
             {(collapsed || expandedSections[section.label]) && (
@@ -292,7 +391,8 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                           collapsed && "justify-center px-2"
                         )}
                       >
-                        <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
+                        {/* E3: Tooltips on collapsed icons */}
+                        {renderIcon(Icon, active, collapsed ? item.label : undefined)}
                         {!collapsed && (
                           <>
                             <span className="flex-1">{item.label}</span>
@@ -317,6 +417,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
       <div className="border-t border-white/10 p-2">
         <Link
           href="/settings"
+          title={collapsed ? "Settings" : undefined}
           className={cn(
             "flex items-center gap-3 rounded-[8px] px-3 py-2 text-sm transition-colors",
             isActive("/settings")
@@ -325,7 +426,7 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
             collapsed && "justify-center px-2"
           )}
         >
-          <Settings className={cn("h-5 w-5 shrink-0", isActive("/settings") ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
+          {renderIcon(Settings, isActive("/settings"), collapsed ? "Settings" : undefined)}
           {!collapsed && <span>Settings</span>}
         </Link>
       </div>

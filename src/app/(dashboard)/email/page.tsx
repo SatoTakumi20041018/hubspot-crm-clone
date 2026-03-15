@@ -21,7 +21,11 @@ import {
   FlaskConical,
   Trash2,
   Download,
+  Upload,
   Archive,
+  ChevronDown,
+  Settings2,
+  MoreVertical,
 } from "lucide-react";
 
 interface Campaign {
@@ -198,6 +202,19 @@ export default function EmailPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [columnMenuOpen, setColumnMenuOpen] = useState(false);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const columnMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (actionsRef.current && !actionsRef.current.contains(event.target as Node)) setActionsOpen(false);
+      if (columnMenuRef.current && !columnMenuRef.current.contains(event.target as Node)) setColumnMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const savedViews = [
     { key: "all", label: "すべて" },
@@ -283,15 +300,37 @@ export default function EmailPage() {
         title="Eメールマーケティング"
         description="メールキャンペーンの作成・管理・分析"
         actions={
-          <Button size="sm" onClick={() => alert("メール作成は準備中です")}>
-            <Plus className="h-4 w-4 mr-1" />
-
-      <p className="text-sm text-gray-500">{campaigns.length}件のキャンペーン</p>
-
-            メール作成
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="relative" ref={actionsRef}>
+              <Button variant="outline" size="sm" onClick={() => setActionsOpen(!actionsOpen)}>
+                アクション
+                <ChevronDown className="h-3 w-3 ml-1" />
+              </Button>
+              {actionsOpen && (
+                <div className="absolute right-0 top-9 z-50 w-52 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                  <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("インポート機能は準備中です"); setActionsOpen(false); }}>
+                    <Upload className="h-3.5 w-3.5" /> インポート
+                  </button>
+                  <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("エクスポート機能は準備中です"); setActionsOpen(false); }}>
+                    <Download className="h-3.5 w-3.5" /> エクスポート
+                  </button>
+                  <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("プロパティ編集は準備中です"); setActionsOpen(false); }}>
+                    <Settings2 className="h-3.5 w-3.5" /> プロパティを編集
+                  </button>
+                  <button className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50" onClick={() => { alert("レコード復元は準備中です"); setActionsOpen(false); }}>
+                    <Trash2 className="h-3.5 w-3.5" /> レコードを復元
+                  </button>
+                </div>
+              )}
+            </div>
+            <Button size="sm" onClick={() => alert("メール作成は準備中です")}>
+              <Plus className="h-4 w-4 mr-1" />
+              メール作成
+            </Button>
+          </div>
         }
       />
+      <p className="text-sm text-gray-500">{campaigns.length}件のキャンペーン</p>
 
       {/* Saved View Tabs */}
       <div className="flex items-center gap-1 border-b border-gray-200 px-1">
@@ -302,6 +341,15 @@ export default function EmailPage() {
             }`}>{v.label}</button>
         ))}
         <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded" onClick={() => alert("ビューの追加は準備中です")}><Plus className="h-4 w-4" /></button>
+      </div>
+
+      {/* Quick Filter Pills */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-xs text-gray-500">クイックフィルター:</span>
+        {["ステータス"].map(f => (
+          <button key={f} className="px-2.5 py-1 text-xs rounded-full border border-gray-200 text-gray-600 hover:border-gray-400 hover:bg-gray-50">{f} ▾</button>
+        ))}
+        <button className="px-2 py-1 text-xs text-[#ff4800] hover:underline">+ フィルターを追加</button>
       </div>
 
       {/* KPI Cards */}
@@ -413,9 +461,25 @@ export default function EmailPage() {
                   <input type="checkbox" className="rounded border-gray-300" checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length} onChange={toggleAll} />
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
-                  <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}>
-                    キャンペーン名
-                    <ArrowUpDown className="h-3 w-3" />
+                  <div className="flex items-center gap-1 group">
+                    <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700" onClick={() => handleSort("name")}>
+                      キャンペーン名
+                      <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                    </div>
+                    <div className="relative" ref={columnMenuRef}>
+                      <button className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-gray-200" onClick={() => setColumnMenuOpen(!columnMenuOpen)}>
+                        <MoreVertical className="h-3 w-3" />
+                      </button>
+                      {columnMenuOpen && (
+                        <div className="absolute left-0 top-6 z-50 w-44 rounded-md border border-gray-200 bg-white py-1 shadow-lg">
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { handleSort("name"); setColumnMenuOpen(false); }}>昇順でソート</button>
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { setSortField("name"); setSortDir("desc"); setColumnMenuOpen(false); }}>降順でソート</button>
+                          <div className="border-t border-gray-100 my-1" />
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { alert("列の固定は準備中です"); setColumnMenuOpen(false); }}>列を固定</button>
+                          <button className="flex w-full items-center gap-2 px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50" onClick={() => { alert("列の削除は準備中です"); setColumnMenuOpen(false); }}>列を削除</button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
@@ -434,12 +498,13 @@ export default function EmailPage() {
                   </div>
                 </th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">A/Bテスト</th>
+                <th className="px-2 py-3 w-10"></th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {paginatedItems.map((campaign) => (
-                <tr key={campaign.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(campaign.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/email/${campaign.id}`)}>
+                <tr key={campaign.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer group ${selectedIds.has(campaign.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/email/${campaign.id}`)}>
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(campaign.id)} onChange={() => toggleSelect(campaign.id)} onClick={(e) => e.stopPropagation()} />
                   </td>
@@ -484,6 +549,11 @@ export default function EmailPage() {
                       <span className="text-gray-400 text-xs">-</span>
                     )}
                   </td>
+                  <td className="px-2 py-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={(e) => { e.stopPropagation(); alert("プレビューは準備中です"); }} className="p-1 rounded hover:bg-gray-100" title="プレビュー">
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    </button>
+                  </td>
                   <td className="px-4 py-3">
                     <RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} />
                   </td>
@@ -494,7 +564,7 @@ export default function EmailPage() {
         </div>
             {totalPages > 1 && (
               <div className="flex items-center justify-between border-t border-gray-200 px-4 py-3 mt-2">
-                <p className="text-sm text-gray-500">{sorted.length}件中 {(currentPage-1)*itemsPerPage+1}〜{Math.min(currentPage*itemsPerPage, sorted.length)}件</p>
+                <p className="text-sm text-gray-500">{(currentPage-1)*itemsPerPage+1}-{Math.min(currentPage*itemsPerPage, sorted.length)} / {sorted.length.toLocaleString()}件</p>
                 <div className="flex gap-1">
                   <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage===1} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">前へ</button>
                   <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage===totalPages} className="px-3 py-1.5 text-sm border rounded-md disabled:opacity-40 hover:bg-gray-50">次へ</button>
