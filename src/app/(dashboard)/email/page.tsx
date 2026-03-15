@@ -182,7 +182,7 @@ export default function EmailPage() {
         title="Eメールマーケティング"
         description="メールキャンペーンの作成・管理・分析"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("メール作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             メール作成
           </Button>

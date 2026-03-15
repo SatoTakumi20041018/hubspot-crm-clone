@@ -107,7 +107,7 @@ export default function PlaybooksPage() {
         title="プレイブック"
         description="営業プロセスのベストプラクティスを標準化"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("プレイブック作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             プレイブック作成
           </Button>

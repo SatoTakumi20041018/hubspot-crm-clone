@@ -173,7 +173,7 @@ export default function SequencesPage() {
         title="シーケンス"
         description="メール・タスクの自動シーケンスでリードを育成"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("シーケンス作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             シーケンス作成
           </Button>

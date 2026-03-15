@@ -247,7 +247,7 @@ export default function ProspectingPage() {
                 </p>
               </div>
               <div className="mt-3 flex gap-2">
-                <Button size="sm">
+                <Button size="sm" onClick={() => alert("メールを送信しました")}>
                   <Send className="h-4 w-4 mr-1" />
                   送信
                 </Button>

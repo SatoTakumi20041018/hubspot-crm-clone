@@ -212,7 +212,7 @@ export default function TicketsPage() {
             {total}件のチケット
           </p>
         </div>
-        <Button size="sm">
+        <Button size="sm" onClick={() => alert("チケット作成モーダルは準備中です")}>
           <Plus className="h-4 w-4 mr-1" />
           チケットを作成
         </Button>

@@ -71,11 +71,11 @@ export default function InvoicesPage() {
         ]}
         actions={
           <div className="flex gap-2">
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
               <Download className="h-4 w-4 mr-1" />
               エクスポート
             </Button>
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert("請求書作成は準備中です")}>
               <Plus className="h-4 w-4 mr-1" />
               請求書作成
             </Button>

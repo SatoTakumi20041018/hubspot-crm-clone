@@ -364,7 +364,7 @@ export default function BreezePage() {
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
             />
-            <Button size="sm">
+            <Button size="sm" onClick={() => alert("メッセージを送信しました")}>
               送信
             </Button>
           </div>

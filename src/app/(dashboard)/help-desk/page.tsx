@@ -246,7 +246,7 @@ export default function HelpDeskPage() {
                 onChange={(e) => setQuickReply(e.target.value)}
               />
               <div className="mt-2 flex gap-2">
-                <Button size="sm" className="flex-1">
+                <Button size="sm" className="flex-1" onClick={() => alert("メッセージを送信しました")}>
                   <Send className="h-4 w-4 mr-1" />
                   送信
                 </Button>

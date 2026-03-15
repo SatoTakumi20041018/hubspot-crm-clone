@@ -229,7 +229,7 @@ export default function SettingsPage() {
                 <Input label="通貨" defaultValue="JPY (日本円)" />
               </div>
               <div className="flex justify-end">
-                <Button>保存</Button>
+                <Button onClick={() => alert("設定を保存しました")}>保存</Button>
               </div>
             </CardContent>
           </Card>
@@ -262,7 +262,7 @@ export default function SettingsPage() {
                 </label>
               </div>
               <div className="flex justify-end">
-                <Button>保存</Button>
+                <Button onClick={() => alert("設定を保存しました")}>保存</Button>
               </div>
             </CardContent>
           </Card>

@@ -70,7 +70,7 @@ export default function BlogPage() {
           { label: "ブログ" },
         ]}
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("記事作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             記事作成
           </Button>

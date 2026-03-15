@@ -102,7 +102,7 @@ export default function ChatflowsPage() {
         title="チャットフロー"
         description="ライブチャットとチャットボットの管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("チャットフロー作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             チャットフロー作成
           </Button>

@@ -131,7 +131,7 @@ export default function FeedbackPage() {
         title="フィードバック"
         description="顧客満足度調査とフィードバックの管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("アンケート作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             アンケート作成
           </Button>

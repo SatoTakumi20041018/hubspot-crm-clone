@@ -141,7 +141,7 @@ export default function DashboardsPage() {
         title="ダッシュボード"
         description="カスタムダッシュボードでデータを可視化"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("ダッシュボード作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             ダッシュボード作成
           </Button>

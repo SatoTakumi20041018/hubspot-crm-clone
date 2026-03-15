@@ -166,7 +166,7 @@ export default function FormsPage() {
         title="フォーム"
         description="リードキャプチャフォームの管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("フォーム作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             フォーム作成
           </Button>

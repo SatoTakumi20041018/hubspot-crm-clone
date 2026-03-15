@@ -136,7 +136,7 @@ export default function GoalsPage() {
         title="ゴール"
         description="個人・チームの目標設定と進捗管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("ゴール作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             ゴール作成
           </Button>

@@ -221,7 +221,7 @@ export default function QuotesPage() {
         title="見積書"
         description={`${quotes.length}件の見積書 - 合計 ¥${totalAmount.toLocaleString()}`}
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("見積書作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             見積書作成
           </Button>

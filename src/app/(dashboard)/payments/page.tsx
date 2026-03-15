@@ -80,7 +80,7 @@ export default function PaymentsPage() {
           { label: "支払い" },
         ]}
         actions={
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
             <Download className="h-4 w-4 mr-1" />
             エクスポート
           </Button>

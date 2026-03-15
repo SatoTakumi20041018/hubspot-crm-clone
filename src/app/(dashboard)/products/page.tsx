@@ -163,7 +163,7 @@ export default function ProductsPage() {
         title="商品カタログ"
         description={`${products.length}件の商品を管理`}
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("商品追加は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             商品追加
           </Button>

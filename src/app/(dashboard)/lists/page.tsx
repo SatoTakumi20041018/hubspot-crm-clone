@@ -156,7 +156,7 @@ export default function ListsPage() {
         title="リスト"
         description="コンタクトリストの作成・管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("リスト作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             リスト作成
           </Button>

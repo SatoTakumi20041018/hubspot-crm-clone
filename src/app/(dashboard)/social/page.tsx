@@ -161,7 +161,7 @@ export default function SocialPage() {
         title="ソーシャルメディア"
         description="ソーシャルメディア投稿の管理と分析"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("投稿作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             投稿作成
           </Button>

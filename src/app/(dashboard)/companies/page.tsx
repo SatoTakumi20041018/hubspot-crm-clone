@@ -182,11 +182,11 @@ export default function CompaniesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>
             <Download className="h-4 w-4 mr-1" />
             エクスポート
           </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("会社作成モーダルは準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             会社を作成
           </Button>

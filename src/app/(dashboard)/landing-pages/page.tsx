@@ -156,7 +156,7 @@ export default function LandingPagesPage() {
         title="ランディングページ"
         description="ランディングページの作成・管理"
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("ランディングページ作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             ランディングページ作成
           </Button>

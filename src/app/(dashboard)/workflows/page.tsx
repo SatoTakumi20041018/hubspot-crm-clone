@@ -155,7 +155,7 @@ export default function WorkflowsPage() {
         title="ワークフロー"
         description={`${workflows.length}件のワークフロー（${workflows.filter((w) => w.active).length}件が有効）`}
         actions={
-          <Button size="sm">
+          <Button size="sm" onClick={() => alert("ワークフロー作成は準備中です")}>
             <Plus className="h-4 w-4 mr-1" />
             ワークフロー作成
           </Button>
