@@ -329,7 +329,7 @@ describe("Inbox conversation selection state", () => {
   });
 
   it("selected conversation has left border accent", () => {
-    expect(src).toContain("border-l-2 border-l-[#FF7A59]");
+    expect(src).toContain("border-l-2 border-l-[#ff4800]");
   });
 
   it("unread conversations have blue tint", () => {
@@ -341,6 +341,6 @@ describe("Inbox conversation selection state", () => {
   });
 
   it("unread indicator dot is visible", () => {
-    expect(src).toContain("h-2 w-2 rounded-full bg-[#FF7A59]");
+    expect(src).toContain("h-2 w-2 rounded-full bg-[#ff4800]");
   });
 });

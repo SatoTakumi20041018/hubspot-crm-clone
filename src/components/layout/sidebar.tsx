@@ -59,6 +59,7 @@ interface NavItem {
   label: string;
   href: string;
   icon: React.ElementType;
+  badge?: string;
 }
 
 interface NavSection {
@@ -82,7 +83,7 @@ const navSections: NavSection[] = [
     items: [
       { label: "Prospecting", href: "/prospecting", icon: SearchIcon },
       { label: "Customer Success", href: "/customer-success", icon: Heart },
-      { label: "Help Desk", href: "/help-desk", icon: Headphones },
+      { label: "Help Desk", href: "/help-desk", icon: Headphones, badge: "5" },
     ],
   },
   {
@@ -91,7 +92,8 @@ const navSections: NavSection[] = [
       { label: "Contacts", href: "/contacts", icon: Users },
       { label: "Companies", href: "/companies", icon: Building2 },
       { label: "Deals", href: "/deals", icon: Handshake },
-      { label: "Tickets", href: "/tickets", icon: Ticket },
+      { label: "Tickets", href: "/tickets", icon: Ticket, badge: "10" },
+      { label: "Tasks", href: "/tasks", icon: CheckSquare, badge: "3" },
       { label: "Lists", href: "/lists", icon: ListChecks },
       { label: "Import", href: "/import", icon: Upload },
     ],
@@ -291,7 +293,16 @@ export function Sidebar({ collapsed, onToggleCollapse }: SidebarProps) {
                         )}
                       >
                         <Icon className={cn("h-5 w-5 shrink-0", active ? "text-[#f8f5ee]" : "text-[#f8f5ee]/60")} />
-                        {!collapsed && <span>{item.label}</span>}
+                        {!collapsed && (
+                          <>
+                            <span className="flex-1">{item.label}</span>
+                            {item.badge && (
+                              <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#d9002b] px-1.5 text-[10px] font-bold text-white leading-none">
+                                {item.badge}
+                              </span>
+                            )}
+                          </>
+                        )}
                       </Link>
                     </li>
                   );

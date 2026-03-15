@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -140,11 +140,78 @@ const weekDates = [
 
 const hours = Array.from({ length: 11 }, (_, i) => i + 8); // 8:00 - 18:00
 
+
+function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1 rounded hover:bg-gray-100">
+        <MoreHorizontal className="h-4 w-4 text-gray-400" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-10 w-40 rounded-lg border bg-white py-1 shadow-lg">
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">編集</button>
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">複製</button>
+          <button onClick={() => { onDelete(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">削除</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MeetingsPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [view, setView] = useState<"calendar" | "list">("calendar");
+  const [activeView, setActiveView] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const views = [
+    { key: "all", label: "すべて" },
+    { key: "upcoming", label: "今後の予定" },
+    { key: "past", label: "過去" },
+  ];
+
+  const toggleAll = () => {
+    if (selectedIds.size === meetings.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(meetings.map((item) => item.id)));
+    }
+  };
+
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
 
   const getMeetingsForDate = (date: string) =>
     meetings.filter((m) => m.date === date);
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,6 +245,21 @@ export default function MeetingsPage() {
           </div>
         }
       />
+
+      
+      {/* Empty State */}
+      {meetings.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Calendar className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500 mb-4">新しいミーティングを作成して始めましょう</p>
+          <Button size="sm" onClick={() => alert("作成は準備中です")}>
+            <Plus className="h-4 w-4 mr-1" /> ミーティングを作成
+          </Button>
+        </div>
+      )}
 
       {view === "calendar" ? (
         <Card>
@@ -260,6 +342,7 @@ export default function MeetingsPage() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
+                    <input type="checkbox" className="rounded border-gray-300 mt-3" checked={selectedIds.has(meeting.id)} onChange={() => toggle(meeting.id)} onClick={(e) => e.stopPropagation()} />
                     <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${
                       meeting.type === "external" ? "bg-blue-50" : "bg-green-50"
                     }`}>
@@ -303,9 +386,7 @@ export default function MeetingsPage() {
                         参加
                       </Button>
                     )}
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                    <RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} />
                   </div>
                 </div>
               </CardContent>

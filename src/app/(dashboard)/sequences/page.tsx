@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -161,11 +161,37 @@ const stepTypeConfig = {
 };
 
 export default function SequencesPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [search, setSearch] = useState("");
+  const [activeView, setActiveView] = useState("all");
+
+  const views = [
+    { key: "all", label: "すべて" },
+    { key: "mine", label: "マイシーケンス" },
+    { key: "active", label: "アクティブ" },
+  ];
 
   const filtered = sequences.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase())
   );
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -179,6 +205,16 @@ export default function SequencesPage() {
           </Button>
         }
       />
+
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
+        {views.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">

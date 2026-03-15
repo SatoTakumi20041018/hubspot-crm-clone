@@ -102,6 +102,16 @@ function getContactAvatar(contact: Contact): string {
   return "?";
 }
 
+function relativeTime(date: string) {
+  const diff = Date.now() - new Date(date).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return "今日";
+  if (days === 1) return "昨日";
+  if (days < 7) return `${days}日前`;
+  if (days < 30) return `${Math.floor(days / 7)}週間前`;
+  return `${Math.floor(days / 30)}ヶ月前`;
+}
+
 function LoadingSkeleton() {
   return (
     <div className="space-y-4">
@@ -142,8 +152,17 @@ function RowActionsMenu({ onEdit, onAssign, onDelete }: { onEdit: () => void; on
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   return (
@@ -451,6 +470,9 @@ export default function ContactsPage() {
                     <ArrowUpDown className="h-3 w-3" />
                   </button>
                 </th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">
+                  最終活動
+                </th>
                 <th className="px-4 py-3 w-10"></th>
               </tr>
             </thead>
@@ -516,19 +538,27 @@ export default function ContactsPage() {
                         <span className="text-gray-400">-</span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {contact.properties.hubspot_owner_id || "-"}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-[#ff4800] flex items-center justify-center text-[10px] font-bold text-white">
+                          {contact.properties.hubspot_owner_id ? contact.properties.hubspot_owner_id.charAt(0) : "?"}
+                        </div>
+                        <span className="text-sm text-gray-600">{contact.properties.hubspot_owner_id || "未割り当て"}</span>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600">
                       {contact.createdAt
                         ? new Date(contact.createdAt).toLocaleDateString("ja-JP")
                         : "-"}
                     </td>
+                    <td className="px-4 py-3 text-gray-500 text-xs">
+                      {contact.updatedAt ? relativeTime(contact.updatedAt) : "-"}
+                    </td>
                     <td className="px-4 py-3">
                       <RowActionsMenu
                         onEdit={() => alert(`編集: ${getContactName(contact)}`)}
                         onAssign={() => alert(`担当者を割り当て: ${getContactName(contact)}`)}
-                        onDelete={() => alert(`削除: ${getContactName(contact)}`)}
+                        onDelete={() => { if (confirm("本当に削除しますか？")) alert("削除しました"); }}
                       />
                     </td>
                   </tr>

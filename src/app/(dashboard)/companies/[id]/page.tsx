@@ -284,6 +284,12 @@ export default function CompanyDetailPage() {
 
   return (
     <div className="-m-6 flex flex-col" style={{ height: "calc(100vh - 4rem)" }}>
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-gray-500 px-6 pt-3 pb-1 bg-white flex-shrink-0">
+        <Link href="/companies" className="hover:text-gray-700">会社</Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-gray-900">{name}</span>
+      </div>
       {/* Top Bar */}
       <div className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 flex-shrink-0">
         <div className="flex items-center gap-3">

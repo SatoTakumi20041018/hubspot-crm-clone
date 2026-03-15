@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,13 +127,38 @@ const widgetTypeConfig: Record<WidgetType, { icon: typeof BarChart3; label: stri
 };
 
 export default function DashboardsPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [filter, setFilter] = useState<"all" | "favorites" | "shared">("all");
+  const [activeView, setActiveView] = useState("all");
+
+  const views = [
+    { key: "all", label: "すべて" },
+    { key: "mine", label: "マイダッシュボード" },
+  ];
 
   const filtered = dashboards.filter((db) => {
     if (filter === "favorites") return db.favorite;
     if (filter === "shared") return db.shared;
     return true;
   });
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -148,6 +173,16 @@ export default function DashboardsPage() {
         }
       />
 
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
+        {views.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
+
       {/* Filter Tabs */}
       <div className="flex gap-1 border-b border-gray-200">
         {[
@@ -160,13 +195,13 @@ export default function DashboardsPage() {
             onClick={() => setFilter(tab.key)}
             className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               filter === tab.key
-                ? "border-[#FF7A59] text-[#FF7A59]"
+                ? "border-[#ff4800] text-[#ff4800]"
                 : "border-transparent text-gray-500 hover:text-gray-700"
             }`}
           >
             {tab.label}
             <span className={`rounded-full px-1.5 py-0.5 text-xs ${
-              filter === tab.key ? "bg-[#FF7A59]/10 text-[#FF7A59]" : "bg-gray-100 text-gray-500"
+              filter === tab.key ? "bg-[#ff4800]/10 text-[#ff4800]" : "bg-gray-100 text-gray-500"
             }`}>
               {tab.count}
             </span>
@@ -182,7 +217,7 @@ export default function DashboardsPage() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF1ED]">
-                    <LayoutDashboard className="h-5 w-5 text-[#FF7A59]" />
+                    <LayoutDashboard className="h-5 w-5 text-[#ff4800]" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">

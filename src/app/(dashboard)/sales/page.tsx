@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/layout/page-header";
@@ -25,6 +27,7 @@ const kpis = [
     icon: Handshake,
     color: "text-blue-600",
     bg: "bg-blue-50",
+    tooltip: "現在パイプラインで進行中の取引数",
   },
   {
     label: "今月の成約",
@@ -33,6 +36,7 @@ const kpis = [
     icon: Trophy,
     color: "text-green-600",
     bg: "bg-green-50",
+    tooltip: "今月成約（クローズ済み）した取引の件数",
   },
   {
     label: "パイプライン金額",
@@ -41,6 +45,7 @@ const kpis = [
     icon: TrendingUp,
     color: "text-purple-600",
     bg: "bg-purple-50",
+    tooltip: "パイプライン内の全取引の合計金額",
   },
   {
     label: "平均取引サイズ",
@@ -49,6 +54,7 @@ const kpis = [
     icon: DollarSign,
     color: "text-orange-600",
     bg: "bg-orange-50",
+    tooltip: "成約済み取引の平均金額",
   },
   {
     label: "成約率",
@@ -57,6 +63,7 @@ const kpis = [
     icon: Target,
     color: "text-cyan-600",
     bg: "bg-cyan-50",
+    tooltip: "全取引のうち成約に至った割合",
   },
 ];
 
@@ -105,6 +112,25 @@ const stageBadgeVariant = (stage: string) => {
 };
 
 export default function SalesPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -117,7 +143,8 @@ export default function SalesPage() {
         {kpis.map((kpi) => {
           const Icon = kpi.icon;
           return (
-            <Card key={kpi.label}>
+            <div key={kpi.label} title={kpi.tooltip}>
+            <Card>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${kpi.bg}`}>
@@ -132,6 +159,7 @@ export default function SalesPage() {
                 <p className="text-xs text-gray-500 mt-0.5">{kpi.label}</p>
               </CardContent>
             </Card>
+            </div>
           );
         })}
       </div>

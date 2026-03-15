@@ -352,7 +352,7 @@ describe("Social page platform filter", () => {
   });
 
   it("active platform filter has distinct styling", () => {
-    expect(src).toContain("bg-[#FF7A59] text-white");
+    expect(src).toContain("bg-[#ff4800] text-white");
   });
 });
 

@@ -94,7 +94,7 @@ export default function ForecastingPage() {
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-gray-400" />
             <select
-              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+              className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
             >
@@ -142,7 +142,7 @@ export default function ForecastingPage() {
                 <span className="text-gray-600">パイプライン</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded bg-[#FF7A59]" />
+                <div className="h-3 w-3 rounded bg-[#ff4800]" />
                 <span className="text-gray-600">予測</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -166,7 +166,7 @@ export default function ForecastingPage() {
                     </div>
                     <div className="h-3 rounded bg-gray-100">
                       <div
-                        className="h-3 rounded bg-[#FF7A59]"
+                        className="h-3 rounded bg-[#ff4800]"
                         style={{ width: `${(m.forecast / maxBarValue) * 100}%` }}
                       />
                     </div>
@@ -196,7 +196,7 @@ export default function ForecastingPage() {
           <CardContent>
             <div className="flex items-center gap-4 mb-4 text-xs">
               <div className="flex items-center gap-1.5">
-                <div className="h-3 w-3 rounded bg-[#FF7A59]" />
+                <div className="h-3 w-3 rounded bg-[#ff4800]" />
                 <span className="text-gray-600">実績</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -209,7 +209,7 @@ export default function ForecastingPage() {
                 <div key={m.month} className="flex-1 flex flex-col items-center gap-1">
                   <div className="flex items-end gap-1 w-full" style={{ height: "160px" }}>
                     <div
-                      className="flex-1 rounded-t bg-[#FF7A59] hover:bg-[#FF957A] transition-colors"
+                      className="flex-1 rounded-t bg-[#ff4800] hover:bg-[#e64200] transition-colors"
                       style={{ height: `${(m.actual / maxTrend) * 100}%` }}
                     />
                     <div
@@ -249,7 +249,7 @@ export default function ForecastingPage() {
                   <tr key={person.name} className="border-b border-gray-100 hover:bg-gray-50">
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                           {person.name.charAt(0)}
                         </div>
                         <span className="font-medium text-gray-900">{person.name}</span>

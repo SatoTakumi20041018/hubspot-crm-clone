@@ -149,6 +149,13 @@ const statusBadgeVariant = (status: string) => {
 
 export default function SocialPage() {
   const [filterPlatform, setFilterPlatform] = useState<string>("すべて");
+  const [activeView, setActiveView] = useState("all");
+
+  const views = [
+    { key: "all", label: "すべての投稿" },
+    { key: "published", label: "公開済み" },
+    { key: "scheduled", label: "予約済み" },
+  ];
   const platforms: (Platform | "すべて")[] = ["すべて", "Twitter", "Facebook", "Instagram", "LinkedIn"];
 
   const filtered = posts.filter((p) =>
@@ -168,6 +175,16 @@ export default function SocialPage() {
         }
       />
 
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
+        {views.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
+
       {/* Platform Filter */}
       <div className="flex items-center gap-2">
         <Filter className="h-4 w-4 text-gray-400" />
@@ -177,7 +194,7 @@ export default function SocialPage() {
             onClick={() => setFilterPlatform(platform)}
             className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
               filterPlatform === platform
-                ? "bg-[#FF7A59] text-white"
+                ? "bg-[#ff4800] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
@@ -216,11 +233,11 @@ export default function SocialPage() {
                   key={i}
                   className={`min-h-[60px] rounded p-1 text-xs ${
                     isValidDay ? "bg-gray-50" : ""
-                  } ${isToday ? "ring-2 ring-[#FF7A59] bg-[#FFF1ED]" : ""}`}
+                  } ${isToday ? "ring-2 ring-[#ff4800] bg-[#FFF1ED]" : ""}`}
                 >
                   {isValidDay && (
                     <>
-                      <span className={`text-xs ${isToday ? "font-bold text-[#FF7A59]" : "text-gray-600"}`}>
+                      <span className={`text-xs ${isToday ? "font-bold text-[#ff4800]" : "text-gray-600"}`}>
                         {dayNum}
                       </span>
                       <div className="mt-0.5 space-y-0.5">

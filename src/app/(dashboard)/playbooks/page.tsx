@@ -169,7 +169,7 @@ export default function PlaybooksPage() {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#FFF1ED]">
-                    <BookOpen className="h-5 w-5 text-[#FF7A59]" />
+                    <BookOpen className="h-5 w-5 text-[#ff4800]" />
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900">{pb.name}</h3>

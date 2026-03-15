@@ -139,8 +139,17 @@ function RowActionsMenu({ onEdit, onAssign, onDelete }: { onEdit: () => void; on
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   return (
@@ -658,7 +667,7 @@ export default function DealsPage() {
                         <RowActionsMenu
                           onEdit={() => alert(`編集: ${deal.properties.dealname || "名前なし"}`)}
                           onAssign={() => alert(`担当者を割り当て: ${deal.properties.dealname || "名前なし"}`)}
-                          onDelete={() => alert(`削除: ${deal.properties.dealname || "名前なし"}`)}
+                          onDelete={() => { if (confirm("本当に削除しますか？")) alert("削除しました"); }}
                         />
                       </td>
                     </tr>

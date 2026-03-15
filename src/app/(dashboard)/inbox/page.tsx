@@ -220,11 +220,11 @@ export default function InboxPage() {
                 key={conv.id}
                 onClick={() => setSelectedId(conv.id)}
                 className={`w-full text-left p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                  selectedId === conv.id ? "bg-[#FFF1ED] border-l-2 border-l-[#FF7A59]" : ""
+                  selectedId === conv.id ? "bg-[#FFF1ED] border-l-2 border-l-[#ff4800]" : ""
                 } ${conv.unread ? "bg-blue-50/50" : ""}`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FF7A59] text-xs font-medium text-white">
+                  <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#ff4800] text-xs font-medium text-white">
                     {conv.contact.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -241,7 +241,7 @@ export default function InboxPage() {
                     <p className="text-xs text-gray-500 truncate">{conv.lastMessage}</p>
                   </div>
                   {conv.unread && (
-                    <div className="h-2 w-2 rounded-full bg-[#FF7A59] flex-shrink-0 mt-2" />
+                    <div className="h-2 w-2 rounded-full bg-[#ff4800] flex-shrink-0 mt-2" />
                   )}
                 </div>
               </button>
@@ -255,7 +255,7 @@ export default function InboxPage() {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF7A59] text-sm font-medium text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff4800] text-sm font-medium text-white">
                   {selected.contact.charAt(0)}
                 </div>
                 <div>
@@ -278,7 +278,7 @@ export default function InboxPage() {
               <div key={i} className={`flex ${msg.isAgent ? "justify-end" : "justify-start"}`}>
                 <div className={`max-w-[70%] rounded-lg p-3 ${
                   msg.isAgent
-                    ? "bg-[#FF7A59] text-white"
+                    ? "bg-[#ff4800] text-white"
                     : "bg-gray-100 text-gray-900"
                 }`}>
                   <div className="flex items-center gap-2 mb-1">
@@ -300,7 +300,7 @@ export default function InboxPage() {
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <textarea
-                  className="w-full rounded-md border border-gray-300 p-3 text-sm resize-none focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                  className="w-full rounded-md border border-gray-300 p-3 text-sm resize-none focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                   rows={2}
                   placeholder="メッセージを入力..."
                 />
@@ -309,7 +309,7 @@ export default function InboxPage() {
                 <button className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
                   <Paperclip className="h-4 w-4" />
                 </button>
-                <button className="rounded-md bg-[#FF7A59] p-2 text-white hover:bg-[#FF957A]">
+                <button className="rounded-md bg-[#ff4800] p-2 text-white hover:bg-[#e64200]">
                   <Send className="h-4 w-4" />
                 </button>
               </div>

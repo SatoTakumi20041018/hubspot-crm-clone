@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -135,7 +135,18 @@ const typeConfig: Record<WorkflowType, { label: string; icon: typeof Users; colo
 };
 
 export default function WorkflowsPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
   const [filterType, setFilterType] = useState<string>("すべて");
   const [filterStatus, setFilterStatus] = useState<string>("すべて");
 
@@ -148,6 +159,22 @@ export default function WorkflowsPage() {
       (filterStatus === "無効" && !wf.active);
     return matchSearch && matchType && matchStatus;
   });
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -211,6 +238,7 @@ export default function WorkflowsPage() {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">
+                    <input type="checkbox" className="rounded border-gray-300 mt-3" checked={selectedIds.has(wf.id)} onChange={() => toggle(wf.id)} onClick={(e) => e.stopPropagation()} />
                     <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${config.bg}`}>
                       <Zap className={`h-5 w-5 ${config.color}`} />
                     </div>

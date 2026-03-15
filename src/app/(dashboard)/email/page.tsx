@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -158,7 +158,35 @@ const statusBadgeVariant = (status: string) => {
   }
 };
 
+
+function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1 rounded hover:bg-gray-100">
+        <MoreHorizontal className="h-4 w-4 text-gray-400" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-10 w-40 rounded-lg border bg-white py-1 shadow-lg">
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">編集</button>
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">複製</button>
+          <button onClick={() => { onDelete(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">削除</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function EmailPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("すべて");
 
@@ -176,6 +204,22 @@ export default function EmailPage() {
     ? (sentCampaigns.reduce((s, c) => s + c.clickRate, 0) / sentCampaigns.length).toFixed(1)
     : "0";
 
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -191,6 +235,7 @@ export default function EmailPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+        <div title="送信済みキャンペーンの合計送信メール数">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -208,6 +253,8 @@ export default function EmailPage() {
             <p className="text-xs text-gray-500 mt-0.5">送信数</p>
           </CardContent>
         </Card>
+        </div>
+        <div title="送信済みメールのうち開封された割合の平均">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -223,6 +270,8 @@ export default function EmailPage() {
             <p className="text-xs text-gray-500 mt-0.5">平均開封率</p>
           </CardContent>
         </Card>
+        </div>
+        <div title="開封されたメールのうちリンクがクリックされた割合の平均">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -238,6 +287,8 @@ export default function EmailPage() {
             <p className="text-xs text-gray-500 mt-0.5">平均クリック率</p>
           </CardContent>
         </Card>
+        </div>
+        <div title="作成されたメールキャンペーンの総数">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
@@ -249,6 +300,7 @@ export default function EmailPage() {
             <p className="text-xs text-gray-500 mt-0.5">キャンペーン数</p>
           </CardContent>
         </Card>
+        </div>
       </div>
 
       {/* Filters */}
@@ -266,7 +318,7 @@ export default function EmailPage() {
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4 text-gray-400" />
               <select
-                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#FF7A59] focus:outline-none focus:ring-1 focus:ring-[#FF7A59]"
+                className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-[#ff4800] focus:outline-none focus:ring-1 focus:ring-[#ff4800]"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
               >
@@ -357,9 +409,7 @@ export default function EmailPage() {
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                    <RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} />
                   </td>
                 </tr>
               ))}

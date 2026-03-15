@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -150,8 +150,58 @@ const typeBadgeVariant = (type: string) => {
   }
 };
 
+
+function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1 rounded hover:bg-gray-100">
+        <MoreHorizontal className="h-4 w-4 text-gray-400" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-10 w-40 rounded-lg border bg-white py-1 shadow-lg">
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">編集</button>
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">複製</button>
+          <button onClick={() => { onDelete(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">削除</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FormsPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [search, setSearch] = useState("");
+  const [activeView, setActiveView] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  const views = [
+    { key: "all", label: "すべてのフォーム" },
+    { key: "mine", label: "マイフォーム" },
+  ];
+
+  const toggleAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((f) => f.id)));
+    }
+  };
+
+  const toggle = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
 
   const filtered = forms.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
@@ -159,6 +209,22 @@ export default function FormsPage() {
 
   const totalSubmissions = forms.reduce((s, f) => s + f.submissions, 0);
   const totalViews = forms.reduce((s, f) => s + f.views, 0);
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -172,6 +238,16 @@ export default function FormsPage() {
           </Button>
         }
       />
+
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
+        {views.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -234,6 +310,7 @@ export default function FormsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50">
+                <th className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" onChange={toggleAll} checked={filtered.length > 0 && selectedIds.size === filtered.length} /></th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">
                   <div className="flex items-center gap-1 cursor-pointer hover:text-gray-700">
                     フォーム名
@@ -251,12 +328,14 @@ export default function FormsPage() {
                 <th className="px-4 py-3 text-right font-medium text-gray-500">表示数</th>
                 <th className="px-4 py-3 text-right font-medium text-gray-500">CVR</th>
                 <th className="px-4 py-3 text-left font-medium text-gray-500">最終送信</th>
+                <th className="px-4 py-3 text-left font-medium text-gray-500">作成日</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((form) => (
                 <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(form.id)} onChange={() => toggle(form.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
@@ -293,10 +372,9 @@ export default function FormsPage() {
                       {form.lastSubmission}
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-gray-600 text-xs">{form.createdAt}</td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600" onClick={(e) => e.stopPropagation()}>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                    <RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} />
                   </td>
                 </tr>
               ))}

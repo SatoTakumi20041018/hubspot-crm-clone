@@ -134,8 +134,17 @@ function RowActionsMenu({ onEdit, onAssign, onDelete }: { onEdit: () => void; on
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    if (open) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   return (
@@ -341,6 +350,7 @@ export default function TicketsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div title="現在未解決（新規・対応中）のチケット数">
         <Card>
           <div className="p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-50">
@@ -352,6 +362,8 @@ export default function TicketsPage() {
             </div>
           </div>
         </Card>
+        </div>
+        <div title="優先度が緊急に設定されているチケット数">
         <Card>
           <div className="p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50">
@@ -363,6 +375,8 @@ export default function TicketsPage() {
             </div>
           </div>
         </Card>
+        </div>
+        <div title="チケット作成から解決までの平均所要時間">
         <Card>
           <div className="p-4 flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50">
@@ -374,6 +388,7 @@ export default function TicketsPage() {
             </div>
           </div>
         </Card>
+        </div>
       </div>
 
       {/* Filters */}
@@ -563,7 +578,7 @@ export default function TicketsPage() {
                       <RowActionsMenu
                         onEdit={() => alert(`編集: ${ticket.properties.subject || "件名なし"}`)}
                         onAssign={() => alert(`担当者を割り当て: ${ticket.properties.subject || "件名なし"}`)}
-                        onDelete={() => alert(`削除: ${ticket.properties.subject || "件名なし"}`)}
+                        onDelete={() => { if (confirm("本当に削除しますか？")) alert("削除しました"); }}
                       />
                     </td>
                   </tr>

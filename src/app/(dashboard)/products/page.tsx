@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,8 +143,42 @@ const products: Product[] = [
   },
 ];
 
+
+function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1 rounded hover:bg-gray-100">
+        <MoreHorizontal className="h-4 w-4 text-gray-400" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-8 z-10 w-40 rounded-lg border bg-white py-1 shadow-lg">
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">編集</button>
+          <button onClick={() => { onEdit(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50">複製</button>
+          <button onClick={() => { onDelete(); setOpen(false); }} className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">削除</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ProductsPage() {
+  const [loading, setLoading] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
+
   const [search, setSearch] = useState("");
+  const [activeView, setActiveView] = useState("all");
+
+  const views = [
+    { key: "all", label: "すべての商品" },
+    { key: "active", label: "アクティブ" },
+  ];
   const [filterCategory, setFilterCategory] = useState("すべて");
 
   const categories = ["すべて", "ソフトウェア", "サービス", "サポート", "アドオン"];
@@ -156,6 +190,22 @@ export default function ProductsPage() {
     const matchCategory = filterCategory === "すべて" || p.category === filterCategory;
     return matchSearch && matchCategory;
   });
+
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-4">
+        <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 w-32 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-4 gap-4 mt-6">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+          ))}
+        </div>
+        <div className="h-64 bg-gray-100 rounded-lg animate-pulse mt-4" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -169,6 +219,16 @@ export default function ProductsPage() {
           </Button>
         }
       />
+
+      <div className="flex items-center gap-1 border-b border-gray-200 px-1 mb-4">
+        {views.map((v) => (
+          <button key={v.key} onClick={() => setActiveView(v.key)}
+            className={`px-3 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeView === v.key ? "border-[#ff4800] text-[#1f1f1f]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>{v.label}</button>
+        ))}
+        <button className="ml-1 p-1.5 text-gray-400 hover:text-gray-600 rounded"><Plus className="h-4 w-4" /></button>
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
@@ -187,7 +247,7 @@ export default function ProductsPage() {
               onClick={() => setFilterCategory(cat)}
               className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                 filterCategory === cat
-                  ? "bg-[#FF7A59] text-white"
+                  ? "bg-[#ff4800] text-white"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
@@ -196,6 +256,21 @@ export default function ProductsPage() {
           ))}
         </div>
       </div>
+
+      
+      {/* Empty State */}
+      {filtered.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <Package className="h-8 w-8 text-gray-300" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">データがありません</h3>
+          <p className="text-sm text-gray-500 mb-4">新しい商品を作成して始めましょう</p>
+          <Button size="sm" onClick={() => alert("作成は準備中です")}>
+            <Plus className="h-4 w-4 mr-1" /> 商品を作成
+          </Button>
+        </div>
+      )}
 
       {/* Products Table */}
       <Card>
@@ -272,9 +347,7 @@ export default function ProductsPage() {
                   </td>
                   <td className="px-4 py-3 text-gray-600 text-xs">{product.createdAt}</td>
                   <td className="px-4 py-3">
-                    <button className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </button>
+                    <RowActions onEdit={() => alert("編集は準備中です")} onDelete={() => alert("削除は準備中です")} />
                   </td>
                 </tr>
               ))}
