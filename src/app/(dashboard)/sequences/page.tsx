@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,7 @@ const stepTypeConfig = {
 };
 
 export default function SequencesPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -173,7 +175,7 @@ export default function SequencesPage() {
       {/* Sequence List */}
       <div className="space-y-3">
         {paginatedItems.map((seq) => (
-          <Card key={seq.id} className="hover:border-gray-300 transition-all">
+          <Card key={seq.id} className="hover:border-gray-300 transition-all cursor-pointer" onClick={() => router.push(`/sequences/${seq.id}`)}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

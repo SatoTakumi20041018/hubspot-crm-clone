@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -81,6 +82,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function PaymentsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -276,7 +278,7 @@ export default function PaymentsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((payment) => (
-                <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={payment.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/payments/${payment.id}`)}>
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(payment.id)} onChange={() => toggle(payment.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3 text-gray-600">{payment.date}</td>
                   <td className="px-4 py-3 font-mono text-xs text-gray-500">{payment.id}</td>

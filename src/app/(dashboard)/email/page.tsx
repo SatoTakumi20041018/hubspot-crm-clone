@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -187,6 +188,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function EmailPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -437,7 +439,7 @@ export default function EmailPage() {
             </thead>
             <tbody>
               {paginatedItems.map((campaign) => (
-                <tr key={campaign.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(campaign.id) ? "bg-blue-50" : ""}`}>
+                <tr key={campaign.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(campaign.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/email/${campaign.id}`)}>
                   <td className="px-4 py-3">
                     <input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(campaign.id)} onChange={() => toggleSelect(campaign.id)} onClick={(e) => e.stopPropagation()} />
                   </td>

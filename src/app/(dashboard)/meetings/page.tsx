@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -169,6 +170,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function MeetingsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -355,7 +357,7 @@ export default function MeetingsPage() {
                           {dayMeetings.map((m) => (
                             <div
                               key={m.id}
-                              onClick={() => alert(`ミーティング: ${m.title}\n${m.date} ${m.time} (${m.duration})\n場所: ${m.location}`)}
+                              onClick={() => router.push(`/meetings/${m.id}`)}
                               className={`rounded px-1.5 py-1 text-[10px] leading-tight cursor-pointer mb-0.5 ${
                                 m.type === "external"
                                   ? "bg-blue-100 text-blue-800 border-l-2 border-blue-500"
@@ -379,7 +381,7 @@ export default function MeetingsPage() {
         /* List View */
         <div className="space-y-3">
           {paginatedMeetings.map((meeting) => (
-            <Card key={meeting.id} className="hover:border-gray-300 transition-all">
+            <Card key={meeting.id} className="hover:border-gray-300 transition-all cursor-pointer" onClick={() => router.push(`/meetings/${meeting.id}`)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">

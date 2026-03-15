@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -176,7 +178,7 @@ export default function ProductsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((product) => (
-                <tr key={product.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(product.id) ? "bg-blue-50" : ""}`}>
+                <tr key={product.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(product.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/products/${product.id}`)}>
                   <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(product.id)} onChange={() => toggleSelect(product.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3"><div className="flex items-center gap-3"><div className="flex h-8 w-8 items-center justify-center rounded bg-gray-100"><Package className="h-4 w-4 text-gray-500" /></div><span className="font-medium text-gray-900">{product.name}</span></div></td>
                   <td className="px-4 py-3 text-gray-500 font-mono text-xs">{product.sku}</td>

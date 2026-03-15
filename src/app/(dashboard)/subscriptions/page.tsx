@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +76,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function SubscriptionsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -320,7 +322,7 @@ export default function SubscriptionsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((sub) => (
-                <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={sub.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/subscriptions/${sub.id}`)}>
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(String(sub.id))} onChange={() => toggle(String(sub.id))} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3 font-medium text-gray-900">{sub.customer}</td>
                   <td className="px-4 py-3">

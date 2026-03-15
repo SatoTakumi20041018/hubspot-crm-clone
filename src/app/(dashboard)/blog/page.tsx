@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +74,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function BlogPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -256,7 +258,7 @@ export default function BlogPage() {
             </thead>
             <tbody>
               {paginatedItems.map((post) => (
-                <tr key={post.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={post.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/blog/${post.id}`)}>
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(String(post.id))} onChange={() => toggle(String(post.id))} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

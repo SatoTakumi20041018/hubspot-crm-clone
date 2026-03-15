@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -130,6 +131,7 @@ const typeBadgeVariant = (type: string) => {
 };
 
 export default function FeedbackPage() {
+  const router = useRouter();
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -408,7 +410,7 @@ export default function FeedbackPage() {
               </thead>
               <tbody>
                 {paginatedItems.map((survey) => (
-                  <tr key={survey.id} className="border-b border-gray-100 hover:bg-gray-50">
+                  <tr key={survey.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/feedback/${survey.id}`)}>
                     <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(survey.id)} onChange={() => toggle(survey.id)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="px-6 py-3 font-medium text-gray-900">{survey.name}</td>
                     <td className="px-4 py-3">

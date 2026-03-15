@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,7 @@ const typeConfig: Record<WorkflowType, { label: string; icon: typeof Users; colo
 };
 
 export default function WorkflowsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -181,7 +183,7 @@ export default function WorkflowsPage() {
           const config = typeConfig[wf.type];
           const TypeIcon = config.icon;
           return (
-            <Card key={wf.id} className="hover:border-gray-300 transition-all">
+            <Card key={wf.id} className="hover:border-gray-300 transition-all cursor-pointer" onClick={() => router.push(`/workflows/${wf.id}`)}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4 flex-1">

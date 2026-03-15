@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +134,7 @@ const widgetTypeConfig: Record<WidgetType, { icon: typeof BarChart3; label: stri
 };
 
 export default function DashboardsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -300,7 +302,7 @@ export default function DashboardsPage() {
       {/* Dashboard Cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {filtered.map((dashboard) => (
-          <Card key={dashboard.id} className={`hover:border-gray-300 transition-all ${selectedIds.has(dashboard.id) ? "ring-2 ring-[#ff4800]/30" : ""}`}>
+          <Card key={dashboard.id} className={`hover:border-gray-300 transition-all cursor-pointer ${selectedIds.has(dashboard.id) ? "ring-2 ring-[#ff4800]/30" : ""}`} onClick={() => router.push(`/dashboards/${dashboard.id}`)}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">

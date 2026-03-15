@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -67,6 +68,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function ChatflowsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -164,7 +166,7 @@ export default function ChatflowsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((cf) => (
-                <tr key={cf.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(cf.id) ? "bg-blue-50" : ""}`}>
+                <tr key={cf.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(cf.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/chatflows/${cf.id}`)}>
                   <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(cf.id)} onChange={() => toggleSelect(cf.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3"><div><p className="font-medium text-gray-900">{cf.name}</p><p className="text-xs text-gray-500 mt-0.5">{cf.description}</p></div></td>
                   <td className="px-4 py-3"><Badge variant={cf.type === "ボット" ? "info" : "success"}>{cf.type}</Badge></td>

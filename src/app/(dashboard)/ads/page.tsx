@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,6 +149,7 @@ const performanceData = [
 const maxClicks = Math.max(...performanceData.map((d) => d.clicks));
 
 export default function AdsPage() {
+  const router = useRouter();
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -361,7 +363,7 @@ export default function AdsPage() {
                   const pConfig = platformColors[campaign.platform];
                   const spentPercent = Math.round((campaign.spent / campaign.budget) * 100);
                   return (
-                    <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer" onClick={() => router.push(`/ads/${campaign.id}`)}>
                       <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(campaign.id)} onChange={() => toggle(campaign.id)} onClick={(e) => e.stopPropagation()} /></td>
                       <td className="px-6 py-3 font-medium text-gray-900">{campaign.name}</td>
                       <td className="px-4 py-3">

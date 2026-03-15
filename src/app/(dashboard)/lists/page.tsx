@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,6 +71,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function ListsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -172,7 +174,7 @@ export default function ListsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((list) => (
-                <tr key={list.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(list.id) ? "bg-blue-50" : ""}`}>
+                <tr key={list.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(list.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/lists/${list.id}`)}>
                   <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(list.id)} onChange={() => toggleSelect(list.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3"><div><div className="flex items-center gap-2"><Users className="h-4 w-4 text-gray-400" /><span className="font-medium text-gray-900">{list.name}</span></div><p className="text-xs text-gray-500 mt-0.5 ml-6">{list.description}</p></div></td>
                   <td className="px-4 py-3"><Badge variant={list.type === "動的" ? "info" : "default"}>{list.type === "動的" && <Zap className="h-3 w-3 mr-0.5" />}{list.type}</Badge></td>

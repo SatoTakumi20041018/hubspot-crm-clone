@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function DocumentsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -176,7 +178,7 @@ export default function DocumentsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((doc) => (
-                <tr key={doc.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(doc.id) ? "bg-blue-50" : ""}`}>
+                <tr key={doc.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(doc.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/documents/${doc.id}`)}>
                   <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(doc.id)} onChange={() => toggleSelect(doc.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3"><div className="flex items-center gap-3">{typeIcon(doc.type)}<div><p className="font-medium text-gray-900">{doc.name}</p><p className="text-xs text-gray-500">作成: {doc.createdAt} / {doc.owner}</p></div></div></td>
                   <td className="px-4 py-3"><Badge variant="default">{doc.type}</Badge></td>

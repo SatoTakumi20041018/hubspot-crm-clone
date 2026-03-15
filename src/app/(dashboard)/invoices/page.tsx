@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function InvoicesPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -262,7 +264,7 @@ export default function InvoicesPage() {
             </thead>
             <tbody>
               {paginatedItems.map((invoice) => (
-                <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={invoice.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/invoices/${invoice.id}`)}>
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(invoice.id)} onChange={() => toggle(invoice.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3 font-mono text-xs font-medium text-[#ff4800]">{invoice.id}</td>
                   <td className="px-4 py-3">

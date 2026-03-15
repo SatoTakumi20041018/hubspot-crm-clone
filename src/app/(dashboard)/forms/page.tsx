@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -177,6 +178,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function FormsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -372,7 +374,7 @@ export default function FormsPage() {
             </thead>
             <tbody>
               {paginatedItems.map((form) => (
-                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <tr key={form.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => router.push(`/forms/${form.id}`)}>
                   <td className="w-10 px-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(form.id)} onChange={() => toggle(form.id)} onClick={(e) => e.stopPropagation()} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">

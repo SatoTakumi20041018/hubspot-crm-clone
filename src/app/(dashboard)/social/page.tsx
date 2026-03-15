@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,6 +90,7 @@ function RowActions({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => 
 }
 
 export default function SocialPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   useEffect(() => { const t = setTimeout(() => setLoading(false), 500); return () => clearTimeout(t); }, []);
 
@@ -197,7 +199,7 @@ export default function SocialPage() {
               {paginatedItems.map((post) => {
                 const config = platformConfig[post.platform];
                 return (
-                  <tr key={post.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${selectedIds.has(post.id) ? "bg-blue-50" : ""}`}>
+                  <tr key={post.id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${selectedIds.has(post.id) ? "bg-blue-50" : ""}`} onClick={() => router.push(`/social/${post.id}`)}>
                     <td className="px-4 py-3"><input type="checkbox" className="rounded border-gray-300" checked={selectedIds.has(post.id)} onChange={() => toggleSelect(post.id)} onClick={(e) => e.stopPropagation()} /></td>
                     <td className="px-4 py-3"><div className={`flex h-8 w-8 items-center justify-center rounded-lg ${config.bg}`}><span className={`text-xs font-bold ${config.color}`}>{config.label}</span>
             <Button variant="outline" size="sm" onClick={() => alert("エクスポート機能は準備中です")}>

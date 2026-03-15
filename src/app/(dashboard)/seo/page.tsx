@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -216,6 +217,7 @@ function LoadingSkeleton() {
 }
 
 export default function SeoPage() {
+  const router = useRouter();
   const [activeView, setActiveView] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -454,7 +456,7 @@ export default function SeoPage() {
               </thead>
               <tbody>
                 {paginatedItems.map((rec) => (
-                  <tr key={rec.id} className={`border-b border-gray-100 hover:bg-gray-50 ${selectedIds.has(rec.id) ? "bg-blue-50/50" : ""}`}>
+                  <tr key={rec.id} className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${selectedIds.has(rec.id) ? "bg-blue-50/50" : ""}`} onClick={() => router.push(`/seo/${rec.id}`)}>
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
