@@ -361,8 +361,8 @@ export function Header({ sidebarCollapsed }: HeaderProps) {
               <div className="absolute right-0 top-full mt-2 w-56 rounded-[8px] border border-[rgba(0,0,0,0.11)] bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.12)] animate-slide-down">
                 {/* User Info with account name/portal ID (D4) */}
                 <div className="border-b border-[rgba(0,0,0,0.11)] px-4 py-3">
-                  <p className="text-sm font-medium text-[#1f1f1f]">佐藤 匠</p>
-                  <p className="text-xs text-[rgba(0,0,0,0.62)]">satotakumi20041018@gmail.com</p>
+                  <p className="text-sm font-medium text-[#1f1f1f]">山田 太郎</p>
+                  <p className="text-xs text-[rgba(0,0,0,0.62)]">user@example.com</p>
                   <div className="mt-1.5 flex items-center gap-1">
                     <span className="text-[10px] text-[rgba(0,0,0,0.38)] bg-gray-100 rounded px-1.5 py-0.5">サンプル株式会社</span>
                     <span className="text-[10px] text-[rgba(0,0,0,0.38)]">Portal ID: 48271935</span>
